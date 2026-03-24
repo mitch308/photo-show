@@ -32,7 +32,7 @@ See: .planning/PROJECT.md (updated 2026-03-24)
 ## Phase States
 
 ### Phase 1: 项目基础架构
-- **Status:** Not Started
+- **Status:** Context Gathered
 - **Plans:** None
 - **Progress:** 0/3 requirements
 
@@ -61,10 +61,16 @@ See: .planning/PROJECT.md (updated 2026-03-24)
 | Date | Phase | Action | Result |
 |------|-------|--------|--------|
 | 2026-03-24 | - | Project initialized | Roadmap created |
+| 2026-03-24 | 1 | Context gathered | Ready for planning |
+
+## Resume Context
+
+**Last stopped at:** Phase 1 context gathered
+**Resume file:** .planning/phases/01-项目基础架构/01-CONTEXT.md
 
 ## Next Action
 
-Run `/gsd:discuss-phase 1` to start Phase 1 planning.
+Run `/gsd:plan-phase 1` to create implementation plans for Phase 1.
 
 ---
 *State initialized: 2026-03-24*
