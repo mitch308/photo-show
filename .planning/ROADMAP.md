@@ -44,6 +44,15 @@ AUTH-01, AUTH-02, AUTH-03
 - 数据库使用 TypeORM 连接 MySQL
 - 使用 Redis 存储 JWT 黑名单（退出登录时使用）
 
+### Plans
+
+**Plans:** 4 plans in 3 waves
+
+- [ ] 01-01-PLAN.md — Backend Infrastructure (Wave 1)
+- [ ] 01-02-PLAN.md — Frontend Infrastructure (Wave 1, parallel)
+- [ ] 01-03-PLAN.md — Authentication Backend (Wave 2)
+- [ ] 01-04-PLAN.md — Authentication Frontend (Wave 3, checkpoint)
+
 ---
 
 ## Phase 2: 作品管理功能
