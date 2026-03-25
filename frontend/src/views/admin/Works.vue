@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { useWorksStore } from '@/stores/works';
 import { albumsApi } from '@/api/albums';
 import { tagsApi } from '@/api/tags';
+import { batchApi } from '@/api/batch';
 import Upload from '@/components/Upload.vue';
+import BatchActionBar from '@/components/BatchActionBar.vue';
 import type { Album, Tag, UploadResult, Work } from '@/api/types';
 
 const worksStore = useWorksStore();
@@ -23,6 +25,15 @@ const form = ref({
 });
 
 const uploadedFile = ref<UploadResult | null>(null);
+
+// Batch selection state
+const selectedWorks = ref<string[]>([]);
+const batchLoading = ref(false);
+const moveDialogVisible = ref(false);
+const selectedAlbumIds = ref<string[]>([]);
+
+// Computed for batch actions
+const hasSelection = computed(() => selectedWorks.value.length > 0);
 
 onMounted(async () => {
   await Promise.all([
@@ -118,6 +129,83 @@ function formatFileSize(bytes: number): string {
   if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
   return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
 }
+
+// Batch selection handlers
+function handleSelectionChange(selection: Work[]) {
+  selectedWorks.value = selection.map(w => w.id);
+}
+
+function clearSelection() {
+  selectedWorks.value = [];
+}
+
+// Batch operations
+async function handleBatchPublic() {
+  batchLoading.value = true;
+  try {
+    const result = await batchApi.updateStatus(selectedWorks.value, true);
+    ElMessage.success(`成功将 ${result.success.length} 个作品设为公开`);
+    await worksStore.fetchWorks();
+    clearSelection();
+  } catch (error: any) {
+    ElMessage.error(error.message || '操作失败');
+  } finally {
+    batchLoading.value = false;
+  }
+}
+
+async function handleBatchPrivate() {
+  batchLoading.value = true;
+  try {
+    const result = await batchApi.updateStatus(selectedWorks.value, false);
+    ElMessage.success(`成功将 ${result.success.length} 个作品设为私密`);
+    await worksStore.fetchWorks();
+    clearSelection();
+  } catch (error: any) {
+    ElMessage.error(error.message || '操作失败');
+  } finally {
+    batchLoading.value = false;
+  }
+}
+
+function openMoveDialog() {
+  selectedAlbumIds.value = [];
+  moveDialogVisible.value = true;
+}
+
+async function handleBatchMove() {
+  if (selectedAlbumIds.value.length === 0) {
+    ElMessage.warning('请选择至少一个相册');
+    return;
+  }
+
+  batchLoading.value = true;
+  try {
+    const result = await batchApi.moveToAlbum(selectedWorks.value, selectedAlbumIds.value, 'set');
+    ElMessage.success(`成功将 ${result.success.length} 个作品移动到相册`);
+    await worksStore.fetchWorks();
+    moveDialogVisible.value = false;
+    clearSelection();
+  } catch (error: any) {
+    ElMessage.error(error.message || '操作失败');
+  } finally {
+    batchLoading.value = false;
+  }
+}
+
+async function handleBatchDelete() {
+  batchLoading.value = true;
+  try {
+    const result = await batchApi.deleteWorks(selectedWorks.value);
+    ElMessage.success(`成功删除 ${result.success.length} 个作品`);
+    await worksStore.fetchWorks();
+    clearSelection();
+  } catch (error: any) {
+    ElMessage.error(error.message || '操作失败');
+  } finally {
+    batchLoading.value = false;
+  }
+}
 </script>
 
 <template>
@@ -129,6 +217,7 @@ function formatFileSize(bytes: number): string {
       </el-button>
     </div>
 
+    <!-- Upload/Edit Dialog -->
     <el-dialog
       v-model="dialogVisible"
       :title="editingWork ? '编辑作品' : '上传作品'"
@@ -187,7 +276,42 @@ function formatFileSize(bytes: number): string {
       </template>
     </el-dialog>
 
-    <el-table :data="worksStore.works" v-loading="worksStore.loading" stripe>
+    <!-- Batch Move Dialog -->
+    <el-dialog
+      v-model="moveDialogVisible"
+      title="移动到相册"
+      width="400px"
+    >
+      <el-form label-width="80px">
+        <el-form-item label="目标相册">
+          <el-select v-model="selectedAlbumIds" multiple placeholder="选择相册">
+            <el-option
+              v-for="album in albums"
+              :key="album.id"
+              :label="album.name"
+              :value="album.id"
+            />
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="moveDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="handleBatchMove" :loading="batchLoading">
+          确定移动
+        </el-button>
+      </template>
+    </el-dialog>
+
+    <!-- Works Table -->
+    <el-table
+      :data="worksStore.works"
+      v-loading="worksStore.loading"
+      stripe
+      @selection-change="handleSelectionChange"
+    >
+      <!-- Checkbox column for batch selection -->
+      <el-table-column type="selection" width="55" />
+      
       <el-table-column width="80">
         <template #default="{ row }">
           <el-image
@@ -223,6 +347,19 @@ function formatFileSize(bytes: number): string {
           </el-tag>
         </template>
       </el-table-column>
+
+      <!-- Statistics columns per STAT-04 -->
+      <el-table-column label="浏览" width="80" align="right">
+        <template #default="{ row }">
+          <span class="stat-count">{{ row.viewCount || 0 }}</span>
+        </template>
+      </el-table-column>
+      
+      <el-table-column label="下载" width="80" align="right">
+        <template #default="{ row }">
+          <span class="stat-count">{{ row.downloadCount || 0 }}</span>
+        </template>
+      </el-table-column>
       
       <el-table-column label="相册" min-width="150">
         <template #default="{ row }">
@@ -244,12 +381,24 @@ function formatFileSize(bytes: number): string {
         </template>
       </el-table-column>
     </el-table>
+
+    <!-- Batch Action Bar -->
+    <BatchActionBar
+      :selected-count="selectedWorks.length"
+      :loading="batchLoading"
+      @batch-public="handleBatchPublic"
+      @batch-private="handleBatchPrivate"
+      @batch-move="openMoveDialog"
+      @batch-delete="handleBatchDelete"
+      @clear-selection="clearSelection"
+    />
   </div>
 </template>
 
 <style scoped>
 .works-page {
   padding: 20px;
+  padding-bottom: 100px;
 }
 
 .page-header {
@@ -261,5 +410,10 @@ function formatFileSize(bytes: number): string {
 
 .page-header h2 {
   margin: 0;
+}
+
+.stat-count {
+  font-variant-numeric: tabular-nums;
+  color: var(--el-text-color-regular);
 }
 </style>
