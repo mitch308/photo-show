@@ -14,11 +14,72 @@ export interface UploadResult {
   fileSize: number;
 }
 
+export interface MultipleUploadResult {
+  success: boolean;
+  results: UploadResult[];
+  errors: { filename: string; error: string }[];
+}
+
 function toUrlPath(...parts: string[]): string {
   return parts.join('/');
 }
 
+/**
+ * Determine if file is an image based on mime type
+ */
+function isImageFile(mimetype: string): boolean {
+  return mimetype.startsWith('image/');
+}
+
+/**
+ * Determine if file is a video based on mime type
+ */
+function isVideoFile(mimetype: string): boolean {
+  return mimetype.startsWith('video/');
+}
+
 export class UploadService {
+  /**
+   * Process a single file (image or video)
+   * Automatically detects file type and processes accordingly
+   */
+  async processFile(file: Express.Multer.File): Promise<UploadResult> {
+    if (isImageFile(file.mimetype)) {
+      return this.processImage(file);
+    } else if (isVideoFile(file.mimetype)) {
+      return this.processVideo(file);
+    }
+
+    throw new Error(`Unsupported file type: ${file.mimetype}`);
+  }
+
+  /**
+   * Process multiple files in batch
+   * Returns both successful results and any errors
+   */
+  async uploadMultipleFiles(files: Express.Multer.File[]): Promise<MultipleUploadResult> {
+    const results: UploadResult[] = [];
+    const errors: { filename: string; error: string }[] = [];
+
+    for (const file of files) {
+      try {
+        const result = await this.processFile(file);
+        results.push(result);
+      } catch (error) {
+        errors.push({
+          filename: file.originalname,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        });
+      }
+    }
+
+    return {
+      success: errors.length === 0,
+      results,
+      errors,
+    };
+  }
+
   /**
    * Process uploaded image: generate thumbnails
    */
