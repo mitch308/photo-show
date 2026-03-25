@@ -10,6 +10,8 @@ export interface ShareData {
 export interface CreateShareRequest {
   workIds: string[];
   expiresInDays?: number;
+  maxAccess?: number;
+  clientId?: string;
 }
 
 export interface ShareInfo {
@@ -18,6 +20,26 @@ export interface ShareInfo {
   expiresAt: number;
   createdAt: number;
   shareUrl?: string;
+  maxAccess?: number;
+  accessCount?: number;
+  clientId?: string;
+}
+
+export interface AccessLogEntry {
+  id: string;
+  token: string;
+  workId: string;
+  action: 'view' | 'download';
+  ipAddress: string;
+  userAgent: string;
+  createdAt: string;
+}
+
+export interface AccessLogResult {
+  logs: AccessLogEntry[];
+  total: number;
+  limit: number;
+  offset: number;
 }
 
 export const shareApi = {
@@ -49,5 +71,30 @@ export const shareApi = {
 
   async revokeShare(token: string): Promise<void> {
     await api.delete(`/admin/share/${token}`);
+  },
+
+  async updateShare(token: string, data: {
+    maxAccess?: number;
+    clientId?: string;
+  }): Promise<ShareInfo> {
+    const response = await api.put<ApiResponse<ShareInfo>>(
+      `/admin/share/${token}`,
+      data
+    );
+    return response.data.data;
+  },
+
+  async getAccessLogs(token: string, options?: {
+    limit?: number;
+    offset?: number;
+  }): Promise<AccessLogResult> {
+    const params = new URLSearchParams();
+    if (options?.limit) params.set('limit', options.limit.toString());
+    if (options?.offset) params.set('offset', options.offset.toString());
+    
+    const response = await api.get<ApiResponse<AccessLogResult>>(
+      `/admin/share/${token}/access-logs?${params.toString()}`
+    );
+    return response.data.data;
   }
 };
