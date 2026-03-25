@@ -12,20 +12,26 @@
 
 ### Validated
 
-- [x] 摄影师可以批量上传作品 — Phase 4: BATCH-01~04
-- [x] 摄影师可以查看作品数据统计（浏览量、下载量）— Phase 4: STAT-01~04
-- [x] 摄影师可以查看私密链接访问记录 — Phase 4: PRIV-05
-- [x] 摄影师可以管理客户联系方式和备注 — Phase 4: CLNT-01~04
+- [x] 管理员可以使用用户名密码登录后台 — v1.0 Phase 1: AUTH-01
+- [x] 登录状态在浏览器关闭后保持 — v1.0 Phase 1: AUTH-02
+- [x] 管理员可以安全退出登录 — v1.0 Phase 1: AUTH-03
+- [x] 管理员可以上传照片和视频作品 — v1.0 Phase 2: WORK-01~02
+- [x] 管理员可以创建和管理相册 — v1.0 Phase 2: ALBM-01~05
+- [x] 管理员可以对作品进行分类、标签、排序、置顶管理 — v1.0 Phase 2: WORK-03~07
+- [x] 管理员可以为作品添加水印保护 — v1.0 Phase 2: WATR-01~03
+- [x] 访客可以在公开画廊浏览作品 — v1.0 Phase 3: PUBL-01~07
+- [x] 管理员可以生成私密链接分享给客户 — v1.0 Phase 3: PRIV-01~02
+- [x] 客户通过私密链接可以查看和下载高清无水印原图 — v1.0 Phase 3: PRIV-03~04
+- [x] 管理员可以批量上传作品 — v1.0 Phase 4: BATCH-01~04
+- [x] 管理员可以查看作品数据统计（浏览量、下载量）— v1.0 Phase 4: STAT-01~04
+- [x] 管理员可以查看私密链接访问记录 — v1.0 Phase 4: PRIV-05
+- [x] 管理员可以管理客户联系方式和备注 — v1.0 Phase 4: CLNT-01~04
+- [x] 用户可以切换深色/浅色主题 — v1.0 Phase 4: THEM-01~03
+- [x] 作品可以包含多个媒体项（图片/视频）— v1.0 Phase 6: DATA-01~08
 
 ### Active
 
-- [ ] 摄影师可以上传照片和视频作品
-- [ ] 摄影师可以创建和管理相册
-- [ ] 摄影师可以对作品进行分类、标签、排序、置顶管理
-- [ ] 摄影师可以为作品添加水印保护
-- [ ] 访客可以在公开画廊浏览作品
-- [ ] 摄影师可以生成私密链接分享给客户
-- [ ] 客户通过私密链接可以查看和下载高清无水印原图
+(None — all v1.0 requirements shipped)
 
 ### Out of Scope
 
@@ -37,10 +43,25 @@
 
 ## Context
 
-- 摄影工作室需要一个专业的在线作品展示平台
-- 目前可能通过社交媒体或网盘分享作品，缺乏专业性和统一管理
-- 需要区分公开展示和私密分享两种场景
-- 私密分享的客户需要下载高清原图的权限
+**v1.0 Shipped:** 2026-03-25
+
+技术实现：
+- 前端: Vue 3 + TypeScript + Vite + Element Plus
+- 后端: Node.js + Express + TypeORM
+- 数据库: MySQL 8.0 + Redis 7.2
+- 部署: PM2 cluster + Nginx + Let's Encrypt SSL
+
+代码统计：
+- ~11,500 行 TypeScript/Vue 代码
+- 115 次提交
+- 6 个开发阶段，27 个计划，70+ 任务
+
+架构亮点：
+- 作品可包含多个媒体项（图片/视频）
+- 公开画廊瀑布流布局
+- 私密链接支持过期时间和访问限制
+- 深色/浅色主题切换
+- 完整的客户管理和访问记录
 
 ## Constraints
 
@@ -62,11 +83,13 @@
 | 批量操作支持部分成功 | 用户友好，不会因单个失败而整体失败 | ✅ Phase 4 |
 | MySQL 存储访问日志 | 查询方便，适合预期访问量 | ✅ Phase 4 |
 | VueUse + CSS 变量实现主题 | 简单可靠，自动持久化 | ✅ Phase 4 |
-| PM2 cluster + Nginx | 高可用、负载均衡、SSL 终止 | ✅ Phase 5 |
-| Let's Encrypt SSL | 免费、自动续期、安全 | ✅ Phase 5 |
+| PM2 cluster + Nginx | 高可用、负载均衡、SSL 终止 | ✅ v1.0 |
+| Let's Encrypt SSL | 免费、自动续期、安全 | ✅ v1.0 |
+| MediaItem 模型支持多媒体 | 作品可包含多个图片/视频 | ✅ v1.0 |
+| VueUse + CSS 变量实现主题 | 简单可靠，自动持久化 | ✅ v1.0 |
 
 ---
-*Last updated: 2026-03-25 after Phase 5 completion*
+*Last updated: 2026-03-25 after v1.0 milestone completion*
 
 ## Evolution
 
