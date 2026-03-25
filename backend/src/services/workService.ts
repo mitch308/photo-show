@@ -148,6 +148,13 @@ export class WorkService {
       .getRawOne();
     return (result?.max || 0) + 1;
   }
+
+  /**
+   * Increment download count for a work
+   */
+  async incrementDownloadCount(id: string): Promise<void> {
+    await this.workRepo.increment({ id }, 'downloadCount', 1);
+  }
 }
 
 export const workService = new WorkService();
