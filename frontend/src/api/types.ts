@@ -39,8 +39,8 @@ export interface Work {
   title: string;
   description: string;
   filePath: string;
-  thumbnailSmall: string;
-  thumbnailLarge: string;
+  thumbnailSmall?: string | null;
+  thumbnailLarge?: string | null;
   originalFilename: string;
   fileType: 'image' | 'video';
   mimeType: string;
@@ -54,6 +54,9 @@ export interface Work {
   tags: Tag[];
   createdAt: string;
   updatedAt: string;
+  // Used for creation/update only
+  albumIds?: string[];
+  tagIds?: string[];
 }
 
 /**

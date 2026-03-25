@@ -52,7 +52,7 @@ async function saveAlbum() {
 
 async function deleteAlbum(album: Album) {
   try {
-    const { value } = await ElMessageBox.confirm(
+    await ElMessageBox.confirm(
       '删除相册时，是否同时删除其中的作品？',
       '删除相册',
       {
