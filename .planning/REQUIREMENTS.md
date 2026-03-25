@@ -77,8 +77,8 @@ Requirements for initial release. Each maps to roadmap phases.
 ### Client Management
 
 - [x] **CLNT-01**: 管理员可以添加客户信息（姓名、联系方式、备注）
-- [ ] **CLNT-02**: 管理员可以为客户创建专属的私密链接
-- [ ] **CLNT-03**: 管理员可以查看每个客户的访问历史
+- [x] **CLNT-02**: 管理员可以为客户创建专属的私密链接
+- [x] **CLNT-03**: 管理员可以查看每个客户的访问历史
 - [x] **CLNT-04**: 管理员可以编辑和删除客户信息
 
 ### Theme & UI
@@ -166,8 +166,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | STAT-03 | Phase 4 | Complete |
 | STAT-04 | Phase 4 | Complete |
 | CLNT-01 | Phase 4 | Complete |
-| CLNT-02 | Phase 4 | Pending |
-| CLNT-03 | Phase 4 | Pending |
+| CLNT-02 | Phase 4 | Complete |
+| CLNT-03 | Phase 4 | Complete |
 | CLNT-04 | Phase 4 | Complete |
 | THEM-01 | Phase 4 | Pending |
 | THEM-02 | Phase 4 | Pending |
