@@ -37,10 +37,10 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Batch Operations
 
-- [ ] **BATCH-01**: 管理员可以批量上传多个作品
-- [ ] **BATCH-02**: 批量上传时显示进度和成功/失败状态
-- [ ] **BATCH-03**: 管理员可以批量移动作品到相册
-- [ ] **BATCH-04**: 管理员可以批量删除作品
+- [x] **BATCH-01**: 管理员可以批量上传多个作品
+- [x] **BATCH-02**: 批量上传时显示进度和成功/失败状态
+- [x] **BATCH-03**: 管理员可以批量移动作品到相册
+- [x] **BATCH-04**: 管理员可以批量删除作品
 
 ### Watermark
 
@@ -65,13 +65,13 @@ Requirements for initial release. Each maps to roadmap phases.
 - [x] **PRIV-03**: 客户通过私密链接可以查看选定的作品
 - [x] **PRIV-04**: 客户通过私密链接可以下载高清无水印原图
 - [x] **PRIV-05**: 管理员可以查看私密链接的访问记录
-- [ ] **PRIV-06**: 管理员可以手动使私密链接失效
+- [x] **PRIV-06**: 管理员可以手动使私密链接失效
 
 ### Statistics
 
-- [ ] **STAT-01**: 系统记录每个作品的浏览次数
-- [ ] **STAT-02**: 系统记录每个作品的下载次数
-- [ ] **STAT-03**: 管理员可以在后台查看作品统计数据
+- [x] **STAT-01**: 系统记录每个作品的浏览次数
+- [x] **STAT-02**: 系统记录每个作品的下载次数
+- [x] **STAT-03**: 管理员可以在后台查看作品统计数据
 - [x] **STAT-04**: 管理员可以查看总体访问趋势
 
 ### Client Management
@@ -141,10 +141,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | ALBM-03 | Phase 2 | Pending |
 | ALBM-04 | Phase 2 | Pending |
 | ALBM-05 | Phase 2 | Pending |
-| BATCH-01 | Phase 4 | Pending |
-| BATCH-02 | Phase 4 | Pending |
-| BATCH-03 | Phase 4 | Pending |
-| BATCH-04 | Phase 4 | Pending |
+| BATCH-01 | Phase 4 | Complete |
+| BATCH-02 | Phase 4 | Complete |
+| BATCH-03 | Phase 4 | Complete |
+| BATCH-04 | Phase 4 | Complete |
 | WATR-01 | Phase 2 | Pending |
 | WATR-02 | Phase 2 | Pending |
 | WATR-03 | Phase 2 | Pending |
@@ -160,10 +160,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | PRIV-03 | Phase 3 | Complete |
 | PRIV-04 | Phase 3 | Complete |
 | PRIV-05 | Phase 4 | Complete |
-| PRIV-06 | Phase 4 | Pending |
-| STAT-01 | Phase 4 | Pending |
-| STAT-02 | Phase 4 | Pending |
-| STAT-03 | Phase 4 | Pending |
+| PRIV-06 | Phase 4 | Complete |
+| STAT-01 | Phase 4 | Complete |
+| STAT-02 | Phase 4 | Complete |
+| STAT-03 | Phase 4 | Complete |
 | STAT-04 | Phase 4 | Complete |
 | CLNT-01 | Phase 4 | Complete |
 | CLNT-02 | Phase 4 | Pending |
