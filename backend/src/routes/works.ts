@@ -1,0 +1,128 @@
+import { Router, Request, Response } from 'express';
+import { workService, CreateWorkData, UpdateWorkData } from '../services/workService.js';
+import { successResponse, errorResponse, ErrorCodes } from '../types/response.js';
+import { authMiddleware } from '../middlewares/auth.js';
+
+const router = Router();
+
+// All routes require authentication
+router.use(authMiddleware);
+
+/**
+ * GET /api/works
+ * List all works with optional filters
+ */
+router.get('/', async (req: Request, res: Response) => {
+  try {
+    const { albumId, tagId, isPublic } = req.query;
+    const works = await workService.getWorks({
+      albumId: albumId as string | undefined,
+      tagId: tagId as string | undefined,
+      isPublic: isPublic === 'true' ? true : isPublic === 'false' ? false : undefined,
+    });
+    res.json(successResponse(works));
+  } catch (error: any) {
+    res.status(500).json(errorResponse(ErrorCodes.UNKNOWN, error.message));
+  }
+});
+
+/**
+ * GET /api/works/:id
+ * Get a single work
+ */
+router.get('/:id', async (req: Request, res: Response) => {
+  try {
+    const id = req.params.id as string;
+    const work = await workService.getWorkById(id);
+    if (!work) {
+      res.status(404).json(errorResponse(ErrorCodes.NOT_FOUND, 'Work not found'));
+      return;
+    }
+    res.json(successResponse(work));
+  } catch (error: any) {
+    res.status(500).json(errorResponse(ErrorCodes.UNKNOWN, error.message));
+  }
+});
+
+/**
+ * POST /api/works
+ * Create a new work
+ */
+router.post('/', async (req: Request, res: Response) => {
+  try {
+    const data: CreateWorkData = req.body;
+    
+    if (!data.title || !data.filePath) {
+      res.status(400).json(errorResponse(ErrorCodes.VALIDATION_ERROR, 'Title and filePath are required'));
+      return;
+    }
+
+    const work = await workService.createWork(data);
+    res.status(201).json(successResponse(work, 'Work created successfully'));
+  } catch (error: any) {
+    res.status(500).json(errorResponse(ErrorCodes.UNKNOWN, error.message));
+  }
+});
+
+/**
+ * PUT /api/works/:id
+ * Update a work
+ */
+router.put('/:id', async (req: Request, res: Response) => {
+  try {
+    const id = req.params.id as string;
+    const data: UpdateWorkData = req.body;
+    const work = await workService.updateWork(id, data);
+    
+    if (!work) {
+      res.status(404).json(errorResponse(ErrorCodes.NOT_FOUND, 'Work not found'));
+      return;
+    }
+    
+    res.json(successResponse(work, 'Work updated successfully'));
+  } catch (error: any) {
+    res.status(500).json(errorResponse(ErrorCodes.UNKNOWN, error.message));
+  }
+});
+
+/**
+ * DELETE /api/works/:id
+ * Delete a work
+ */
+router.delete('/:id', async (req: Request, res: Response) => {
+  try {
+    const id = req.params.id as string;
+    const deleted = await workService.deleteWork(id);
+    
+    if (!deleted) {
+      res.status(404).json(errorResponse(ErrorCodes.NOT_FOUND, 'Work not found'));
+      return;
+    }
+    
+    res.json(successResponse(null, 'Work deleted successfully'));
+  } catch (error: any) {
+    res.status(500).json(errorResponse(ErrorCodes.UNKNOWN, error.message));
+  }
+});
+
+/**
+ * PUT /api/works/positions
+ * Update positions for drag-and-drop sorting
+ */
+router.put('/positions', async (req: Request, res: Response) => {
+  try {
+    const { positions } = req.body; // Array of { id, position }
+    
+    if (!Array.isArray(positions)) {
+      res.status(400).json(errorResponse(ErrorCodes.VALIDATION_ERROR, 'positions must be an array'));
+      return;
+    }
+
+    await workService.setWorksPosition(positions);
+    res.json(successResponse(null, 'Positions updated'));
+  } catch (error: any) {
+    res.status(500).json(errorResponse(ErrorCodes.UNKNOWN, error.message));
+  }
+});
+
+export default router;
