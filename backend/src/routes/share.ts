@@ -17,7 +17,7 @@ const router = Router();
  */
 router.get('/:token', async (req: Request, res: Response) => {
   try {
-    const token = req.params.token;
+    const token = req.params.token as string;
 
     // Validate token
     const shareData = await shareService.validateToken(token);
@@ -54,7 +54,8 @@ router.get('/:token', async (req: Request, res: Response) => {
  */
 router.get('/:token/download/:workId', async (req: Request, res: Response) => {
   try {
-    const { token, workId } = req.params;
+    const token = req.params.token as string;
+    const workId = req.params.workId as string;
 
     // Validate token
     const shareData = await shareService.validateToken(token);

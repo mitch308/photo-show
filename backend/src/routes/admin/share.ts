@@ -74,7 +74,7 @@ router.get('/', async (req: Request, res: Response) => {
  */
 router.get('/:token', async (req: Request, res: Response) => {
   try {
-    const token = req.params.token;
+    const token = req.params.token as string;
     const shareInfo = await shareService.getShareInfo(token);
 
     if (!shareInfo) {
@@ -95,7 +95,7 @@ router.get('/:token', async (req: Request, res: Response) => {
  */
 router.delete('/:token', async (req: Request, res: Response) => {
   try {
-    const token = req.params.token;
+    const token = req.params.token as string;
     const revoked = await shareService.revokeToken(token);
 
     if (!revoked) {

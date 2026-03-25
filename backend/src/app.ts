@@ -17,6 +17,8 @@ import worksRoutes from './routes/works.js';
 import albumsRoutes from './routes/albums.js';
 import tagsRoutes from './routes/tags.js';
 import publicRoutes from './routes/public.js';
+import shareRoutes from './routes/share.js';
+import adminShareRoutes from './routes/admin/share.js';
 
 const app = express();
 
@@ -40,12 +42,16 @@ app.get('/api/health', (req, res) => {
 // 公开 API（无需认证）
 app.use('/api/public', publicRoutes);
 
+// 私密分享 API（无需认证，token-based）
+app.use('/api/share', shareRoutes);
+
 // API 路由
 app.use('/api/auth', authRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/works', worksRoutes);
 app.use('/api/albums', albumsRoutes);
 app.use('/api/tags', tagsRoutes);
+app.use('/api/admin/share', adminShareRoutes);
 
 // 404 处理
 app.use((req, res) => {
