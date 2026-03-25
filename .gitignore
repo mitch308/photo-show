@@ -27,3 +27,6 @@ uploads/
 
 # Test coverage
 coverage/
+
+# Local tools
+.opencode/
