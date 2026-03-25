@@ -56,7 +56,7 @@ Requirements for initial release. Each maps to roadmap phases.
 - [x] **PUBL-04**: 访客可以搜索作品标题和描述
 - [x] **PUBL-05**: 作品以瀑布流/网格形式优雅展示
 - [x] **PUBL-06**: 访客可以点击作品查看大图和详细信息
-- [ ] **PUBL-07**: 移动端适配，支持手机和平板浏览
+- [x] **PUBL-07**: 移动端适配，支持手机和平板浏览
 
 ### Private Sharing
 
@@ -154,7 +154,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | PUBL-04 | Phase 3 | Complete |
 | PUBL-05 | Phase 3 | Complete |
 | PUBL-06 | Phase 3 | Complete |
-| PUBL-07 | Phase 3 | Pending |
+| PUBL-07 | Phase 3 | Complete |
 | PRIV-01 | Phase 3 | Complete |
 | PRIV-02 | Phase 3 | Complete |
 | PRIV-03 | Phase 3 | Complete |
