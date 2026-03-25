@@ -14,12 +14,21 @@ const mockWorkService = vi.hoisted(() => ({
   incrementDownloadCount: vi.fn(),
 }));
 
+// Mock accessLogService
+const mockAccessLogService = vi.hoisted(() => ({
+  recordAccess: vi.fn(),
+}));
+
 vi.mock('../services/shareService.js', () => ({
   shareService: mockShareService,
 }));
 
 vi.mock('../services/workService.js', () => ({
   workService: mockWorkService,
+}));
+
+vi.mock('../services/accessLogService.js', () => ({
+  accessLogService: mockAccessLogService,
 }));
 
 // Import after mocks
@@ -56,6 +65,7 @@ describe('Share Routes', () => {
       mockWorkService.getWorkById
         .mockResolvedValueOnce(mockWorks[0])
         .mockResolvedValueOnce(mockWorks[1]);
+      mockAccessLogService.recordAccess.mockResolvedValue({});
 
       const response = await request(app).get('/api/share/valid-token');
 
@@ -97,6 +107,7 @@ describe('Share Routes', () => {
       mockShareService.isWorkInShare.mockResolvedValue(true);
       mockWorkService.getWorkById.mockResolvedValue(mockWork);
       mockWorkService.incrementDownloadCount.mockResolvedValue(undefined);
+      mockAccessLogService.recordAccess.mockResolvedValue({});
 
       const response = await request(app).get('/api/share/valid-token/download/work-1');
 

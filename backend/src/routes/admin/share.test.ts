@@ -44,6 +44,12 @@ describe('Admin Share Routes', () => {
   describe('POST /api/admin/share', () => {
     it('should create token with workIds', async () => {
       mockShareService.createShareToken.mockResolvedValue('generated-token-123');
+      mockShareService.getShareInfo.mockResolvedValue({
+        token: 'generated-token-123',
+        workIds: ['work-1', 'work-2'],
+        expiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000,
+        createdAt: Date.now(),
+      });
 
       const response = await request(app)
         .post('/api/admin/share')
@@ -55,19 +61,50 @@ describe('Admin Share Routes', () => {
       expect(response.body.data.shareUrl).toContain('/share/generated-token-123');
       expect(mockShareService.createShareToken).toHaveBeenCalledWith(
         ['work-1', 'work-2'],
-        7 // default
+        { expiresInDays: 7, maxAccess: undefined, clientId: undefined }
       );
     });
 
     it('should accept expiresInDays parameter', async () => {
       mockShareService.createShareToken.mockResolvedValue('generated-token-456');
+      mockShareService.getShareInfo.mockResolvedValue({
+        token: 'generated-token-456',
+        workIds: ['work-1'],
+        expiresAt: Date.now() + 30 * 24 * 60 * 60 * 1000,
+        createdAt: Date.now(),
+      });
 
       const response = await request(app)
         .post('/api/admin/share')
         .send({ workIds: ['work-1'], expiresInDays: 30 });
 
       expect(response.status).toBe(201);
-      expect(mockShareService.createShareToken).toHaveBeenCalledWith(['work-1'], 30);
+      expect(mockShareService.createShareToken).toHaveBeenCalledWith(
+        ['work-1'],
+        { expiresInDays: 30, maxAccess: undefined, clientId: undefined }
+      );
+    });
+
+    it('should accept maxAccess and clientId parameters', async () => {
+      mockShareService.createShareToken.mockResolvedValue('generated-token-789');
+      mockShareService.getShareInfo.mockResolvedValue({
+        token: 'generated-token-789',
+        workIds: ['work-1'],
+        expiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000,
+        createdAt: Date.now(),
+        maxAccess: 10,
+        clientId: 'client-1',
+      });
+
+      const response = await request(app)
+        .post('/api/admin/share')
+        .send({ workIds: ['work-1'], maxAccess: 10, clientId: 'client-1' });
+
+      expect(response.status).toBe(201);
+      expect(mockShareService.createShareToken).toHaveBeenCalledWith(
+        ['work-1'],
+        { expiresInDays: 7, maxAccess: 10, clientId: 'client-1' }
+      );
     });
 
     it('should validate workIds is non-empty array', async () => {
