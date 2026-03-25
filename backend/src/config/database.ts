@@ -18,7 +18,6 @@ export function getDataSource(): DataSource {
       logging: process.env.NODE_ENV === 'development',
       poolSize: 10,
       connectTimeout: 10000,
-      acquireTimeout: 30000,
     };
 
     dataSource = new DataSource(options);
