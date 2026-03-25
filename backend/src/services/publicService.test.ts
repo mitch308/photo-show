@@ -234,7 +234,12 @@ describe('PublicService', () => {
 
       expect(mockWorkRepo.findOne).toHaveBeenCalledWith({
         where: { id: '1', isPublic: true },
-        relations: ['albums', 'tags'],
+        relations: ['albums', 'tags', 'mediaItems'],
+        order: {
+          mediaItems: {
+            position: 'ASC',
+          },
+        },
       });
       expect(result).toEqual(mockWork);
     });
@@ -261,15 +266,27 @@ describe('PublicService', () => {
   describe('getPublicAlbums', () => {
     it('should return all albums with work count', async () => {
       const mockQueryBuilder = {
-        leftJoin: vi.fn().mockReturnThis(),
-        select: vi.fn().mockReturnThis(),
-        addSelect: vi.fn().mockReturnThis(),
-        where: vi.fn().mockReturnThis(),
-        groupBy: vi.fn().mockReturnThis(),
+        leftJoinAndSelect: vi.fn().mockReturnThis(),
         orderBy: vi.fn().mockReturnThis(),
-        getRawMany: vi.fn().mockResolvedValue([
-          { id: '1', name: 'Album 1', coverPath: '/cover1.jpg', workCount: '5' },
-          { id: '2', name: 'Album 2', coverPath: '/cover2.jpg', workCount: '3' },
+        addOrderBy: vi.fn().mockReturnThis(),
+        getMany: vi.fn().mockResolvedValue([
+          {
+            id: '1',
+            name: 'Album 1',
+            coverPath: '/cover1.jpg',
+            works: [
+              { id: 'w1', isPublic: true, mediaItems: [{ thumbnailSmall: '/thumb1.jpg' }] },
+              { id: 'w2', isPublic: true, mediaItems: [] },
+            ],
+          },
+          {
+            id: '2',
+            name: 'Album 2',
+            coverPath: '/cover2.jpg',
+            works: [
+              { id: 'w3', isPublic: true, mediaItems: [{ thumbnailSmall: '/thumb3.jpg' }] },
+            ],
+          },
         ]),
       };
 
@@ -278,7 +295,8 @@ describe('PublicService', () => {
       const result = await publicService.getPublicAlbums();
 
       expect(result).toHaveLength(2);
-      expect(result[0].workCount).toBe(5);
+      expect(result[0].workCount).toBe(2);
+      expect(result[1].workCount).toBe(1);
     });
   });
 
