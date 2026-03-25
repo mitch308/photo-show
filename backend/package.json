@@ -9,7 +9,9 @@
     "start": "node dist/index.js",
     "typeorm": "typeorm-ts-node-esm",
     "test": "vitest",
-    "test:run": "vitest --run"
+    "test:run": "vitest --run",
+    "migration:run": "npx tsx src/migrations/run-migration.ts",
+    "migration:rollback": "npx tsx src/migrations/run-migration.ts --rollback"
   },
   "dependencies": {
     "bcrypt": "^5.1.1",
