@@ -60,10 +60,10 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Private Sharing
 
-- [ ] **PRIV-01**: 管理员可以为选定的作品生成私密分享链接
-- [ ] **PRIV-02**: 管理员可以设置链接的过期时间
-- [ ] **PRIV-03**: 客户通过私密链接可以查看选定的作品
-- [ ] **PRIV-04**: 客户通过私密链接可以下载高清无水印原图
+- [x] **PRIV-01**: 管理员可以为选定的作品生成私密分享链接
+- [x] **PRIV-02**: 管理员可以设置链接的过期时间
+- [x] **PRIV-03**: 客户通过私密链接可以查看选定的作品
+- [x] **PRIV-04**: 客户通过私密链接可以下载高清无水印原图
 - [ ] **PRIV-05**: 管理员可以查看私密链接的访问记录
 - [ ] **PRIV-06**: 管理员可以手动使私密链接失效
 
@@ -155,10 +155,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | PUBL-05 | Phase 3 | Pending |
 | PUBL-06 | Phase 3 | Pending |
 | PUBL-07 | Phase 3 | Pending |
-| PRIV-01 | Phase 3 | Pending |
-| PRIV-02 | Phase 3 | Pending |
-| PRIV-03 | Phase 3 | Pending |
-| PRIV-04 | Phase 3 | Pending |
+| PRIV-01 | Phase 3 | Complete |
+| PRIV-02 | Phase 3 | Complete |
+| PRIV-03 | Phase 3 | Complete |
+| PRIV-04 | Phase 3 | Complete |
 | PRIV-05 | Phase 4 | Pending |
 | PRIV-06 | Phase 4 | Pending |
 | STAT-01 | Phase 4 | Pending |

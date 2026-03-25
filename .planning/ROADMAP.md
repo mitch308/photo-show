@@ -139,7 +139,7 @@ PUBL-01, PUBL-02, PUBL-03, PUBL-04, PUBL-05, PUBL-06, PUBL-07, PRIV-01, PRIV-02,
 **Plans:** 4 plans in 4 waves
 
 - [x] 03-01-PLAN.md — Backend Public API (Wave 1)
-- [ ] 03-02-PLAN.md — Backend Share API (Wave 2)
+- [x] 03-02-PLAN.md — Backend Share API (Wave 2)
 - [ ] 03-03-PLAN.md — Frontend Public Gallery (Wave 3)
 - [ ] 03-04-PLAN.md — Share Page & Admin UI (Wave 4, checkpoint)
 
