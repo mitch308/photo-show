@@ -7,30 +7,15 @@ defineProps<{
 }>();
 
 const imageLoaded = ref(false);
-const imageRef = ref<HTMLImageElement | null>(null);
-
-const onImageLoad = () => {
-  imageLoaded.value = true;
-  // Calculate row span based on actual image dimensions
-  if (imageRef.value) {
-    const aspectRatio = imageRef.value.naturalWidth / imageRef.value.naturalHeight;
-    const rowSpan = Math.ceil((300 / aspectRatio + 16) / 10);
-    const masonryItem = imageRef.value.closest('.masonry-item') as HTMLElement;
-    if (masonryItem) {
-      masonryItem.style.setProperty('--row-span', String(rowSpan));
-    }
-  }
-};
 </script>
 
 <template>
   <div class="work-card">
     <img
-      ref="imageRef"
       :src="`/${work.thumbnailLarge}`"
       :alt="work.title"
       loading="lazy"
-      @load="onImageLoad"
+      @load="imageLoaded = true"
       :class="{ loaded: imageLoaded }"
     />
     <div class="work-overlay">

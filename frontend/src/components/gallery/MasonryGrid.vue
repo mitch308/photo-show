@@ -10,13 +10,6 @@ defineProps<{
 const emit = defineEmits<{
   (e: 'select', work: Work): void;
 }>();
-
-// Calculate row span for each work based on aspect ratio
-// This is a simplified approach - actual implementation may need image load detection
-const getRowSpan = (_work: Work) => {
-  // Default row span, will be adjusted on image load
-  return 20; // Approximate for landscape images
-};
 </script>
 
 <template>
@@ -25,7 +18,6 @@ const getRowSpan = (_work: Work) => {
       v-for="work in works"
       :key="work.id"
       class="masonry-item"
-      :style="{ '--row-span': getRowSpan(work) }"
       @click="emit('select', work)"
     >
       <WorkCard :work="work" />
@@ -38,31 +30,48 @@ const getRowSpan = (_work: Work) => {
 
 <style scoped>
 .masonry-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  grid-auto-rows: 10px;
-  gap: 16px;
+  column-count: 4;
+  column-gap: 16px;
 }
 
 .masonry-item {
-  grid-row-end: span var(--row-span, 20);
+  break-inside: avoid;
+  margin-bottom: 16px;
   cursor: pointer;
   transition: transform 0.2s;
 }
 
 .masonry-item:hover {
-  transform: translateY(-2px);
+  transform: scale(1.02);
 }
 
-@media (max-width: 768px) {
+@media (max-width: 640px) {
   .masonry-grid {
-    grid-template-columns: 1fr;
+    column-count: 1;
   }
 }
 
-@media (min-width: 768px) and (max-width: 1024px) {
+@media (min-width: 641px) and (max-width: 900px) {
   .masonry-grid {
-    grid-template-columns: repeat(2, 1fr);
+    column-count: 2;
+  }
+}
+
+@media (min-width: 901px) and (max-width: 1200px) {
+  .masonry-grid {
+    column-count: 3;
+  }
+}
+
+@media (min-width: 1201px) {
+  .masonry-grid {
+    column-count: 4;
+  }
+}
+
+@media (min-width: 1600px) {
+  .masonry-grid {
+    column-count: 5;
   }
 }
 
