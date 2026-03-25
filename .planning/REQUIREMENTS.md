@@ -87,6 +87,13 @@ Requirements for initial release. Each maps to roadmap phases.
 - [x] **THEM-02**: 主题选择在刷新后保持
 - [x] **THEM-03**: 管理后台界面清晰易用
 
+### Data Model
+
+- [x] **DATA-01**: 作品可以包含多个媒体项（图片或视频）
+- [x] **DATA-02**: 数据模型支持 Album → Work → MediaItem 三层结构
+- [ ] **DATA-03**: 管理员可以为作品添加/删除媒体项
+- [ ] **DATA-04**: API 提供媒体项管理接口
+
 ## v2 Requirements
 
 Deferred to future release. Tracked but not in current roadmap.
@@ -172,12 +179,16 @@ Which phases cover which requirements. Updated during roadmap creation.
 | THEM-01 | Phase 4 | Complete |
 | THEM-02 | Phase 4 | Complete |
 | THEM-03 | Phase 4 | Complete |
+| DATA-01 | Phase 6 | Complete |
+| DATA-02 | Phase 6 | Complete |
+| DATA-03 | Phase 6 | Pending |
+| DATA-04 | Phase 6 | Pending |
 
 **Coverage:**
-- v1 requirements: 48 total
-- Mapped to phases: 48
+- v1 requirements: 52 total
+- Mapped to phases: 52
 - Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-03-24*
-*Last updated: 2026-03-24 after initial definition*
+*Last updated: 2026-03-25 after Phase 6 Plan 01*
