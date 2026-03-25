@@ -150,12 +150,23 @@ export class StatsService {
 
     // Sort in memory (since sorting by aggregated columns is tricky)
     const sortedResults = results.sort((a, b) => {
-      let aVal: string | number = a[sortBy];
-      let bVal: string | number = b[sortBy];
+      let aVal: number = a[sortBy] as number;
+      let bVal: number = b[sortBy] as number;
 
       if (sortBy === 'workCount' || sortBy === 'totalViews' || sortBy === 'totalDownloads') {
-        aVal = parseInt(aVal, 10) || 0;
-        bVal = parseInt(bVal, 10) || 0;
+        aVal = parseInt(String(a[sortBy]), 10) || 0;
+        bVal = parseInt(String(b[sortBy]), 10) || 0;
+      } else {
+        // String comparison for name
+        aVal = 0;
+        bVal = 0;
+        const aStr = String(a[sortBy]);
+        const bStr = String(b[sortBy]);
+        if (sortOrder === 'DESC') {
+          return aStr > bStr ? -1 : aStr < bStr ? 1 : 0;
+        } else {
+          return aStr < bStr ? -1 : aStr > bStr ? 1 : 0;
+        }
       }
 
       if (sortOrder === 'DESC') {

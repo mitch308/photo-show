@@ -7,7 +7,17 @@ import { shareService, ShareInfo } from './shareService.js';
 /**
  * Client with associated shares count
  */
-export interface ClientWithStats extends Client {
+export interface ClientWithStats {
+  id: string;
+  name: string;
+  phone: string;
+  email: string;
+  company: string;
+  address: string;
+  birthday: Date | null;
+  notes: string;
+  createdAt: Date;
+  updatedAt: Date;
   shareCount: number;
 }
 
