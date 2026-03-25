@@ -19,6 +19,9 @@ import tagsRoutes from './routes/tags.js';
 import publicRoutes from './routes/public.js';
 import shareRoutes from './routes/share.js';
 import adminShareRoutes from './routes/admin/share.js';
+import batchRoutes from './routes/batch.js';
+import statsRoutes from './routes/stats.js';
+import clientsRoutes from './routes/clients.js';
 
 const app = express();
 
@@ -52,6 +55,9 @@ app.use('/api/works', worksRoutes);
 app.use('/api/albums', albumsRoutes);
 app.use('/api/tags', tagsRoutes);
 app.use('/api/admin/share', adminShareRoutes);
+app.use('/api/batch', batchRoutes);
+app.use('/api/stats', statsRoutes);
+app.use('/api/clients', clientsRoutes);
 
 // 404 处理
 app.use((req, res) => {

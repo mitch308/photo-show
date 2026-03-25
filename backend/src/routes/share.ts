@@ -4,6 +4,7 @@ import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { shareService } from '../services/shareService.js';
 import { workService } from '../services/workService.js';
+import { accessLogService } from '../services/accessLogService.js';
 import { successResponse, errorResponse, ErrorCodes } from '../types/response.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -34,6 +35,13 @@ router.get('/:token', async (req: Request, res: Response) => {
 
     // Filter out nulls (in case some works were deleted)
     const validWorks = works.filter(w => w !== null);
+
+    // Record access for each viewed work (first work as representative)
+    // This is called on initial page load to track "view" action
+    if (validWorks.length > 0) {
+      // Record view for the first work as page view indicator
+      await accessLogService.recordAccess(token, validWorks[0].id, 'view', req);
+    }
 
     res.json(successResponse({
       token,
@@ -81,8 +89,11 @@ router.get('/:token/download/:workId', async (req: Request, res: Response) => {
       return;
     }
 
-    // Increment download count
+    // Increment download count in work model
     await workService.incrementDownloadCount(workId);
+
+    // Record access log for download
+    await accessLogService.recordAccess(token, workId, 'download', req);
 
     // Stream original file (filePath, NOT watermarked)
     const filePath = path.join(UPLOAD_DIR, work.filePath);
@@ -108,6 +119,42 @@ router.get('/:token/download/:workId', async (req: Request, res: Response) => {
     });
   } catch (error: any) {
     console.error('Error in GET /api/share/:token/download/:workId:', error);
+    res.status(500).json(errorResponse(ErrorCodes.UNKNOWN, error.message));
+  }
+});
+
+/**
+ * POST /api/share/:token/view/:workId
+ * Record a view action for a specific work
+ * Optional endpoint for more granular view tracking
+ */
+router.post('/:token/view/:workId', async (req: Request, res: Response) => {
+  try {
+    const token = req.params.token as string;
+    const workId = req.params.workId as string;
+
+    // Validate token
+    const shareData = await shareService.validateToken(token);
+
+    if (!shareData) {
+      res.status(404).json(errorResponse(ErrorCodes.NOT_FOUND, '链接已过期或不存在'));
+      return;
+    }
+
+    // Check if workId is in share
+    const isAuthorized = await shareService.isWorkInShare(token, workId);
+
+    if (!isAuthorized) {
+      res.status(403).json(errorResponse(ErrorCodes.FORBIDDEN, '无权查看此作品'));
+      return;
+    }
+
+    // Record view access
+    await accessLogService.recordAccess(token, workId, 'view', req);
+
+    res.json(successResponse(null, '访问已记录'));
+  } catch (error: any) {
+    console.error('Error in POST /api/share/:token/view/:workId:', error);
     res.status(500).json(errorResponse(ErrorCodes.UNKNOWN, error.message));
   }
 });
