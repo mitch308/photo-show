@@ -55,16 +55,18 @@
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| 前后端分离架构 | 便于独立开发和部署，提高可维护性 | — Pending |
-| Vue3 + Node 全栈TypeScript | 类型安全，开发体验一致 | — Pending |
-| 本地文件存储 | 成本低，部署简单，适合初期 | — Pending |
+| 前后端分离架构 | 便于独立开发和部署，提高可维护性 | ✅ Phase 5 |
+| Vue3 + Node 全栈TypeScript | 类型安全，开发体验一致 | ✅ Phase 5 |
+| 本地文件存储 | 成本低，部署简单，适合初期 | ✅ Phase 5 |
 | 单管理员模式 | 简化权限系统，快速上线 | — Pending |
 | 批量操作支持部分成功 | 用户友好，不会因单个失败而整体失败 | ✅ Phase 4 |
 | MySQL 存储访问日志 | 查询方便，适合预期访问量 | ✅ Phase 4 |
 | VueUse + CSS 变量实现主题 | 简单可靠，自动持久化 | ✅ Phase 4 |
+| PM2 cluster + Nginx | 高可用、负载均衡、SSL 终止 | ✅ Phase 5 |
+| Let's Encrypt SSL | 免费、自动续期、安全 | ✅ Phase 5 |
 
 ---
-*Last updated: 2026-03-25 after Phase 4 completion*
+*Last updated: 2026-03-25 after Phase 5 completion*
 
 ## Evolution
 
