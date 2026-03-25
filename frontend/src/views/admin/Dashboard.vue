@@ -2,14 +2,21 @@
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import { ElMessage } from 'element-plus';
+import { useTheme } from '@/composables/useTheme';
 
 const router = useRouter();
 const authStore = useAuthStore();
+const { isDark, toggleDark } = useTheme();
 
 function handleLogout() {
   authStore.clearUser();
   ElMessage.success('已退出登录');
   router.push('/login');
+}
+
+function handleThemeToggle() {
+  toggleDark();
+  ElMessage.success(isDark.value ? '已切换到浅色模式' : '已切换到深色模式');
 }
 </script>
 
@@ -27,8 +34,12 @@ function handleLogout() {
         <router-link to="/admin/shares" class="nav-item">分享管理</router-link>
         <router-link to="/admin/clients" class="nav-item">客户管理</router-link>
       </nav>
-      <div class="logout">
-        <button @click="handleLogout">退出登录</button>
+      <div class="sidebar-footer">
+        <button class="theme-toggle" @click="handleThemeToggle" :title="isDark ? '切换到浅色模式' : '切换到深色模式'">
+          <span v-if="isDark" class="icon-sun">☀️</span>
+          <span v-else class="icon-moon">🌙</span>
+        </button>
+        <button class="logout-btn" @click="handleLogout">退出登录</button>
       </div>
     </aside>
     <main class="main">
@@ -45,15 +56,16 @@ function handleLogout() {
 
 .sidebar {
   width: 220px;
-  background: #304156;
-  color: white;
+  background: var(--sidebar-bg);
+  color: var(--sidebar-text-active);
   display: flex;
   flex-direction: column;
+  transition: background-color 0.3s ease;
 }
 
 .logo {
   padding: 20px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid var(--sidebar-hover-bg);
 }
 
 .logo h2 {
@@ -69,41 +81,65 @@ function handleLogout() {
 .nav-item {
   display: block;
   padding: 12px 20px;
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--sidebar-text);
   transition: all 0.2s;
 }
 
 .nav-item:hover,
 .nav-item.router-link-active {
-  color: white;
-  background: rgba(255, 255, 255, 0.1);
+  color: var(--sidebar-text-active);
+  background: var(--sidebar-hover-bg);
 }
 
-.logout {
-  padding: 20px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+.sidebar-footer {
+  padding: 15px 20px;
+  border-top: 1px solid var(--sidebar-hover-bg);
+  display: flex;
+  gap: 10px;
 }
 
-.logout button {
-  width: 100%;
+.theme-toggle {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  background: transparent;
+  border: 1px solid var(--sidebar-hover-bg);
+  color: var(--sidebar-text);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+}
+
+.theme-toggle:hover {
+  background: var(--sidebar-hover-bg);
+  color: var(--sidebar-text-active);
+}
+
+.logout-btn {
+  flex: 1;
   padding: 10px;
   background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  color: rgba(255, 255, 255, 0.7);
+  border: 1px solid var(--sidebar-hover-bg);
+  color: var(--sidebar-text);
   border-radius: 4px;
   cursor: pointer;
   transition: all 0.2s;
 }
 
-.logout button:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: white;
+.logout-btn:hover {
+  background: var(--sidebar-hover-bg);
+  color: var(--sidebar-text-active);
 }
 
 .main {
   flex: 1;
-  background: #f5f5f5;
+  background: var(--bg-page);
   padding: 20px;
   overflow-y: auto;
+  transition: background-color 0.3s ease;
 }
 </style>
