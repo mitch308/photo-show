@@ -54,7 +54,7 @@ describe('ShareService', () => {
 
       mockRedis.setex.mockResolvedValue('OK');
 
-      const token = await shareService.createShareToken(workIds, expiresInDays);
+      const token = await shareService.createShareToken(workIds, { expiresInDays });
 
       // Verify token was generated
       expect(token).toHaveLength(43);
@@ -88,7 +88,7 @@ describe('ShareService', () => {
     it('should calculate correct TTL for custom expiration', async () => {
       mockRedis.setex.mockResolvedValue('OK');
 
-      await shareService.createShareToken(['work-1'], 30); // 30 days
+      await shareService.createShareToken(['work-1'], { expiresInDays: 30 }); // 30 days
 
       const setexCall = mockRedis.setex.mock.calls[0];
       expect(setexCall[1]).toBe(30 * 24 * 60 * 60); // 2592000 seconds

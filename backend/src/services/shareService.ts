@@ -3,12 +3,17 @@ import { getRedis } from '../config/redis.js';
 
 /**
  * Share token data stored in Redis
+ * Per PRIV-06: 支持访问次数限制
+ * Per CLNT-02: 支持为客户创建专属私密链接
  */
 export interface ShareTokenData {
   workIds: string[];
   expiresAt: number;  // Unix timestamp (ms)
   createdAt: number;
   createdBy?: string; // Admin ID (optional)
+  clientId?: string;  // Client ID for customer-specific shares (CLNT-02)
+  maxAccess?: number; // Maximum access count limit (PRIV-06)
+  accessCount?: number; // Current access count
 }
 
 /**
@@ -40,12 +45,23 @@ export class ShareService {
   /**
    * Create a new share token and store it in Redis
    * @param workIds - Array of work IDs to share
-   * @param expiresInDays - Expiration in days (default: 7)
+   * @param options - Optional settings
+   * @param options.expiresInDays - Expiration in days (default: 7)
+   * @param options.clientId - Client ID for customer-specific shares
+   * @param options.maxAccess - Maximum access count limit
    * @returns The generated token
    */
-  async createShareToken(workIds: string[], expiresInDays: number = 7): Promise<string> {
+  async createShareToken(
+    workIds: string[],
+    options?: {
+      expiresInDays?: number;
+      clientId?: string;
+      maxAccess?: number;
+    }
+  ): Promise<string> {
     const token = this.generateToken();
     const now = Date.now();
+    const expiresInDays = options?.expiresInDays ?? 7;
     const expiresAt = now + expiresInDays * 24 * 60 * 60 * 1000;
     const ttlSeconds = expiresInDays * 24 * 60 * 60;
 
@@ -53,6 +69,9 @@ export class ShareService {
       workIds,
       expiresAt,
       createdAt: now,
+      clientId: options?.clientId,
+      maxAccess: options?.maxAccess,
+      accessCount: 0,
     };
 
     const redis = getRedis();
@@ -67,7 +86,7 @@ export class ShareService {
   /**
    * Validate a share token and return its data
    * @param token - The token to validate
-   * @returns ShareTokenData if valid, null if expired/invalid
+   * @returns ShareTokenData if valid, null if expired/invalid/exceeded access limit
    */
   async validateToken(token: string): Promise<ShareTokenData | null> {
     const redis = getRedis();
@@ -79,7 +98,43 @@ export class ShareService {
       return null;
     }
 
-    return JSON.parse(data) as ShareTokenData;
+    const parsed = JSON.parse(data) as ShareTokenData;
+    
+    // Check if max access limit exceeded (PRIV-06)
+    if (parsed.maxAccess !== undefined && parsed.accessCount !== undefined) {
+      if (parsed.accessCount >= parsed.maxAccess) {
+        return null; // Access limit exceeded
+      }
+    }
+
+    return parsed;
+  }
+
+  /**
+   * Increment access count for a share token
+   * @param token - The token to increment
+   * @returns Updated ShareTokenData or null if token not found
+   */
+  async incrementAccessCount(token: string): Promise<ShareTokenData | null> {
+    const redis = getRedis();
+    const key = `${this.KEY_PREFIX}${token}`;
+    
+    const data = await redis.get(key);
+    
+    if (!data) {
+      return null;
+    }
+
+    const parsed = JSON.parse(data) as ShareTokenData;
+    parsed.accessCount = (parsed.accessCount || 0) + 1;
+    
+    // Calculate remaining TTL
+    const ttl = await redis.ttl(key);
+    if (ttl > 0) {
+      await redis.setex(key, ttl, JSON.stringify(parsed));
+    }
+    
+    return parsed;
   }
 
   /**
@@ -167,6 +222,53 @@ export class ShareService {
       token,
       ...data,
     };
+  }
+
+  /**
+   * Update share token settings
+   * @param token - The token to update
+   * @param updates - Fields to update
+   * @returns Updated ShareTokenData or null if not found
+   */
+  async updateShareToken(
+    token: string,
+    updates: { maxAccess?: number; clientId?: string }
+  ): Promise<ShareTokenData | null> {
+    const redis = getRedis();
+    const key = `${this.KEY_PREFIX}${token}`;
+    
+    const data = await redis.get(key);
+    
+    if (!data) {
+      return null;
+    }
+
+    const parsed = JSON.parse(data) as ShareTokenData;
+    
+    if (updates.maxAccess !== undefined) {
+      parsed.maxAccess = updates.maxAccess;
+    }
+    if (updates.clientId !== undefined) {
+      parsed.clientId = updates.clientId;
+    }
+    
+    // Calculate remaining TTL
+    const ttl = await redis.ttl(key);
+    if (ttl > 0) {
+      await redis.setex(key, ttl, JSON.stringify(parsed));
+    }
+    
+    return parsed;
+  }
+
+  /**
+   * List shares by client ID
+   * @param clientId - The client ID to filter by
+   * @returns Array of ShareInfo for the client
+   */
+  async listSharesByClient(clientId: string): Promise<ShareInfo[]> {
+    const allShares = await this.listAllShares();
+    return allShares.filter(share => share.clientId === clientId);
   }
 }
 
