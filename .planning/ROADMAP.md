@@ -87,6 +87,15 @@ WORK-01, WORK-02, WORK-03, WORK-04, WORK-05, WORK-06, WORK-07, WORK-08, WORK-09,
 - 作品排序使用 position 字段，支持拖拽排序
 - 文件名使用 UUID 避免冲突
 
+### Plans
+
+**Plans:** 4 plans in 4 waves
+
+- [ ] 02-01-PLAN.md — Database Models (Wave 1)
+- [ ] 02-02-PLAN.md — Upload & Processing Service (Wave 2)
+- [ ] 02-03-PLAN.md — Backend API Routes (Wave 3)
+- [ ] 02-04-PLAN.md — Frontend Admin UI (Wave 4, checkpoint)
+
 ---
 
 ## Phase 3: 公开展示与私密分享
