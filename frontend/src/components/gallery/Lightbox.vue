@@ -77,6 +77,10 @@ onUnmounted(() => {
             <div class="lightbox-meta">
               <span v-for="tag in work.tags" :key="tag.id" class="tag">{{ tag.name }}</span>
             </div>
+            <!-- Actions slot for custom buttons -->
+            <div v-if="$slots.actions" class="lightbox-actions">
+              <slot name="actions" />
+            </div>
           </div>
         </div>
       </div>
@@ -146,6 +150,10 @@ onUnmounted(() => {
   justify-content: center;
   flex-wrap: wrap;
   margin-top: 8px;
+}
+
+.lightbox-actions {
+  margin-top: 16px;
 }
 
 .tag {

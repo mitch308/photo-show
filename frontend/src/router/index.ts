@@ -47,6 +47,12 @@ const routes: RouteRecordRaw[] = [
     ],
   },
   {
+    path: '/share/:token',
+    name: 'Share',
+    component: () => import('@/views/Share.vue'),
+    meta: { title: '私密分享' },
+  },
+  {
     path: '/:pathMatch(.*)*',
     name: 'NotFound',
     component: () => import('@/views/NotFound.vue'),
