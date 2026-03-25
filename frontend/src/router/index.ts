@@ -44,6 +44,12 @@ const routes: RouteRecordRaw[] = [
         component: () => import('@/views/admin/Tags.vue'),
         meta: { title: '标签管理' },
       },
+      {
+        path: 'shares',
+        name: 'Shares',
+        component: () => import('@/views/admin/Shares.vue'),
+        meta: { title: '分享管理' },
+      },
     ],
   },
   {
