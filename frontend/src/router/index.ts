@@ -1,0 +1,69 @@
+import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router';
+
+const routes: RouteRecordRaw[] = [
+  {
+    path: '/',
+    name: 'Home',
+    component: () => import('@/views/Home.vue'),
+    meta: { title: '首页' },
+  },
+  {
+    path: '/login',
+    name: 'Login',
+    component: () => import('@/views/admin/Login.vue'),
+    meta: { title: '登录', guest: true },
+  },
+  {
+    path: '/admin',
+    name: 'AdminLayout',
+    component: () => import('@/views/admin/Dashboard.vue'),
+    meta: { requiresAuth: true, title: '管理后台' },
+    children: [
+      {
+        path: '',
+        name: 'Dashboard',
+        component: () => import('@/views/admin/Overview.vue'),
+        meta: { title: '概览' },
+      },
+    ],
+  },
+  {
+    path: '/:pathMatch(.*)*',
+    name: 'NotFound',
+    component: () => import('@/views/NotFound.vue'),
+    meta: { title: '页面不存在' },
+  },
+];
+
+const router = createRouter({
+  history: createWebHistory(),
+  routes,
+});
+
+// 路由守卫
+router.beforeEach((to, _from, next) => {
+  // 设置页面标题
+  document.title = `${to.meta.title || '摄影工作室'} - 作品展示平台`;
+
+  // 需要认证的路由
+  if (to.meta.requiresAuth) {
+    const token = document.cookie.includes('accessToken');
+    if (!token) {
+      next({ name: 'Login', query: { redirect: to.fullPath } });
+      return;
+    }
+  }
+
+  // 已登录用户不能访问登录页
+  if (to.meta.guest) {
+    const token = document.cookie.includes('accessToken');
+    if (token) {
+      next({ name: 'Dashboard' });
+      return;
+    }
+  }
+
+  next();
+});
+
+export default router;
