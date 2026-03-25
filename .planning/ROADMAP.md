@@ -180,6 +180,16 @@ BATCH-01, BATCH-02, BATCH-03, BATCH-04, PRIV-05, PRIV-06, STAT-01, STAT-02, STAT
 - 客户管理关联私密链接记录
 - 主题使用 CSS 变量 + VueUse useDark
 
+### Plans
+
+**Plans:** 5 plans in 5 waves
+
+- [x] 04-01-PLAN.md — Client & AccessLog Models (Wave 1)
+- [x] 04-02-PLAN.md — Backend Enhancement APIs (Wave 2)
+- [x] 04-03-PLAN.md — Batch & Stats UI (Wave 3)
+- [x] 04-04-PLAN.md — Client Management UI (Wave 4)
+- [x] 04-05-PLAN.md — Theme Switching & UI Polish (Wave 5, checkpoint)
+
 ---
 
 ## Phase 5: 部署与优化

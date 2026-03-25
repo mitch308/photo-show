@@ -83,9 +83,9 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Theme & UI
 
-- [ ] **THEM-01**: 用户可以切换深色/浅色主题
-- [ ] **THEM-02**: 主题选择在刷新后保持
-- [ ] **THEM-03**: 管理后台界面清晰易用
+- [x] **THEM-01**: 用户可以切换深色/浅色主题
+- [x] **THEM-02**: 主题选择在刷新后保持
+- [x] **THEM-03**: 管理后台界面清晰易用
 
 ## v2 Requirements
 
@@ -169,9 +169,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CLNT-02 | Phase 4 | Complete |
 | CLNT-03 | Phase 4 | Complete |
 | CLNT-04 | Phase 4 | Complete |
-| THEM-01 | Phase 4 | Pending |
-| THEM-02 | Phase 4 | Pending |
-| THEM-03 | Phase 4 | Pending |
+| THEM-01 | Phase 4 | Complete |
+| THEM-02 | Phase 4 | Complete |
+| THEM-03 | Phase 4 | Complete |
 
 **Coverage:**
 - v1 requirements: 48 total
