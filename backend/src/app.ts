@@ -22,6 +22,7 @@ import adminShareRoutes from './routes/admin/share.js';
 import batchRoutes from './routes/batch.js';
 import statsRoutes from './routes/stats.js';
 import clientsRoutes from './routes/clients.js';
+import mediaItemsRoutes from './routes/mediaItems.js';
 
 const app = express();
 
@@ -58,6 +59,7 @@ app.use('/api/admin/share', adminShareRoutes);
 app.use('/api/batch', batchRoutes);
 app.use('/api/stats', statsRoutes);
 app.use('/api/clients', clientsRoutes);
+app.use('/api', mediaItemsRoutes); // Media items routes (prefixed with /api)
 
 // 404 处理
 app.use((req, res) => {
