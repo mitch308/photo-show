@@ -14,6 +14,10 @@ export interface UploadResult {
   fileSize: number;
 }
 
+function toUrlPath(...parts: string[]): string {
+  return parts.join('/');
+}
+
 export class UploadService {
   /**
    * Process uploaded image: generate thumbnails
@@ -29,9 +33,9 @@ export class UploadService {
     );
 
     return {
-      filePath: path.join('uploads/works', monthDir, file.filename),
-      thumbnailSmall: path.join('uploads/works', monthDir, path.basename(thumbnails.small)),
-      thumbnailLarge: path.join('uploads/works', monthDir, path.basename(thumbnails.large)),
+      filePath: toUrlPath('uploads/works', monthDir, file.filename),
+      thumbnailSmall: toUrlPath('uploads/works', monthDir, path.basename(thumbnails.small)),
+      thumbnailLarge: toUrlPath('uploads/works', monthDir, path.basename(thumbnails.large)),
       originalFilename: file.originalname,
       fileType: 'image',
       mimeType: file.mimetype,
@@ -49,8 +53,8 @@ export class UploadService {
     const thumbnail = await videoService.generateThumbnail(file.path, dir);
 
     return {
-      filePath: path.join('uploads/works', monthDir, file.filename),
-      thumbnailSmall: path.join('uploads/works', monthDir, path.basename(thumbnail)),
+      filePath: toUrlPath('uploads/works', monthDir, file.filename),
+      thumbnailSmall: toUrlPath('uploads/works', monthDir, path.basename(thumbnail)),
       thumbnailLarge: null, // No large thumbnail for video
       originalFilename: file.originalname,
       fileType: 'video',
