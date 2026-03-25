@@ -64,7 +64,7 @@ Requirements for initial release. Each maps to roadmap phases.
 - [x] **PRIV-02**: 管理员可以设置链接的过期时间
 - [x] **PRIV-03**: 客户通过私密链接可以查看选定的作品
 - [x] **PRIV-04**: 客户通过私密链接可以下载高清无水印原图
-- [ ] **PRIV-05**: 管理员可以查看私密链接的访问记录
+- [x] **PRIV-05**: 管理员可以查看私密链接的访问记录
 - [ ] **PRIV-06**: 管理员可以手动使私密链接失效
 
 ### Statistics
@@ -72,14 +72,14 @@ Requirements for initial release. Each maps to roadmap phases.
 - [ ] **STAT-01**: 系统记录每个作品的浏览次数
 - [ ] **STAT-02**: 系统记录每个作品的下载次数
 - [ ] **STAT-03**: 管理员可以在后台查看作品统计数据
-- [ ] **STAT-04**: 管理员可以查看总体访问趋势
+- [x] **STAT-04**: 管理员可以查看总体访问趋势
 
 ### Client Management
 
-- [ ] **CLNT-01**: 管理员可以添加客户信息（姓名、联系方式、备注）
+- [x] **CLNT-01**: 管理员可以添加客户信息（姓名、联系方式、备注）
 - [ ] **CLNT-02**: 管理员可以为客户创建专属的私密链接
 - [ ] **CLNT-03**: 管理员可以查看每个客户的访问历史
-- [ ] **CLNT-04**: 管理员可以编辑和删除客户信息
+- [x] **CLNT-04**: 管理员可以编辑和删除客户信息
 
 ### Theme & UI
 
@@ -159,16 +159,16 @@ Which phases cover which requirements. Updated during roadmap creation.
 | PRIV-02 | Phase 3 | Complete |
 | PRIV-03 | Phase 3 | Complete |
 | PRIV-04 | Phase 3 | Complete |
-| PRIV-05 | Phase 4 | Pending |
+| PRIV-05 | Phase 4 | Complete |
 | PRIV-06 | Phase 4 | Pending |
 | STAT-01 | Phase 4 | Pending |
 | STAT-02 | Phase 4 | Pending |
 | STAT-03 | Phase 4 | Pending |
-| STAT-04 | Phase 4 | Pending |
-| CLNT-01 | Phase 4 | Pending |
+| STAT-04 | Phase 4 | Complete |
+| CLNT-01 | Phase 4 | Complete |
 | CLNT-02 | Phase 4 | Pending |
 | CLNT-03 | Phase 4 | Pending |
-| CLNT-04 | Phase 4 | Pending |
+| CLNT-04 | Phase 4 | Complete |
 | THEM-01 | Phase 4 | Pending |
 | THEM-02 | Phase 4 | Pending |
 | THEM-03 | Phase 4 | Pending |
