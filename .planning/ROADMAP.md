@@ -273,7 +273,7 @@ Phase 5 (部署优化) ──requires── Phase 4
 
 ### Requirements Covered
 
-TBD (待规划阶段确定具体需求)
+DATA-01, DATA-02, DATA-03, DATA-04, DATA-05, DATA-06, DATA-07
 
 ### Success Criteria
 
@@ -287,23 +287,27 @@ TBD (待规划阶段确定具体需求)
 
 | Decision | Options Considered | Chosen | Rationale |
 |----------|-------------------|--------|-----------|
-| 媒体项类型 | 多态 vs 单表 | 待定 | 需要在规划阶段评估 |
-| 数据迁移策略 | 硬迁移 vs 软迁移 | 待定 | 需要在规划阶段评估 |
+| 媒体项类型 | 多态 vs 单表 | 单表 MediaItem | 简化实现，统一管理 |
+| 数据迁移策略 | 硬迁移 vs 软迁移 | 软迁移（保留旧字段） | 支持回滚，向后兼容 |
 
 ### Technical Notes
 
-- 需要设计新的数据库架构：Album → Work → MediaItem
-- 需要迁移现有数据
-- 需要更新所有相关的 API 端点
-- 需要更新前端组件以适配新的数据结构
+- 新数据库架构：Album → Work → MediaItem
+- MediaItem 存储文件路径、缩略图、类型等
+- Work 保留旧字段用于向后兼容
+- 提供迁移脚本支持数据转换
 
 ### Plans
 
-**Plans:** 0 plans (待规划)
+**Plans:** 5 plans in 5 waves
 
-- [ ] TBD (run /gsd:plan-phase 6 to break down)
+- [x] 06-01-PLAN.md — MediaItem Model (Wave 1)
+- [x] 06-02-PLAN.md — Backend Service Updates (Wave 2)
+- [x] 06-03-PLAN.md — Backend API Updates (Wave 3)
+- [x] 06-04-PLAN.md — Frontend Updates (Wave 4)
+- [x] 06-05-PLAN.md — Migration & Testing (Wave 5)
 
 ---
 
 *Roadmap created: 2026-03-24*
-*Last updated: 2026-03-24 after initial creation*
+*Last updated: 2026-03-25 after Phase 6 completion*

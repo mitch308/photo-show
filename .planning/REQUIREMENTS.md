@@ -93,6 +93,9 @@ Requirements for initial release. Each maps to roadmap phases.
 - [x] **DATA-02**: 数据模型支持 Album → Work → MediaItem 三层结构
 - [x] **DATA-03**: 管理员可以为作品添加/删除媒体项
 - [x] **DATA-04**: API 提供媒体项管理接口
+- [x] **DATA-05**: 前端支持媒体项管理和展示
+- [x] **DATA-06**: 现有数据可以平滑迁移到新结构
+- [x] **DATA-07**: 所有功能在新结构下正常工作
 
 ## v2 Requirements
 
@@ -183,10 +186,13 @@ Which phases cover which requirements. Updated during roadmap creation.
 | DATA-02 | Phase 6 | Complete |
 | DATA-03 | Phase 6 | Complete |
 | DATA-04 | Phase 6 | Complete |
+| DATA-05 | Phase 6 | Complete |
+| DATA-06 | Phase 6 | Complete |
+| DATA-07 | Phase 6 | Complete |
 
 **Coverage:**
-- v1 requirements: 52 total
-- Mapped to phases: 52
+- v1 requirements: 55 total
+- Mapped to phases: 55
 - Unmapped: 0 ✓
 
 ---
