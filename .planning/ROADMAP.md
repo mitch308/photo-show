@@ -134,6 +134,15 @@ PUBL-01, PUBL-02, PUBL-03, PUBL-04, PUBL-05, PUBL-06, PUBL-07, PRIV-01, PRIV-02,
 - Redis 存储 token → 作品 IDs 映射，设置 TTL
 - 下载原图时验证 token 有效性
 
+### Plans
+
+**Plans:** 4 plans in 4 waves
+
+- [ ] 03-01-PLAN.md — Backend Public API (Wave 1)
+- [ ] 03-02-PLAN.md — Backend Share API (Wave 2)
+- [ ] 03-03-PLAN.md — Frontend Public Gallery (Wave 3)
+- [ ] 03-04-PLAN.md — Share Page & Admin UI (Wave 4, checkpoint)
+
 ---
 
 ## Phase 4: 增强功能
@@ -247,6 +256,42 @@ Phase 5 (部署优化) ──requires── Phase 4
 | Phase 5 | (部署优化，无新需求) | 0 |
 
 **Total:** 48 requirements covered ✓
+
+## Phase 6: 数据模型重构
+
+**Goal:** 重构数据模型以支持作品包含多个媒体项（图片/视频），相册包含多个作品的三层结构
+
+### Requirements Covered
+
+TBD (待规划阶段确定具体需求)
+
+### Success Criteria
+
+1. 作品可以包含多个媒体项（图片或视频）
+2. 相册可以包含多个作品
+3. 现有数据可以平滑迁移到新结构
+4. 前端界面支持新的数据结构展示
+5. API 接口向后兼容或提供迁移路径
+
+### Key Decisions
+
+| Decision | Options Considered | Chosen | Rationale |
+|----------|-------------------|--------|-----------|
+| 媒体项类型 | 多态 vs 单表 | 待定 | 需要在规划阶段评估 |
+| 数据迁移策略 | 硬迁移 vs 软迁移 | 待定 | 需要在规划阶段评估 |
+
+### Technical Notes
+
+- 需要设计新的数据库架构：Album → Work → MediaItem
+- 需要迁移现有数据
+- 需要更新所有相关的 API 端点
+- 需要更新前端组件以适配新的数据结构
+
+### Plans
+
+**Plans:** 0 plans (待规划)
+
+- [ ] TBD (run /gsd:plan-phase 6 to break down)
 
 ---
 
