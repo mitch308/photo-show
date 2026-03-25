@@ -314,13 +314,13 @@ th, td {
 }
 
 .status.active {
-  background: #d4edda;
-  color: #155724;
+  background: rgba(103, 194, 58, 0.15);
+  color: var(--color-success);
 }
 
 .status.expired {
-  background: #f8d7da;
-  color: #721c24;
+  background: rgba(245, 108, 108, 0.15);
+  color: var(--color-danger);
 }
 
 .action-tag {
@@ -330,13 +330,13 @@ th, td {
 }
 
 .action-tag.view {
-  background: #cce5ff;
-  color: #004085;
+  background: rgba(64, 158, 255, 0.15);
+  color: var(--color-primary);
 }
 
 .action-tag.download {
-  background: #fff3cd;
-  color: #856404;
+  background: rgba(230, 162, 60, 0.15);
+  color: var(--color-warning);
 }
 
 .actions button {

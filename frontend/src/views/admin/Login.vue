@@ -105,16 +105,17 @@ async function handleLogin() {
   width: 400px;
   max-width: 90%;
   padding: 40px;
-  background: white;
+  background: var(--bg-card);
   border-radius: 8px;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  transition: background-color 0.3s ease;
 }
 
 .title {
   text-align: center;
   font-size: 24px;
   font-weight: 600;
-  color: #333;
+  color: var(--text-primary);
   margin-bottom: 30px;
 }
 </style>

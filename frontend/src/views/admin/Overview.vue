@@ -30,10 +30,11 @@ const authStore = useAuthStore();
   font-size: 24px;
   font-weight: 600;
   margin-bottom: 10px;
+  color: var(--text-primary);
 }
 
 .overview-page > p {
-  color: #666;
+  color: var(--text-secondary);
   margin-bottom: 30px;
 }
 
@@ -44,22 +45,23 @@ const authStore = useAuthStore();
 }
 
 .stat-card {
-  background: white;
+  background: var(--bg-card);
   padding: 20px;
   border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--shadow-md);
+  transition: background-color 0.3s ease;
 }
 
 .stat-card h3 {
   font-size: 14px;
   font-weight: 500;
-  color: #666;
+  color: var(--text-secondary);
   margin-bottom: 10px;
 }
 
 .stat-card .number {
   font-size: 32px;
   font-weight: 600;
-  color: #333;
+  color: var(--text-primary);
 }
 </style>
