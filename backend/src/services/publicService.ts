@@ -54,6 +54,7 @@ export class PublicService {
     const queryBuilder = this.workRepo.createQueryBuilder('work')
       .leftJoinAndSelect('work.albums', 'albums')
       .leftJoinAndSelect('work.tags', 'tags')
+      .leftJoinAndSelect('work.mediaItems', 'mediaItems')
       .where('work.isPublic = :isPublic', { isPublic: true });
 
     if (albumId) {
@@ -64,9 +65,10 @@ export class PublicService {
       queryBuilder.andWhere('tags.id = :tagId', { tagId });
     }
 
-    // Sort: pinned first, then by position
+    // Sort: pinned first, then by position, then media items by position
     queryBuilder.orderBy('work.isPinned', 'DESC')
-      .addOrderBy('work.position', 'ASC');
+      .addOrderBy('work.position', 'ASC')
+      .addOrderBy('mediaItems.position', 'ASC');
 
     // Get total count before pagination
     const total = await queryBuilder.getCount();
@@ -91,6 +93,7 @@ export class PublicService {
     const queryBuilder = this.workRepo.createQueryBuilder('work')
       .leftJoinAndSelect('work.albums', 'albums')
       .leftJoinAndSelect('work.tags', 'tags')
+      .leftJoinAndSelect('work.mediaItems', 'mediaItems')
       .where('work.isPublic = :isPublic', { isPublic: true })
       .andWhere(
         new Brackets(qb => {
@@ -100,7 +103,8 @@ export class PublicService {
       )
       .setParameters({ query: `%${query}%` })
       .orderBy('work.isPinned', 'DESC')
-      .addOrderBy('work.position', 'ASC');
+      .addOrderBy('work.position', 'ASC')
+      .addOrderBy('mediaItems.position', 'ASC');
 
     // Get total count before pagination
     const total = await queryBuilder.getCount();
@@ -121,7 +125,12 @@ export class PublicService {
   async getPublicWorkById(id: string): Promise<Work | null> {
     const work = await this.workRepo.findOne({
       where: { id, isPublic: true },
-      relations: ['albums', 'tags'],
+      relations: ['albums', 'tags', 'mediaItems'],
+      order: {
+        mediaItems: {
+          position: 'ASC',
+        },
+      },
     });
 
     if (work) {
@@ -134,26 +143,44 @@ export class PublicService {
 
   /**
    * Get all albums with work count
+   * Album cover uses first media item of first work, or falls back to album's coverPath
    */
   async getPublicAlbums(): Promise<AlbumWithCount[]> {
-    const results = await this.albumRepo.createQueryBuilder('album')
-      .leftJoin('album.works', 'work')
-      .select('album.id', 'id')
-      .addSelect('album.name', 'name')
-      .addSelect('album.description', 'description')
-      .addSelect('album.coverPath', 'coverPath')
-      .addSelect('COUNT(work.id)', 'workCount')
-      .groupBy('album.id')
+    // Get albums with their works (limited to first work for cover)
+    const albums = await this.albumRepo.createQueryBuilder('album')
+      .leftJoinAndSelect('album.works', 'work', 'work.isPublic = :isPublic', { isPublic: true })
+      .leftJoinAndSelect('work.mediaItems', 'mediaItems')
       .orderBy('album.position', 'ASC')
-      .getRawMany();
+      .addOrderBy('work.position', 'ASC')
+      .addOrderBy('mediaItems.position', 'ASC')
+      .getMany();
 
-    return results.map(r => ({
-      id: r.id,
-      name: r.name,
-      description: r.description,
-      coverPath: r.coverPath,
-      workCount: parseInt(r.workCount, 10) || 0,
-    }));
+    return albums.map(album => {
+      // Calculate work count (only public works)
+      const publicWorks = (album.works || []).filter(w => w.isPublic);
+      const workCount = publicWorks.length;
+
+      // Determine cover path: first media item of first work, or album's coverPath
+      let coverPath = album.coverPath;
+      if (publicWorks.length > 0) {
+        const firstWork = publicWorks[0];
+        if (firstWork.mediaItems && firstWork.mediaItems.length > 0) {
+          // Use first media item's small thumbnail as cover
+          coverPath = firstWork.mediaItems[0].thumbnailSmall || firstWork.mediaItems[0].filePath;
+        } else if (firstWork.thumbnailSmall) {
+          // Fall back to work's legacy thumbnail
+          coverPath = firstWork.thumbnailSmall;
+        }
+      }
+
+      return {
+        id: album.id,
+        name: album.name,
+        description: album.description,
+        coverPath,
+        workCount,
+      };
+    });
   }
 
   /**
