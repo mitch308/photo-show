@@ -17,7 +17,7 @@ const storage = multer.diskStorage({
   },
 });
 
-// File filter
+// File filter for images only
 const imageFilter = (req: Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
   if (ALLOWED_IMAGE_TYPES.includes(file.mimetype)) {
     cb(null, true);
@@ -26,6 +26,7 @@ const imageFilter = (req: Request, file: Express.Multer.File, cb: multer.FileFil
   }
 };
 
+// File filter for videos only
 const videoFilter = (req: Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
   if (ALLOWED_VIDEO_TYPES.includes(file.mimetype)) {
     cb(null, true);
@@ -34,6 +35,16 @@ const videoFilter = (req: Request, file: Express.Multer.File, cb: multer.FileFil
   }
 };
 
+// File filter for both images and videos
+const anyMediaFilter = (req: Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
+  if (ALLOWED_IMAGE_TYPES.includes(file.mimetype) || ALLOWED_VIDEO_TYPES.includes(file.mimetype)) {
+    cb(null, true);
+  } else {
+    cb(new Error(`Invalid file type. Allowed: ${[...ALLOWED_IMAGE_TYPES, ...ALLOWED_VIDEO_TYPES].join(', ')}`));
+  }
+};
+
+// Multer instances for different upload scenarios
 export const uploadImage = multer({
   storage,
   fileFilter: imageFilter,
@@ -43,5 +54,11 @@ export const uploadImage = multer({
 export const uploadVideo = multer({
   storage,
   fileFilter: videoFilter,
+  limits: { fileSize: MAX_FILE_SIZE },
+});
+
+export const uploadAny = multer({
+  storage,
+  fileFilter: anyMediaFilter,
   limits: { fileSize: MAX_FILE_SIZE },
 });
