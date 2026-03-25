@@ -2,14 +2,14 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import express from 'express';
 import request from 'supertest';
 
-// Mock the publicService
-const mockPublicService = {
+// Use vi.hoisted for mock to work with hoisted vi.mock
+const mockPublicService = vi.hoisted(() => ({
   getPublicWorks: vi.fn(),
   searchPublicWorks: vi.fn(),
   getPublicWorkById: vi.fn(),
   getPublicAlbums: vi.fn(),
   getPublicTags: vi.fn(),
-};
+}));
 
 vi.mock('../services/publicService.js', () => ({
   publicService: mockPublicService,
