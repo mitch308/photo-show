@@ -91,7 +91,7 @@ Requirements for initial release. Each maps to roadmap phases.
 
 - [x] **DATA-01**: 作品可以包含多个媒体项（图片或视频）
 - [x] **DATA-02**: 数据模型支持 Album → Work → MediaItem 三层结构
-- [ ] **DATA-03**: 管理员可以为作品添加/删除媒体项
+- [x] **DATA-03**: 管理员可以为作品添加/删除媒体项
 - [ ] **DATA-04**: API 提供媒体项管理接口
 
 ## v2 Requirements
@@ -181,7 +181,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | THEM-03 | Phase 4 | Complete |
 | DATA-01 | Phase 6 | Complete |
 | DATA-02 | Phase 6 | Complete |
-| DATA-03 | Phase 6 | Pending |
+| DATA-03 | Phase 6 | Complete |
 | DATA-04 | Phase 6 | Pending |
 
 **Coverage:**
