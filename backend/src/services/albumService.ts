@@ -51,7 +51,15 @@ export class AlbumService {
   async getAlbumById(id: string): Promise<Album | null> {
     return this.albumRepo.findOne({
       where: { id },
-      relations: ['works', 'works.tags'],
+      relations: ['works', 'works.tags', 'works.mediaItems'],
+      order: {
+        works: {
+          position: 'ASC',
+          mediaItems: {
+            position: 'ASC',
+          },
+        },
+      },
     });
   }
 

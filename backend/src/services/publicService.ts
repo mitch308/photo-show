@@ -184,6 +184,56 @@ export class PublicService {
   }
 
   /**
+   * Get a single public album with its works (containing media items)
+   */
+  async getPublicAlbumById(id: string): Promise<{
+    id: string;
+    name: string;
+    description?: string;
+    coverPath: string;
+    works: Work[];
+  } | null> {
+    const album = await this.albumRepo.findOne({
+      where: { id },
+      relations: ['works', 'works.tags', 'works.mediaItems'],
+      order: {
+        position: 'ASC',
+        works: {
+          isPinned: 'DESC',
+          position: 'ASC',
+          mediaItems: {
+            position: 'ASC',
+          },
+        },
+      },
+    });
+
+    if (!album) return null;
+
+    // Filter to only public works
+    const publicWorks = (album.works || []).filter(w => w.isPublic);
+
+    // Determine cover path: first media item of first work, or album's coverPath
+    let coverPath = album.coverPath;
+    if (publicWorks.length > 0) {
+      const firstWork = publicWorks[0];
+      if (firstWork.mediaItems && firstWork.mediaItems.length > 0) {
+        coverPath = firstWork.mediaItems[0].thumbnailSmall || firstWork.mediaItems[0].filePath;
+      } else if (firstWork.thumbnailSmall) {
+        coverPath = firstWork.thumbnailSmall;
+      }
+    }
+
+    return {
+      id: album.id,
+      name: album.name,
+      description: album.description,
+      coverPath,
+      works: publicWorks,
+    };
+  }
+
+  /**
    * Get all tags with public work count only
    */
   async getPublicTags(): Promise<TagWithCount[]> {

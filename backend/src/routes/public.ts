@@ -77,6 +77,28 @@ router.get('/albums', async (req: Request, res: Response) => {
 });
 
 /**
+ * GET /api/public/albums/:id
+ * Get a single public album with works containing media items
+ * No authentication required
+ */
+router.get('/albums/:id', async (req: Request, res: Response) => {
+  try {
+    const id = req.params.id as string;
+    const album = await publicService.getPublicAlbumById(id);
+
+    if (!album) {
+      res.status(404).json(errorResponse(ErrorCodes.NOT_FOUND, 'Album not found'));
+      return;
+    }
+
+    res.json(successResponse(album));
+  } catch (error: any) {
+    console.error('Error in GET /api/public/albums/:id:', error);
+    res.status(500).json(errorResponse(ErrorCodes.UNKNOWN, error.message));
+  }
+});
+
+/**
  * GET /api/public/tags
  * List all tags with public work count
  * No authentication required
