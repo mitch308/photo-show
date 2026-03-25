@@ -50,10 +50,10 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Public Gallery
 
-- [ ] **PUBL-01**: 访客可以在首页浏览公开的作品
-- [ ] **PUBL-02**: 访客可以按相册浏览作品
-- [ ] **PUBL-03**: 访客可以按标签筛选作品
-- [ ] **PUBL-04**: 访客可以搜索作品标题和描述
+- [x] **PUBL-01**: 访客可以在首页浏览公开的作品
+- [x] **PUBL-02**: 访客可以按相册浏览作品
+- [x] **PUBL-03**: 访客可以按标签筛选作品
+- [x] **PUBL-04**: 访客可以搜索作品标题和描述
 - [ ] **PUBL-05**: 作品以瀑布流/网格形式优雅展示
 - [ ] **PUBL-06**: 访客可以点击作品查看大图和详细信息
 - [ ] **PUBL-07**: 移动端适配，支持手机和平板浏览
@@ -148,10 +148,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | WATR-01 | Phase 2 | Pending |
 | WATR-02 | Phase 2 | Pending |
 | WATR-03 | Phase 2 | Pending |
-| PUBL-01 | Phase 3 | Pending |
-| PUBL-02 | Phase 3 | Pending |
-| PUBL-03 | Phase 3 | Pending |
-| PUBL-04 | Phase 3 | Pending |
+| PUBL-01 | Phase 3 | Complete |
+| PUBL-02 | Phase 3 | Complete |
+| PUBL-03 | Phase 3 | Complete |
+| PUBL-04 | Phase 3 | Complete |
 | PUBL-05 | Phase 3 | Pending |
 | PUBL-06 | Phase 3 | Pending |
 | PUBL-07 | Phase 3 | Pending |
