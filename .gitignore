@@ -30,3 +30,6 @@ coverage/
 
 # Local tools
 .opencode/
+# TypeScript build cache
+*.tsbuildinfo
+frontend/vite.config.d.ts
