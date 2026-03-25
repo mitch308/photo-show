@@ -46,7 +46,7 @@ router.get('/works', async (req: Request, res: Response) => {
  */
 router.get('/works/:id', async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
     const work = await publicService.getPublicWorkById(id);
 
     if (!work) {
