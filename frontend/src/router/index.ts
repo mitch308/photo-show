@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router';
+import { useAuthStore } from '@/stores/auth';
 
 const routes: RouteRecordRaw[] = [
   {
@@ -45,10 +46,11 @@ router.beforeEach((to, _from, next) => {
   // 设置页面标题
   document.title = `${to.meta.title || '摄影工作室'} - 作品展示平台`;
 
+  const authStore = useAuthStore();
+
   // 需要认证的路由
   if (to.meta.requiresAuth) {
-    const token = document.cookie.includes('accessToken');
-    if (!token) {
+    if (!authStore.isAuthenticated) {
       next({ name: 'Login', query: { redirect: to.fullPath } });
       return;
     }
@@ -56,8 +58,7 @@ router.beforeEach((to, _from, next) => {
 
   // 已登录用户不能访问登录页
   if (to.meta.guest) {
-    const token = document.cookie.includes('accessToken');
-    if (token) {
+    if (authStore.isAuthenticated) {
       next({ name: 'Dashboard' });
       return;
     }
