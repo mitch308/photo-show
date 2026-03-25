@@ -50,6 +50,12 @@ const routes: RouteRecordRaw[] = [
         component: () => import('@/views/admin/Shares.vue'),
         meta: { title: '分享管理' },
       },
+      {
+        path: 'clients',
+        name: 'Clients',
+        component: () => import('@/views/admin/Clients.vue'),
+        meta: { title: '客户管理' },
+      },
     ],
   },
   {
