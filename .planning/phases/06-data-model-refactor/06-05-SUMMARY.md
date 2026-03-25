@@ -182,3 +182,13 @@ The following manual tests should be performed after migration:
 ---
 *Phase: 06-data-model-refactor*
 *Completed: 2026-03-25*
+
+## Self-Check: PASSED
+
+- ✓ Created files exist:
+  - backend/src/migrations/run-migration.ts
+  - .planning/phases/06-data-model-refactor/06-05-SUMMARY.md
+- ✓ Commits exist:
+  - f0d51c2: feat(06-05): add database config and migration script
+  - d2457e6: fix(06-05): resolve TypeScript errors in frontend
+  - 8b7defb: docs(06-05): complete data migration & testing plan
