@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { workService, CreateWorkData, UpdateWorkData } from '../services/workService.js';
+import { workService, CreateWorkData, UpdateWorkData, MediaItemInput } from '../services/workService.js';
 import { successResponse, errorResponse, ErrorCodes } from '../types/response.js';
 import { authMiddleware } from '../middlewares/auth.js';
 
@@ -11,6 +11,7 @@ router.use(authMiddleware);
 /**
  * GET /api/works
  * List all works with optional filters
+ * Returns works with their media items
  */
 router.get('/', async (req: Request, res: Response) => {
   try {
@@ -28,7 +29,7 @@ router.get('/', async (req: Request, res: Response) => {
 
 /**
  * GET /api/works/:id
- * Get a single work
+ * Get a single work with media items
  */
 router.get('/:id', async (req: Request, res: Response) => {
   try {
@@ -47,14 +48,26 @@ router.get('/:id', async (req: Request, res: Response) => {
 /**
  * POST /api/works
  * Create a new work
+ * Supports both legacy single-file format and new multi-media format
  */
 router.post('/', async (req: Request, res: Response) => {
   try {
     const data: CreateWorkData = req.body;
     
-    if (!data.title || !data.filePath) {
-      res.status(400).json(errorResponse(ErrorCodes.VALIDATION_ERROR, 'Title and filePath are required'));
+    // Validate required fields
+    if (!data.title) {
+      res.status(400).json(errorResponse(ErrorCodes.VALIDATION_ERROR, 'Title is required'));
       return;
+    }
+
+    // Check if using new mediaItems format or legacy format
+    if (!data.mediaItems || data.mediaItems.length === 0) {
+      // Legacy format: require filePath
+      if (!data.filePath) {
+        res.status(400).json(errorResponse(ErrorCodes.VALIDATION_ERROR, 
+          'Either mediaItems or filePath is required'));
+        return;
+      }
     }
 
     const work = await workService.createWork(data);
@@ -66,7 +79,7 @@ router.post('/', async (req: Request, res: Response) => {
 
 /**
  * PUT /api/works/:id
- * Update a work
+ * Update work metadata (not media items - use media items API for that)
  */
 router.put('/:id', async (req: Request, res: Response) => {
   try {
@@ -87,7 +100,7 @@ router.put('/:id', async (req: Request, res: Response) => {
 
 /**
  * DELETE /api/works/:id
- * Delete a work
+ * Delete a work and all its media items
  */
 router.delete('/:id', async (req: Request, res: Response) => {
   try {
