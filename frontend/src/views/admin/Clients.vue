@@ -2,7 +2,6 @@
 import { ref, onMounted, computed, watch } from 'vue';
 import {
   useClientsStore,
-  type ClientWithStats,
   type ClientShareInfo,
 } from '@/stores/clients';
 import { shareApi, type AccessLogEntry } from '@/api/share';

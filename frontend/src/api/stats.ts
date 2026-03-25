@@ -1,5 +1,5 @@
 import api from './index';
-import type { ApiResponse, Work, Album } from './types';
+import type { ApiResponse, Work } from './types';
 
 /**
  * Work statistics item

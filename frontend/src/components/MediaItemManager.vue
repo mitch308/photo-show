@@ -1,10 +1,9 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
+import { ref, computed } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { Plus, Delete, Rank } from '@element-plus/icons-vue';
 import { useWorksStore } from '@/stores/works';
 import type { Work, MediaItem } from '@/api/types';
-import api from '@/api/index';
 
 const props = defineProps<{
   work: Work;

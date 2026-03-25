@@ -3,12 +3,14 @@ import {
   clientsApi,
   type Client,
   type ClientWithStats,
-  type ClientListResult,
   type CreateClientRequest,
   type UpdateClientRequest,
   type ClientShareInfo,
   type AccessLogListResult,
 } from '@/api/clients';
+
+// Re-export types for use in components
+export type { ClientWithStats, ClientShareInfo };
 
 /**
  * Client store for managing client state

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, onMounted } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { useWorksStore } from '@/stores/works';
 import { albumsApi } from '@/api/albums';
@@ -31,9 +31,6 @@ const selectedWorks = ref<string[]>([]);
 const batchLoading = ref(false);
 const moveDialogVisible = ref(false);
 const selectedAlbumIds = ref<string[]>([]);
-
-// Computed for batch actions
-const hasSelection = computed(() => selectedWorks.value.length > 0);
 
 onMounted(async () => {
   await Promise.all([

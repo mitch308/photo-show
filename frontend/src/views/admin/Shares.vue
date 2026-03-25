@@ -2,7 +2,7 @@
 import { ref, onMounted, computed } from 'vue';
 import { shareApi, type ShareInfo, type AccessLogEntry } from '@/api/share';
 import { useWorksStore } from '@/stores/works';
-import { useClientsStore, type ClientWithStats } from '@/stores/clients';
+import { useClientsStore } from '@/stores/clients';
 
 const shares = ref<ShareInfo[]>([]);
 const loading = ref(true);
@@ -103,8 +103,9 @@ const loadAccessLogs = async (token: string) => {
   }
 };
 
-const formatDate = (timestamp: number) => {
-  return new Date(timestamp).toLocaleString('zh-CN');
+const formatDate = (timestamp: number | string) => {
+  const date = typeof timestamp === 'string' ? new Date(timestamp) : new Date(timestamp);
+  return date.toLocaleString('zh-CN');
 };
 
 const isExpired = (share: ShareInfo) => {
