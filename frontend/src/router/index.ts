@@ -26,6 +26,24 @@ const routes: RouteRecordRaw[] = [
         component: () => import('@/views/admin/Overview.vue'),
         meta: { title: '概览' },
       },
+      {
+        path: 'works',
+        name: 'Works',
+        component: () => import('@/views/admin/Works.vue'),
+        meta: { title: '作品管理' },
+      },
+      {
+        path: 'albums',
+        name: 'Albums',
+        component: () => import('@/views/admin/Albums.vue'),
+        meta: { title: '相册管理' },
+      },
+      {
+        path: 'tags',
+        name: 'Tags',
+        component: () => import('@/views/admin/Tags.vue'),
+        meta: { title: '标签管理' },
+      },
     ],
   },
   {

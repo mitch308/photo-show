@@ -12,6 +12,10 @@ import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import { ApiResponse, errorResponse } from './types/response.js';
 import authRoutes from './routes/auth.js';
+import uploadRoutes from './routes/upload.js';
+import worksRoutes from './routes/works.js';
+import albumsRoutes from './routes/albums.js';
+import tagsRoutes from './routes/tags.js';
 
 const app = express();
 
@@ -24,6 +28,9 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
+// 静态文件服务 - 提供上传的文件访问
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+
 // 健康检查
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
@@ -31,6 +38,10 @@ app.get('/api/health', (req, res) => {
 
 // API 路由
 app.use('/api/auth', authRoutes);
+app.use('/api/upload', uploadRoutes);
+app.use('/api/works', worksRoutes);
+app.use('/api/albums', albumsRoutes);
+app.use('/api/tags', tagsRoutes);
 
 // 404 处理
 app.use((req, res) => {
