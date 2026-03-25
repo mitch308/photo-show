@@ -1,22 +1,33 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
-import { shareApi, type ShareInfo } from '@/api/share';
+import { shareApi, type ShareInfo, type AccessLogEntry } from '@/api/share';
 import { useWorksStore } from '@/stores/works';
+import { useClientsStore, type ClientWithStats } from '@/stores/clients';
 
 const shares = ref<ShareInfo[]>([]);
 const loading = ref(true);
 const showCreateDialog = ref(false);
+const showAccessLogDialog = ref(false);
 
 // Create share form
 const selectedWorkIds = ref<string[]>([]);
 const expiresInDays = ref(7);
+const selectedClientId = ref<string>('');
+const maxAccess = ref<number | undefined>(undefined);
+
+// Access log data
+const accessLogs = ref<AccessLogEntry[]>([]);
+const accessLogsLoading = ref(false);
+const currentShareToken = ref('');
 
 const worksStore = useWorksStore();
+const clientsStore = useClientsStore();
 
 onMounted(async () => {
   await Promise.all([
     loadShares(),
-    worksStore.fetchWorks()
+    worksStore.fetchWorks(),
+    clientsStore.fetchClients(),
   ]);
 });
 
@@ -35,7 +46,9 @@ const createShare = async () => {
   try {
     const result = await shareApi.createShare({
       workIds: selectedWorkIds.value,
-      expiresInDays: expiresInDays.value
+      expiresInDays: expiresInDays.value,
+      maxAccess: maxAccess.value || undefined,
+      clientId: selectedClientId.value || undefined,
     });
     
     // Copy to clipboard
@@ -43,18 +56,24 @@ const createShare = async () => {
     alert('分享链接已创建并复制到剪贴板！');
     
     showCreateDialog.value = false;
-    selectedWorkIds.value = [];
+    resetCreateForm();
     await loadShares();
   } catch (e: any) {
     alert('创建失败：' + e.message);
   }
 };
 
+const resetCreateForm = () => {
+  selectedWorkIds.value = [];
+  expiresInDays.value = 7;
+  selectedClientId.value = '';
+  maxAccess.value = undefined;
+};
+
 const copyShareUrl = async (share: ShareInfo) => {
-  if (share.shareUrl) {
-    await navigator.clipboard.writeText(share.shareUrl);
-    alert('链接已复制！');
-  }
+  const url = share.shareUrl || `${window.location.origin}/share/${share.token}`;
+  await navigator.clipboard.writeText(url);
+  alert('链接已复制！');
 };
 
 const revokeShare = async (token: string) => {
@@ -68,6 +87,22 @@ const revokeShare = async (token: string) => {
   }
 };
 
+const loadAccessLogs = async (token: string) => {
+  currentShareToken.value = token;
+  accessLogsLoading.value = true;
+  showAccessLogDialog.value = true;
+  
+  try {
+    const result = await shareApi.getAccessLogs(token);
+    accessLogs.value = result.logs;
+  } catch (e) {
+    console.error('Failed to load access logs:', e);
+    accessLogs.value = [];
+  } finally {
+    accessLogsLoading.value = false;
+  }
+};
+
 const formatDate = (timestamp: number) => {
   return new Date(timestamp).toLocaleString('zh-CN');
 };
@@ -76,7 +111,14 @@ const isExpired = (share: ShareInfo) => {
   return share.expiresAt < Date.now();
 };
 
+const getClientName = (clientId?: string) => {
+  if (!clientId) return '-';
+  const client = clients.value.find(c => c.id === clientId);
+  return client?.name || '-';
+};
+
 const works = computed(() => worksStore.works);
+const clients = computed(() => clientsStore.clients);
 </script>
 
 <template>
@@ -93,6 +135,8 @@ const works = computed(() => worksStore.works);
         <thead>
           <tr>
             <th>作品数</th>
+            <th>客户</th>
+            <th>访问次数</th>
             <th>创建时间</th>
             <th>过期时间</th>
             <th>状态</th>
@@ -102,6 +146,11 @@ const works = computed(() => worksStore.works);
         <tbody>
           <tr v-for="share in shares" :key="share.token">
             <td>{{ share.workIds.length }}</td>
+            <td>{{ getClientName(share.clientId) }}</td>
+            <td>
+              {{ share.accessCount || 0 }}
+              <span v-if="share.maxAccess"> / {{ share.maxAccess }}</span>
+            </td>
             <td>{{ formatDate(share.createdAt) }}</td>
             <td>{{ formatDate(share.expiresAt) }}</td>
             <td>
@@ -113,6 +162,7 @@ const works = computed(() => worksStore.works);
               <button @click="copyShareUrl(share)" :disabled="isExpired(share)">
                 复制链接
               </button>
+              <button @click="loadAccessLogs(share.token)">访问记录</button>
               <button @click="revokeShare(share.token)" :disabled="isExpired(share)" class="danger">
                 撤销
               </button>
@@ -146,6 +196,16 @@ const works = computed(() => worksStore.works);
         </div>
         
         <div class="form-group">
+          <label>关联客户（可选）</label>
+          <select v-model="selectedClientId">
+            <option value="">不关联客户</option>
+            <option v-for="client in clients" :key="client.id" :value="client.id">
+              {{ client.name }}
+            </option>
+          </select>
+        </div>
+        
+        <div class="form-group">
           <label>过期时间</label>
           <select v-model="expiresInDays">
             <option :value="1">1天</option>
@@ -154,11 +214,58 @@ const works = computed(() => worksStore.works);
           </select>
         </div>
         
+        <div class="form-group">
+          <label>访问次数限制（可选）</label>
+          <input
+            type="number"
+            v-model.number="maxAccess"
+            min="1"
+            placeholder="不限制"
+          />
+          <small class="hint">留空表示不限制访问次数</small>
+        </div>
+        
         <div class="dialog-actions">
           <button @click="showCreateDialog = false">取消</button>
           <button class="btn-primary" @click="createShare" :disabled="selectedWorkIds.length === 0">
             创建并复制链接
           </button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Access Log Dialog -->
+    <div v-if="showAccessLogDialog" class="dialog-overlay" @click.self="showAccessLogDialog = false">
+      <div class="dialog">
+        <h2>访问记录</h2>
+        
+        <div v-if="accessLogsLoading" class="loading">加载中...</div>
+        
+        <table v-else-if="accessLogs.length > 0">
+          <thead>
+            <tr>
+              <th>操作</th>
+              <th>IP 地址</th>
+              <th>时间</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="log in accessLogs" :key="log.id">
+              <td>
+                <span :class="['action-tag', log.action]">
+                  {{ log.action === 'view' ? '查看' : '下载' }}
+                </span>
+              </td>
+              <td>{{ log.ipAddress }}</td>
+              <td>{{ formatDate(log.createdAt) }}</td>
+            </tr>
+          </tbody>
+        </table>
+        
+        <div v-else class="empty">暂无访问记录</div>
+        
+        <div class="dialog-actions">
+          <button @click="showAccessLogDialog = false">关闭</button>
         </div>
       </div>
     </div>
@@ -216,6 +323,22 @@ th, td {
   color: #721c24;
 }
 
+.action-tag {
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 12px;
+}
+
+.action-tag.view {
+  background: #cce5ff;
+  color: #004085;
+}
+
+.action-tag.download {
+  background: #fff3cd;
+  color: #856404;
+}
+
 .actions button {
   margin-right: 8px;
   padding: 4px 8px;
@@ -229,7 +352,7 @@ th, td {
   color: #dc3545;
 }
 
-.empty {
+.empty, .loading {
   text-align: center;
   padding: 48px;
   color: var(--text-secondary);
@@ -238,7 +361,7 @@ th, td {
 .dialog-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.5);
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -263,6 +386,22 @@ th, td {
   display: block;
   margin-bottom: 8px;
   font-weight: 500;
+}
+
+.form-group input,
+.form-group select {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+.hint {
+  display: block;
+  margin-top: 4px;
+  color: var(--text-secondary);
+  font-size: 12px;
 }
 
 .work-selector {
