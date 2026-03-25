@@ -1,16 +1,25 @@
 import {
   Entity,
-  PrimaryGeneratedColumn,
+  PrimaryColumn,
   Column,
   CreateDateColumn,
-  ManyToMany
+  ManyToMany,
+  BeforeInsert
 } from 'typeorm';
+import { randomUUID } from 'crypto';
 import { Work } from './Work.js';
 
 @Entity('tags')
 export class Tag {
-  @PrimaryGeneratedColumn('uuid')
+  @PrimaryColumn({ type: 'varchar', length: 36 })
   id: string = '';
+
+  @BeforeInsert()
+  generateId() {
+    if (!this.id) {
+      this.id = randomUUID();
+    }
+  }
 
   @Column({ type: 'varchar', length: 50, unique: true })
   name: string = '';
