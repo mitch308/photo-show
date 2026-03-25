@@ -13,7 +13,15 @@ const emit = defineEmits<{
 </script>
 
 <template>
-  <div class="masonry-grid">
+  <!-- Empty state -->
+  <div v-if="!loading && works.length === 0" class="empty-state">
+    <div class="empty-icon">📷</div>
+    <h3>暂无作品</h3>
+    <p>还没有公开的作品，请稍后再来查看</p>
+  </div>
+  
+  <!-- Grid -->
+  <div v-else class="masonry-grid">
     <div
       v-for="work in works"
       :key="work.id"
@@ -79,5 +87,32 @@ const emit = defineEmits<{
   padding: 40px;
   text-align: center;
   color: var(--text-secondary);
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px;
+  text-align: center;
+}
+
+.empty-icon {
+  font-size: 64px;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.empty-state h3 {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+
+.empty-state p {
+  color: var(--text-secondary);
+  font-size: 14px;
 }
 </style>
