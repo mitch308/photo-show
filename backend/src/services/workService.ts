@@ -3,11 +3,10 @@ import { Work } from '../models/Work.js';
 import { Album } from '../models/Album.js';
 import { Tag } from '../models/Tag.js';
 import { uploadService } from './uploadService.js';
+import { mediaItemService } from './mediaItemService.js';
 import { In, Repository } from 'typeorm';
 
-export interface CreateWorkData {
-  title: string;
-  description?: string;
+export interface MediaItemInput {
   filePath: string;
   thumbnailSmall?: string;
   thumbnailLarge?: string;
@@ -15,9 +14,24 @@ export interface CreateWorkData {
   fileType: 'image' | 'video';
   mimeType: string;
   fileSize: number;
+}
+
+export interface CreateWorkData {
+  title: string;
+  description?: string;
+  // Legacy fields - kept for backward compatibility
+  filePath?: string;
+  thumbnailSmall?: string;
+  thumbnailLarge?: string;
+  originalFilename?: string;
+  fileType?: 'image' | 'video';
+  mimeType?: string;
+  fileSize?: number;
   isPublic?: boolean;
   albumIds?: string[];
   tagIds?: string[];
+  // New field for multiple media items
+  mediaItems?: MediaItemInput[];
 }
 
 export interface UpdateWorkData {
@@ -45,13 +59,16 @@ export class WorkService {
     const work = new Work();
     work.title = data.title;
     work.description = data.description || '';
-    work.filePath = data.filePath;
+
+    // Legacy fields - kept for backward compatibility
+    work.filePath = data.filePath || '';
     work.thumbnailSmall = data.thumbnailSmall || '';
     work.thumbnailLarge = data.thumbnailLarge || '';
-    work.originalFilename = data.originalFilename;
-    work.fileType = data.fileType;
-    work.mimeType = data.mimeType;
-    work.fileSize = data.fileSize;
+    work.originalFilename = data.originalFilename || '';
+    work.fileType = data.fileType || 'image';
+    work.mimeType = data.mimeType || '';
+    work.fileSize = data.fileSize || 0;
+
     work.isPublic = data.isPublic ?? true;
     work.position = await this.getNextPosition();
     work.viewCount = 0;
@@ -59,6 +76,7 @@ export class WorkService {
     work.isPinned = false;
     work.albums = [];
     work.tags = [];
+    work.mediaItems = [];
 
     // Set albums
     if (data.albumIds && data.albumIds.length > 0) {
@@ -70,13 +88,34 @@ export class WorkService {
       work.tags = await this.tagRepo.findBy({ id: In(data.tagIds) });
     }
 
-    return this.workRepo.save(work);
+    // Save work first to get ID
+    const savedWork = await this.workRepo.save(work);
+
+    // Create media items if provided
+    if (data.mediaItems && data.mediaItems.length > 0) {
+      for (let i = 0; i < data.mediaItems.length; i++) {
+        const item = data.mediaItems[i];
+        await mediaItemService.createMediaItem(savedWork.id, {
+          ...item,
+          position: i,
+        });
+      }
+
+      // Reload work with media items
+      const workWithItems = await this.getWorkById(savedWork.id);
+      if (workWithItems) {
+        return workWithItems;
+      }
+    }
+
+    return savedWork;
   }
 
   async getWorks(options?: { albumId?: string; tagId?: string; isPublic?: boolean }): Promise<Work[]> {
     const query = this.workRepo.createQueryBuilder('work')
       .leftJoinAndSelect('work.albums', 'albums')
-      .leftJoinAndSelect('work.tags', 'tags');
+      .leftJoinAndSelect('work.tags', 'tags')
+      .leftJoinAndSelect('work.mediaItems', 'mediaItems');
 
     if (options?.albumId) {
       query.andWhere('albums.id = :albumId', { albumId: options.albumId });
@@ -90,7 +129,8 @@ export class WorkService {
 
     // Sort: pinned first, then by position
     query.orderBy('work.isPinned', 'DESC')
-         .addOrderBy('work.position', 'ASC');
+         .addOrderBy('work.position', 'ASC')
+         .addOrderBy('mediaItems.position', 'ASC');
 
     return query.getMany();
   }
@@ -98,7 +138,12 @@ export class WorkService {
   async getWorkById(id: string): Promise<Work | null> {
     return this.workRepo.findOne({
       where: { id },
-      relations: ['albums', 'tags'],
+      relations: ['albums', 'tags', 'mediaItems'],
+      order: {
+        mediaItems: {
+          position: 'ASC',
+        },
+      },
     });
   }
 
@@ -126,8 +171,13 @@ export class WorkService {
     const work = await this.getWorkById(id);
     if (!work) return false;
 
-    // Delete associated files
-    await uploadService.deleteFile(work.filePath, work.thumbnailSmall || undefined, work.thumbnailLarge || undefined);
+    // Delete all associated media items first
+    await mediaItemService.deleteMediaItemsByWork(id);
+
+    // Delete legacy associated files (if any)
+    if (work.filePath) {
+      await uploadService.deleteFile(work.filePath, work.thumbnailSmall || undefined, work.thumbnailLarge || undefined);
+    }
 
     await this.workRepo.remove(work);
     return true;
