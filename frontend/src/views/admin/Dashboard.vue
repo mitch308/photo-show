@@ -3,12 +3,18 @@ import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import { ElMessage } from 'element-plus';
 import { useTheme } from '@/composables/useTheme';
+import { logout } from '@/api/auth';
 
 const router = useRouter();
 const authStore = useAuthStore();
 const { isDark, toggleDark } = useTheme();
 
-function handleLogout() {
+async function handleLogout() {
+  try {
+    await logout();
+  } catch {
+    // Ignore logout API errors
+  }
   authStore.clearUser();
   ElMessage.success('已退出登录');
   router.push('/login');
