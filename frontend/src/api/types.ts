@@ -30,3 +30,62 @@ export interface LoginRequest {
 export interface LoginResponse {
   user: AdminInfo;
 }
+
+/**
+ * 作品
+ */
+export interface Work {
+  id: string;
+  title: string;
+  description: string;
+  filePath: string;
+  thumbnailSmall: string;
+  thumbnailLarge: string;
+  originalFilename: string;
+  fileType: 'image' | 'video';
+  mimeType: string;
+  fileSize: number;
+  position: number;
+  isPinned: boolean;
+  isPublic: boolean;
+  viewCount: number;
+  downloadCount: number;
+  albums: Album[];
+  tags: Tag[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * 相册
+ */
+export interface Album {
+  id: string;
+  name: string;
+  description: string;
+  coverPath: string;
+  position: number;
+  works?: Work[];
+}
+
+/**
+ * 标签
+ */
+export interface Tag {
+  id: string;
+  name: string;
+  works?: Work[];
+}
+
+/**
+ * 上传结果
+ */
+export interface UploadResult {
+  filePath: string;
+  thumbnailSmall: string | null;
+  thumbnailLarge: string | null;
+  originalFilename: string;
+  fileType: 'image' | 'video';
+  mimeType: string;
+  fileSize: number;
+}

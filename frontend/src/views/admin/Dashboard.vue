@@ -21,6 +21,9 @@ function handleLogout() {
       </div>
       <nav class="nav">
         <router-link to="/admin" class="nav-item">概览</router-link>
+        <router-link to="/admin/works" class="nav-item">作品管理</router-link>
+        <router-link to="/admin/albums" class="nav-item">相册管理</router-link>
+        <router-link to="/admin/tags" class="nav-item">标签管理</router-link>
       </nav>
       <div class="logout">
         <button @click="handleLogout">退出登录</button>
