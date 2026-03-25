@@ -47,6 +47,11 @@ function handleUploadSuccess(result: UploadResult) {
 }
 
 function openEditDialog(work: Work) {
+  if (!work.id) {
+    ElMessage.error('作品ID不存在，请刷新页面重试');
+    console.error('Work missing id:', work);
+    return;
+  }
   editingWork.value = work;
   uploadedFile.value = null;
   form.value = {
@@ -54,8 +59,8 @@ function openEditDialog(work: Work) {
     description: work.description,
     isPublic: work.isPublic,
     isPinned: work.isPinned,
-    albumIds: work.albums.map(a => a.id),
-    tagIds: work.tags.map(t => t.id),
+    albumIds: (work.albums || []).map(a => a.id),
+    tagIds: (work.tags || []).map(t => t.id),
   };
   dialogVisible.value = true;
 }
