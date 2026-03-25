@@ -4,7 +4,7 @@
   "description": "Photography Studio Portfolio Platform - Backend",
   "type": "module",
   "scripts": {
-    "dev": "nodemon --exec ts-node src/index.ts",
+    "dev": "nodemon --exec npx tsx src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
     "typeorm": "typeorm-ts-node-esm"
