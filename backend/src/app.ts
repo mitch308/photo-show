@@ -16,6 +16,7 @@ import uploadRoutes from './routes/upload.js';
 import worksRoutes from './routes/works.js';
 import albumsRoutes from './routes/albums.js';
 import tagsRoutes from './routes/tags.js';
+import publicRoutes from './routes/public.js';
 
 const app = express();
 
@@ -35,6 +36,9 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
+
+// 公开 API（无需认证）
+app.use('/api/public', publicRoutes);
 
 // API 路由
 app.use('/api/auth', authRoutes);
