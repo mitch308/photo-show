@@ -1,14 +1,32 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { Work } from '../models/Work.js';
-import { Album } from '../models/Album.js';
-import { Tag } from '../models/Tag.js';
+
+// Use vi.hoisted to create mocks before they're referenced in vi.mock
+const mockWorkRepo = vi.hoisted(() => ({
+  createQueryBuilder: vi.fn(),
+  findOne: vi.fn(),
+  increment: vi.fn(),
+}));
+
+const mockAlbumRepo = vi.hoisted(() => ({
+  createQueryBuilder: vi.fn(),
+  find: vi.fn(),
+}));
+
+const mockTagRepo = vi.hoisted(() => ({
+  createQueryBuilder: vi.fn(),
+  find: vi.fn(),
+}));
 
 // Mock AppDataSource before importing the service
-const mockGetRepository = vi.fn();
-
 vi.mock('../config/database.js', () => ({
   AppDataSource: {
-    getRepository: mockGetRepository,
+    getRepository: vi.fn((entity: any) => {
+      // Return the appropriate mock based on entity name
+      if (entity?.name === 'Work') return mockWorkRepo;
+      if (entity?.name === 'Album') return mockAlbumRepo;
+      if (entity?.name === 'Tag') return mockTagRepo;
+      return null;
+    }),
   },
 }));
 
@@ -17,36 +35,9 @@ import { PublicService } from './publicService.js';
 
 describe('PublicService', () => {
   let publicService: PublicService;
-  let mockWorkRepo: any;
-  let mockAlbumRepo: any;
-  let mockTagRepo: any;
 
   beforeEach(() => {
     vi.clearAllMocks();
-    
-    mockWorkRepo = {
-      createQueryBuilder: vi.fn(),
-      findOne: vi.fn(),
-      increment: vi.fn(),
-    };
-    
-    mockAlbumRepo = {
-      createQueryBuilder: vi.fn(),
-      find: vi.fn(),
-    };
-    
-    mockTagRepo = {
-      createQueryBuilder: vi.fn(),
-      find: vi.fn(),
-    };
-
-    mockGetRepository.mockImplementation((entity: any) => {
-      if (entity === Work) return mockWorkRepo;
-      if (entity === Album) return mockAlbumRepo;
-      if (entity === Tag) return mockTagRepo;
-      return null;
-    });
-
     publicService = new PublicService();
   });
 
@@ -275,6 +266,7 @@ describe('PublicService', () => {
         addSelect: vi.fn().mockReturnThis(),
         where: vi.fn().mockReturnThis(),
         groupBy: vi.fn().mockReturnThis(),
+        orderBy: vi.fn().mockReturnThis(),
         getRawMany: vi.fn().mockResolvedValue([
           { id: '1', name: 'Album 1', coverPath: '/cover1.jpg', workCount: '5' },
           { id: '2', name: 'Album 2', coverPath: '/cover2.jpg', workCount: '3' },
@@ -298,6 +290,7 @@ describe('PublicService', () => {
         addSelect: vi.fn().mockReturnThis(),
         where: vi.fn().mockReturnThis(),
         groupBy: vi.fn().mockReturnThis(),
+        orderBy: vi.fn().mockReturnThis(),
         getRawMany: vi.fn().mockResolvedValue([
           { id: '1', name: 'Nature', workCount: '10' },
           { id: '2', name: 'Portrait', workCount: '5' },
