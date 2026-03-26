@@ -5,9 +5,10 @@ import { useWorksStore } from '@/stores/works';
 import { albumsApi } from '@/api/albums';
 import { tagsApi } from '@/api/tags';
 import { batchApi } from '@/api/batch';
+import { mediaItemsApi } from '@/api/mediaItems';
 import Upload from '@/components/Upload.vue';
 import BatchActionBar from '@/components/BatchActionBar.vue';
-import type { Album, Tag, UploadResult, Work } from '@/api/types';
+import type { Album, Tag, UploadResult, Work, MediaItem } from '@/api/types';
 
 const worksStore = useWorksStore();
 const albums = ref<Album[]>([]);
@@ -25,6 +26,10 @@ const form = ref({
 });
 
 const uploadedFile = ref<UploadResult | null>(null);
+
+// File management state
+const showAddFile = ref(false);
+const addingFile = ref(false);
 
 // Batch selection state
 const selectedWorks = ref<string[]>([]);
@@ -106,6 +111,45 @@ async function deleteWork(work: Work) {
   } catch {
     // Cancelled
   }
+}
+
+async function handleAddFile(result: UploadResult & { isDuplicate?: boolean }) {
+  if (!editingWork.value) return;
+  
+  addingFile.value = true;
+  try {
+    const formData = new FormData();
+    formData.append('filePath', result.filePath);
+    formData.append('thumbnailSmall', result.thumbnailSmall || '');
+    formData.append('thumbnailLarge', result.thumbnailLarge || '');
+    formData.append('originalFilename', result.originalFilename);
+    formData.append('fileType', result.fileType);
+    formData.append('mimeType', result.mimeType);
+    formData.append('fileSize', String(result.fileSize));
+    if (result.fileHash) {
+      formData.append('fileHash', result.fileHash);
+    }
+    
+    await mediaItemsApi.addMediaItem(editingWork.value.id, formData);
+    
+    ElMessage.success('文件添加成功');
+    showAddFile.value = false;
+    
+    await worksStore.fetchWorks();
+    
+    const updated = worksStore.works.find(w => w.id === editingWork.value?.id);
+    if (updated) {
+      editingWork.value = updated;
+    }
+  } catch (error: any) {
+    ElMessage.error(error.message || '添加失败');
+  } finally {
+    addingFile.value = false;
+  }
+}
+
+function cancelAddFile() {
+  showAddFile.value = false;
 }
 
 function resetForm() {
@@ -274,6 +318,49 @@ async function handleBatchDelete() {
         <el-form-item label="公开">
           <el-switch v-model="form.isPublic" />
         </el-form-item>
+        
+        <!-- 文件管理区域（仅编辑模式） -->
+        <el-form-item v-if="editingWork" label="文件">
+          <div class="files-manager">
+            <div class="files-list">
+              <div 
+                v-for="item in editingWork.mediaItems" 
+                :key="item.id" 
+                class="file-item"
+              >
+                <el-image
+                  v-if="item.thumbnailSmall"
+                  :src="`/${item.thumbnailSmall}`"
+                  fit="cover"
+                  class="file-thumb"
+                />
+                <div v-else class="file-thumb file-thumb-placeholder">
+                  {{ item.fileType === 'video' ? '🎬' : '📷' }}
+                </div>
+                <span class="file-name">{{ item.originalFilename }}</span>
+              </div>
+            </div>
+            
+            <el-button 
+              v-if="!showAddFile"
+              size="small" 
+              @click="showAddFile = true"
+            >
+              添加文件
+            </el-button>
+            
+            <div v-else class="add-file-area">
+              <Upload @success="handleAddFile" />
+              <el-button 
+                size="small" 
+                @click="cancelAddFile" 
+                style="margin-top: 10px"
+              >
+                取消
+              </el-button>
+            </div>
+          </div>
+        </el-form-item>
       </el-form>
       
       <template #footer>
@@ -429,5 +516,55 @@ async function handleBatchDelete() {
 .stat-count {
   font-variant-numeric: tabular-nums;
   color: var(--el-text-color-regular);
+}
+
+.files-manager {
+  width: 100%;
+}
+
+.files-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.file-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  background: var(--el-fill-color-light);
+  border-radius: 4px;
+  min-width: 200px;
+}
+
+.file-thumb {
+  width: 40px;
+  height: 40px;
+  border-radius: 4px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.file-thumb-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--el-fill-color);
+  font-size: 18px;
+}
+
+.file-name {
+  font-size: 13px;
+  color: var(--el-text-color-regular);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+
+.add-file-area {
+  margin-top: 10px;
 }
 </style>
