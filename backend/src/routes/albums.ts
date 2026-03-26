@@ -11,7 +11,8 @@ router.use(authMiddleware);
  */
 router.get('/', async (req: Request, res: Response) => {
   try {
-    const albums = await albumService.getAlbums();
+    const { name } = req.query;
+    const albums = await albumService.getAlbums(name as string | undefined);
     res.json(successResponse(albums));
   } catch (error: any) {
     res.status(500).json(errorResponse(ErrorCodes.UNKNOWN, error.message));

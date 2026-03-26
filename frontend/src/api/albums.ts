@@ -2,8 +2,11 @@ import api from './index';
 import type { ApiResponse, Album } from './types';
 
 export const albumsApi = {
-  async getAlbums(): Promise<Album[]> {
-    const response = await api.get<ApiResponse<Album[]>>('/albums');
+  async getAlbums(name?: string): Promise<Album[]> {
+    const params = new URLSearchParams();
+    if (name) params.append('name', name);
+    const url = params.toString() ? `/albums?${params.toString()}` : '/albums';
+    const response = await api.get<ApiResponse<Album[]>>(url);
     return response.data.data;
   },
 

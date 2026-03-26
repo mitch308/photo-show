@@ -41,11 +41,16 @@ export class AlbumService {
     return this.albumRepo.save(album);
   }
 
-  async getAlbums(): Promise<Album[]> {
-    return this.albumRepo.find({
-      relations: ['works'],
-      order: { position: 'ASC' },
-    });
+  async getAlbums(name?: string): Promise<Album[]> {
+    const query = this.albumRepo.createQueryBuilder('album')
+      .leftJoinAndSelect('album.works', 'works');
+    
+    if (name) {
+      query.andWhere('album.name LIKE :name', { name: `%${name}%` });
+    }
+    
+    query.orderBy('album.position', 'ASC');
+    return query.getMany();
   }
 
   async getAlbumById(id: string): Promise<Album | null> {

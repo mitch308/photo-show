@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
+import { ref, watch, onMounted, computed } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { albumsApi } from '@/api/albums';
 import { shareApi } from '@/api/share';
@@ -8,6 +8,9 @@ import type { Album } from '@/api/types';
 
 const albums = ref<Album[]>([]);
 const loading = ref(false);
+
+// Search state
+const searchQuery = ref('');
 
 const dialogVisible = ref(false);
 const editingAlbum = ref<Album | null>(null);
@@ -31,10 +34,19 @@ onMounted(() => {
   clientsStore.fetchClients();
 });
 
-async function loadAlbums() {
+// Search with debounce
+let searchTimeout: ReturnType<typeof setTimeout>;
+watch(searchQuery, () => {
+  clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(() => {
+    loadAlbums(searchQuery.value || undefined);
+  }, 300);
+});
+
+async function loadAlbums(name?: string) {
   loading.value = true;
   try {
-    albums.value = await albumsApi.getAlbums();
+    albums.value = await albumsApi.getAlbums(name);
   } finally {
     loading.value = false;
   }
@@ -136,6 +148,12 @@ const clients = computed(() => clientsStore.clients);
   <div class="albums-page">
     <div class="page-header">
       <h2>相册管理</h2>
+      <el-input
+        v-model="searchQuery"
+        placeholder="搜索相册名称..."
+        clearable
+        style="width: 200px; margin-right: 12px"
+      />
       <el-button type="primary" @click="openCreateDialog">新建相册</el-button>
     </div>
 
