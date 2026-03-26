@@ -1,23 +1,29 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import type { Work } from '@/api/types';
+import { useWorkThumbnail } from '@/composables/useWorkThumbnail';
 
-defineProps<{
+const props = defineProps<{
   work: Work;
 }>();
 
+const { thumbnailUrl } = useWorkThumbnail(props.work);
 const imageLoaded = ref(false);
 </script>
 
 <template>
   <div class="work-card">
     <img
-      :src="`/${work.thumbnailLarge}`"
+      v-if="thumbnailUrl"
+      :src="`/${thumbnailUrl}`"
       :alt="work.title"
       loading="lazy"
       @load="imageLoaded = true"
       :class="{ loaded: imageLoaded }"
     />
+    <div v-else class="placeholder">
+      <span>无图片</span>
+    </div>
     <div class="work-overlay">
       <h3>{{ work.title }}</h3>
     </div>
@@ -41,6 +47,17 @@ const imageLoaded = ref(false);
 
 .work-card img.loaded {
   opacity: 1;
+}
+
+.placeholder {
+  width: 100%;
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-card, #f0f0f0);
+  color: var(--text-secondary, #999);
+  font-size: 14px;
 }
 
 .work-overlay {
