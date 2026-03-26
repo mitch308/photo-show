@@ -1,6 +1,7 @@
 {
   "model_profile": "inherit",
   "commit_docs": true,
+  "language": "zh-CN",
   "parallelization": true,
   "search_gitignored": false,
   "brave_search": false,
