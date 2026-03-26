@@ -7,7 +7,7 @@
 
 ### Bug Fixes
 
-- [ ] **BUG-01**: 管理员可以为作品配置水印，公开展示时自动应用水印
+- [x] **BUG-01**: 管理员可以为作品配置水印，公开展示时自动应用水印
 - [ ] **BUG-02**: 客户通过私密链接下载文件时返回源文件而非 JSON
 - [x] **BUG-03**: 作品浏览量在访问时正确递增
 
@@ -64,7 +64,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| BUG-01 | Phase 7 | Pending |
+| BUG-01 | Phase 7 | Complete |
 | BUG-02 | Phase 7 | Pending |
 | BUG-03 | Phase 7 | Complete |
 | FILE-01 | Phase 8 | Pending |
