@@ -52,23 +52,20 @@ export const useShareStore = defineStore('share', {
       }
     },
 
-    getDownloadUrl(workId: string): string | null {
+    getDownloadUrl(workId: string, mediaId?: string): string | null {
       if (!this.shareData || this.expired) return null;
       if (!this.works.find(w => w.id === workId)) return null;
-      return shareApi.getDownloadUrl(this.shareData.token, workId);
+      return shareApi.getDownloadUrl(this.shareData.token, workId, mediaId);
     },
 
-    async downloadWork(workId: string) {
-      const url = this.getDownloadUrl(workId);
-      if (!url) return;
+    async downloadWork(workId: string, mediaId?: string) {
+      const url = this.getDownloadUrl(workId, mediaId);
+      if (!url) return false;
       
-      // Create download link
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = '';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      // Direct navigation for download - browser handles file stream correctly
+      // This avoids axios intercepting the response and returning JSON
+      window.location.href = url;
+      return true;
     }
   }
 });

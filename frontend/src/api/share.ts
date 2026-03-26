@@ -49,7 +49,10 @@ export const shareApi = {
     return response.data.data;
   },
 
-  getDownloadUrl(token: string, workId: string): string {
+  getDownloadUrl(token: string, workId: string, mediaId?: string): string {
+    if (mediaId) {
+      return `${api.defaults.baseURL}/share/${token}/download/${workId}/media/${mediaId}`;
+    }
     return `${api.defaults.baseURL}/share/${token}/download/${workId}`;
   },
 
