@@ -1,7 +1,18 @@
 import api from './index';
-import type { ApiResponse, MediaItem } from './types';
+import type { ApiResponse, MediaItem, MediaCheckResult } from './types';
 
 export const mediaItemsApi = {
+  /**
+   * Check if a file with the given hash already exists
+   */
+  async checkFileHash(hash: string): Promise<MediaCheckResult> {
+    const response = await api.get<ApiResponse<MediaCheckResult>>(
+      `/media/check`,
+      { params: { hash } }
+    );
+    return response.data.data;
+  },
+
   /**
    * Add a media item to a work
    */
