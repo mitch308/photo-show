@@ -3,6 +3,7 @@ import fs from 'fs';
 import { imageService, ThumbnailResult } from './imageService.js';
 import { videoService } from './videoService.js';
 import { getUploadPath } from '../config/storage.js';
+import { settingsService, WatermarkConfig } from './settingsService.js';
 
 export interface UploadResult {
   filePath: string;
@@ -81,7 +82,7 @@ export class UploadService {
   }
 
   /**
-   * Process uploaded image: generate thumbnails
+   * Process uploaded image: generate thumbnails with optional watermark
    */
   async processImage(file: Express.Multer.File): Promise<UploadResult> {
     const { dir, monthDir } = getUploadPath();
@@ -92,6 +93,40 @@ export class UploadService {
       dir,
       file.originalname
     );
+
+    // Get watermark configuration
+    const watermarkConfig = await settingsService.getWatermarkConfig();
+
+    // Apply watermark to thumbnails if enabled
+    if (watermarkConfig.enabled) {
+      // Apply watermark to small thumbnail
+      if (thumbnails.small) {
+        const wmSmallPath = thumbnails.small.replace('_small', '_small_wm');
+        await imageService.addWatermark(thumbnails.small, wmSmallPath, {
+          text: watermarkConfig.type === 'text' ? watermarkConfig.text : undefined,
+          imagePath: watermarkConfig.type === 'image' ? watermarkConfig.imagePath : undefined,
+          position: watermarkConfig.position,
+          opacity: watermarkConfig.opacity
+        });
+        // Replace original with watermarked version
+        fs.unlinkSync(thumbnails.small);
+        fs.renameSync(wmSmallPath, thumbnails.small);
+      }
+
+      // Apply watermark to large thumbnail
+      if (thumbnails.large) {
+        const wmLargePath = thumbnails.large.replace('_large', '_large_wm');
+        await imageService.addWatermark(thumbnails.large, wmLargePath, {
+          text: watermarkConfig.type === 'text' ? watermarkConfig.text : undefined,
+          imagePath: watermarkConfig.type === 'image' ? watermarkConfig.imagePath : undefined,
+          position: watermarkConfig.position,
+          opacity: watermarkConfig.opacity
+        });
+        // Replace original with watermarked version
+        fs.unlinkSync(thumbnails.large);
+        fs.renameSync(wmLargePath, thumbnails.large);
+      }
+    }
 
     return {
       filePath: toUrlPath('uploads/works', monthDir, file.filename),
