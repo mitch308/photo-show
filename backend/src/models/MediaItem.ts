@@ -53,6 +53,9 @@ export class MediaItem {
   @Column({ type: 'int', default: 0 })
   position: number = 0;
 
+  @Column({ type: 'varchar', length: 32, unique: true, nullable: true, name: 'file_hash', default: null })
+  fileHash: string = '';
+
   @CreateDateColumn({ type: 'datetime', name: 'created_at' })
   createdAt: Date = new Date();
 }

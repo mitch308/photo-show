@@ -45,6 +45,7 @@ export interface MediaItem {
   mimeType: string;
   fileSize: number;
   position: number;
+  fileHash?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -112,6 +113,15 @@ export interface UploadResult {
   fileType: 'image' | 'video';
   mimeType: string;
   fileSize: number;
+  fileHash?: string;
+}
+
+/**
+ * 文件哈希检查结果
+ */
+export interface MediaCheckResult {
+  exists: boolean;
+  mediaItem?: MediaItem | null;
 }
 
 /**

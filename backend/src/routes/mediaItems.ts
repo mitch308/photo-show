@@ -9,6 +9,30 @@ const router = Router();
 router.use(authMiddleware);
 
 /**
+ * GET /api/media/check
+ * Check if a file with the given hash already exists
+ */
+router.get('/media/check', async (req: Request, res: Response) => {
+  try {
+    const hash = req.query.hash as string;
+
+    if (!hash) {
+      res.status(400).json(errorResponse(ErrorCodes.VALIDATION_ERROR, 'hash parameter is required'));
+      return;
+    }
+
+    const mediaItem = await mediaItemService.findByHash(hash);
+
+    res.json(successResponse({
+      exists: !!mediaItem,
+      mediaItem: mediaItem || null
+    }));
+  } catch (error: any) {
+    res.status(500).json(errorResponse(ErrorCodes.UNKNOWN, error.message));
+  }
+});
+
+/**
  * POST /api/works/:workId/media
  * Add a media item to a work
  */

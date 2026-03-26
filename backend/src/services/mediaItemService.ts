@@ -13,6 +13,7 @@ export interface CreateMediaItemData {
   mimeType: string;
   fileSize: number;
   position?: number;
+  fileHash?: string;
 }
 
 export interface UpdateMediaItemData {
@@ -51,6 +52,7 @@ export class MediaItemService {
     mediaItem.mimeType = data.mimeType;
     mediaItem.fileSize = data.fileSize;
     mediaItem.position = position;
+    mediaItem.fileHash = data.fileHash || '';
 
     return this.mediaItemRepo.save(mediaItem);
   }
@@ -159,6 +161,16 @@ export class MediaItemService {
    */
   async getMediaItemCount(workId: string): Promise<number> {
     return this.mediaItemRepo.count({ where: { workId } });
+  }
+
+  /**
+   * Find a media item by file hash
+   */
+  async findByHash(hash: string): Promise<MediaItem | null> {
+    return this.mediaItemRepo.findOne({
+      where: { fileHash: hash },
+      relations: ['work'],
+    });
   }
 
   /**
