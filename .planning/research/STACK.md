@@ -1,113 +1,199 @@
-# Stack Research
+# Stack Research — v1.1 Enhancements
 
-**Domain:** Photography Studio Portfolio Platform
-**Researched:** 2026-03-24
+**Domain:** Photography Studio Portfolio Platform (v1.1 Enhancement Features)
+**Researched:** 2026-03-26
 **Confidence:** HIGH
 
-## Recommended Stack
+## v1.1 New Dependencies
 
-### Core Technologies
+### Frontend — Required Additions
 
-| Technology | Version | Purpose | Why Recommended |
-|------------|---------|---------|-----------------|
-| Vue 3 | ^3.4 | Frontend Framework | Composition API for better code organization, excellent performance, developer chose |
-| TypeScript | ^5.3 | Type Safety | Full-stack type consistency, better IDE support, catch errors at compile time |
-| Vite | ^5.0 | Build Tool | Fast HMR, native ESM, excellent Vue support, developer chose |
-| Node.js | ^20 LTS | Backend Runtime | Same language as frontend, excellent async I/O for file handling |
-| Express | ^4.18 | Backend Framework | Mature, minimal, extensive middleware ecosystem |
-| MySQL | ^8.0 | Primary Database | Relational data (users, works, categories), ACID compliance, developer chose |
-| Redis | ^7.2 | Cache & Session | Fast key-value store for sessions, view counts, link tokens, developer chose |
+| Library | Version | Purpose | Why Recommended |
+|---------|---------|---------|-----------------|
+| @wangeditor/editor | ^5.1 | Rich Text Editor Core | Modern WYSIWYG, TypeScript support, active maintenance (18.3k stars) |
+| @wangeditor/editor-for-vue | ^5.1 | Vue 3 Integration | Official Vue 3 wrapper, shallowRef pattern, Element Plus compatible |
 
-### Supporting Libraries - Frontend
+### Backend — No New Dependencies Required
 
-| Library | Version | Purpose | When to Use |
-|---------|---------|---------|-------------|
-| Vue Router | ^4.2 | Routing | SPA navigation, lazy loading routes |
-| Pinia | ^2.1 | State Management | Global state (user, theme, gallery) |
-| Element Plus | ^2.5 | UI Components | Admin panel, forms, tables |
-| VueUse | ^10.7 | Composition Utilities | Theme switching, responsive detection |
-| Axios | ^1.6 | HTTP Client | API requests with interceptors |
-| Sharp (server) | ^0.33 | Image Processing | Thumbnails, watermarks, resizing |
+| Feature | Implementation | Why No New Library |
+|---------|---------------|-------------------|
+| File deduplication | Node.js `crypto.createHash('md5')` | Built-in, native, no dependency needed |
+| Smart thumbnails | Sharp `withoutEnlargement` + metadata check | Already have Sharp 0.34.5, code change only |
 
-### Supporting Libraries - Backend
+## Integration Details
 
-| Library | Version | Purpose | When to Use |
-|---------|---------|---------|-------------|
-| TypeORM | ^0.3 | ORM | Database models, migrations, relations |
-| Multer | ^1.4 | File Upload | Handling multipart/form-data |
-| JWT | ^9.0 | Authentication | Stateless admin auth tokens |
-| Bcrypt | ^5.1 | Password Hashing | Secure password storage |
-| Sharp | ^0.33 | Image Processing | Watermark, resize, format conversion |
-| Fluent-FFmpeg | ^2.2 | Video Processing | Video thumbnails, transcoding |
+### Rich Text Editor (wangEditor)
 
-### Development Tools
-
-| Tool | Purpose | Notes |
-|------|---------|-------|
-| ESLint + Prettier | Linting & Formatting | Airbnb config base |
-| Vitest | Unit Testing | Fast, Vite-native |
-| TypeScript ESLint | TS Linting Rules | Strict mode recommended |
-
-## Installation
-
+**Installation:**
 ```bash
-# Frontend (in /frontend)
-npm create vite@latest . -- --template vue-ts
-npm install vue-router pinia element-plus vueuse axios
-npm install -D sass
-
-# Backend (in /backend)
-npm init -y
-npm install express typeorm mysql2 redis multer sharp fluent-ffmpeg bcrypt jsonwebtoken cors dotenv
-npm install -D typescript @types/node @types/express @types/multer @types/bcrypt @types/jsonwebtoken ts-node nodemon vite
+# Frontend
+npm install @wangeditor/editor @wangeditor/editor-for-vue@next
 ```
 
-## Alternatives Considered
+**Why wangEditor over alternatives:**
 
-| Recommended | Alternative | When to Use Alternative |
-|-------------|-------------|-------------------------|
-| Express | Fastify | When performance is critical (100k+ req/s) |
-| TypeORM | Prisma | When prefering schema-first approach, better TypeScript inference |
-| Element Plus | Naive UI | When preferring more minimal design system |
-| Sharp | Jimp | When needing pure JS (no native dependencies) |
+| Editor | Pros | Cons | Verdict |
+|--------|------|------|---------|
+| wangEditor 5 | Chinese docs, Vue 3 native, simple API, 18.3k stars | Less customizable than headless | ✅ Recommended |
+| Tiptap | Headless, highly customizable, 35.9k stars | Requires building UI, more complex | Overkill for studio intro |
+| Vue-Quill | Quill wrapper, mature | VueQuill less active, Quill aging | Second choice |
 
-## What NOT to Use
+**Usage pattern with Vue 3:**
+```typescript
+import { Editor, Toolbar } from '@wangeditor/editor-for-vue'
+import '@wangeditor/editor/dist/css/style.css'
+
+// Must use shallowRef for editor instance
+const editorRef = shallowRef()
+
+// Destroy on unmount
+onBeforeUnmount(() => {
+  const editor = editorRef.value
+  if (editor == null) return
+  editor.destroy()
+})
+```
+
+**Key considerations:**
+- Use `shallowRef()` for editor instance (not `ref()`)
+- Always destroy editor in `onBeforeUnmount`
+- Supports image upload customization via `MENU_CONF`
+- Works with Element Plus styling
+
+### File Deduplication
+
+**Use Node.js built-in crypto, NOT fast-md5:**
+
+```typescript
+import { createHash } from 'crypto'
+import fs from 'fs'
+
+async function computeFileMD5(filePath: string): Promise<string> {
+  const buffer = fs.readFileSync(filePath)
+  return createHash('md5').update(buffer).digest('hex')
+}
+```
+
+**Why NOT fast-md5:**
+- `fast-md5` adds an unnecessary dependency
+- Node.js `crypto` module is native, no installation needed
+- For large files, use streaming with `crypto.createHash('md5')`:
+  ```typescript
+  async function computeLargeFileMD5(filePath: string): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const hash = createHash('md5')
+      const stream = fs.createReadStream(filePath)
+      stream.on('data', chunk => hash.update(chunk))
+      stream.on('end', () => resolve(hash.digest('hex')))
+      stream.on('error', reject)
+    })
+  }
+  ```
+
+**Database change:**
+- Add `md5Hash` column to `media_items` table
+- Create unique index on `md5Hash` for deduplication queries
+
+### Smart Thumbnail Generation
+
+**Use Sharp's `withoutEnlargement` option:**
+
+```typescript
+async generateThumbnails(
+  inputPath: string,
+  outputDir: string,
+  originalName: string
+): Promise<ThumbnailResult | null> {
+  const image = sharp(inputPath)
+  const metadata = await image.metadata()
+  
+  // Skip if image is smaller than both thumbnail sizes
+  const MIN_WIDTH = 300
+  if ((metadata.width ?? 0) < MIN_WIDTH) {
+    return null // Signal: no thumbnails needed
+  }
+  
+  // Use withoutEnlargement to prevent upscaling
+  await sharp(inputPath)
+    .resize(300, undefined, { 
+      fit: 'inside', 
+      withoutEnlargement: true 
+    })
+    .toFile(smallPath)
+  
+  // ... rest of logic
+}
+```
+
+**Benefits:**
+- No upscaling artifacts
+- Saves storage for small images
+- Faster processing (skip unnecessary resize)
+
+## Existing Stack (No Changes)
+
+The following are already in place from v1.0 and require no changes:
+
+| Component | Version | Status |
+|-----------|---------|--------|
+| Vue 3 | ^3.5.13 | ✅ No change |
+| Element Plus | ^2.9.1 | ✅ No change |
+| Sharp | ^0.34.5 | ✅ No change |
+| TypeORM | ^0.3.21 | ✅ No change |
+| Express | ^4.21.2 | ✅ No change |
+
+## What NOT to Add
 
 | Avoid | Why | Use Instead |
 |-------|-----|-------------|
-| Vuex | Vue 3 prefers Pinia, better TypeScript support | Pinia |
-| moment.js | Large bundle size, mutable API | date-fns or dayjs |
-| Body-parser | Built into Express 4.16+ | express.json() |
-| localStorage for tokens | XSS vulnerable | httpOnly cookies + JWT |
+| fast-md5 | Unnecessary dependency | Node.js `crypto` module (built-in) |
+| Tiptap | Overkill for simple studio intro | wangEditor (simpler, better fit) |
+| Quill | Older architecture | wangEditor (modern, Vue 3 native) |
+| Any image resizing lib | Already have Sharp | Sharp `withoutEnlargement` option |
 
-## Stack Patterns by Variant
+## Database Schema Changes
 
-**If high traffic expected (10k+ daily visitors):**
-- Add CDN for static files
-- Use Redis for full-page caching
-- Consider PM2 cluster mode
+### New Table: `studio_settings`
 
-**If large video files (>500MB):**
-- Use streaming upload (multipart with chunks)
-- Consider separate video processing queue
-- Store videos on separate subdomain
+```sql
+CREATE TABLE studio_settings (
+  id VARCHAR(36) PRIMARY KEY,
+  setting_key VARCHAR(100) UNIQUE NOT NULL,
+  setting_value TEXT,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
 
-## Version Compatibility
+-- Default studio intro
+INSERT INTO studio_settings (id, setting_key, setting_value) 
+VALUES (UUID(), 'studio_intro', '<p>欢迎来到我们的摄影工作室</p>');
+```
 
-| Package A | Compatible With | Notes |
-|-----------|-----------------|-------|
-| Vue 3.4+ | Vite 5.x | Requires Vite 4.3+ for full features |
-| TypeScript 5.x | Vue 3.3+ | Vue 3.3+ has improved TS support |
-| TypeORM 0.3 | Node 18+ | Node 18+ recommended for performance |
-| Sharp 0.33 | Node 18+ | Prebuilt binaries for Node 18+ |
+### MediaItem Table Addition
+
+```sql
+ALTER TABLE media_items ADD COLUMN md5_hash VARCHAR(32);
+CREATE INDEX idx_media_items_md5 ON media_items(md5_hash);
+```
+
+## Installation Commands
+
+```bash
+# Frontend — add rich text editor
+cd frontend
+npm install @wangeditor/editor @wangeditor/editor-for-vue@next
+
+# Backend — no new packages needed
+# crypto is built-in to Node.js
+```
 
 ## Sources
 
-- Vue 3 official documentation — Composition API patterns
-- TypeORM documentation — MySQL integration
-- Sharp documentation — Image processing performance
-- Personal experience — Photography platform development patterns
+- wangEditor GitHub: https://github.com/wangeditor-team/wangEditor — 18.3k stars, Vue 3 support verified
+- wangEditor docs: https://www.wangeditor.com/v5/for-frame.html — Vue 3 integration guide
+- Node.js crypto docs: https://nodejs.org/api/crypto.html — MD5 hashing built-in
+- Sharp resize docs: https://sharp.pixelplumbing.com/api-resize — `withoutEnlargement` option
 
 ---
-*Stack research for: Photography Studio Portfolio Platform*
-*Researched: 2026-03-24*
+*Stack research for: v1.1 Enhancement Features*
+*Researched: 2026-03-26*

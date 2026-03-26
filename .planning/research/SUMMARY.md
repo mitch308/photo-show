@@ -1,137 +1,172 @@
 # Project Research Summary
 
-**Project:** 摄影工作室作品展示平台
-**Domain:** Photography Studio Portfolio Platform
-**Researched:** 2026-03-24
+**Project:** 摄影工作室作品展示平台 (Photography Studio Portfolio Platform)
+**Domain:** Photo Gallery Platform — v1.1 Enhancement Features
+**Researched:** 2026-03-26
 **Confidence:** HIGH
 
 ## Executive Summary
 
-这是一个面向单个摄影工作室的作品展示平台，核心功能包括：摄影师上传管理作品、公开画廊展示、私密链接分享给客户、客户下载高清原图。技术栈采用 Vue3 + Node + TypeScript 全栈方案，MySQL 存储长期数据，Redis 做缓存和会话管理。
+This is an enhancement phase for an existing v1.0 photo gallery platform. The system already has a solid foundation with Vue 3 + TypeScript + Vite frontend, Node.js + Express + TypeORM backend, MySQL for persistence, and Redis for sessions/share tokens. The v1.1 focus is on fixing critical bugs (watermark, download, view count), optimizing storage (MD5 deduplication, smart thumbnails), and adding quality-of-life features (studio introduction, album sharing).
 
-关键成功因素：优雅的作品展示体验、稳定的文件上传处理、安全的私密分享机制。主要风险在于大文件处理性能和私密链接安全性，需在架构设计时重点考虑。
+The recommended approach follows a dependency-aware build order: start with bug fixes and low-risk enhancements (view count, admin link), then optimize core systems (file storage, thumbnails), and finally add new features (studio intro, album sharing). The existing codebase is well-structured with clear service layers, making integration straightforward.
+
+Key risks center on concurrent file operations (MD5 deduplication race conditions), security in rich text handling (XSS prevention), and data integrity (orphaned files, deleted works with active shares). Each has documented prevention strategies that should be implemented during their respective phases.
 
 ## Key Findings
 
 ### Recommended Stack
 
-前端采用 Vue3 + TypeScript + Vite 组合，配合 Pinia 状态管理和 Vue Router 路由。Element Plus 提供 UI 组件库，VueUse 提供常用组合式函数。后端使用 Express + TypeORM，Sharp 处理图片（水印、缩略图），JWT 做无状态认证。
+**No major stack changes required** — this is an enhancement of an existing v1.0 system. Core technologies remain: Vue 3.5, Element Plus 2.9, Sharp 0.34.5, TypeORM 0.3, Express 4.21, MySQL 8.0, Redis 7.2.
 
-**Core technologies:**
-- **Vue 3 + TypeScript + Vite**: 前端完整解决方案，开发体验优秀
-- **Express + TypeORM**: 成熟稳定的 Node 后端方案，TypeScript 支持完善
-- **MySQL + Redis**: 关系数据 + 缓存的经典组合，适合作品管理和访问统计
+**New dependencies for v1.1:**
+- **@wangeditor/editor + @wangeditor/editor-for-vue** — Rich text editor for studio introduction page. Chosen for Vue 3 native support, Chinese documentation, and lightweight footprint (18.3k stars, active maintenance).
+- **Node.js crypto module (built-in)** — MD5 hash computation for file deduplication. No new dependency needed; `createHash('md5')` is native.
+
+**Database schema changes:**
+- New `studio_settings` table for configurable studio info (name, logo, introduction, contact)
+- Add `md5_hash` column to `media_items` with unique index for deduplication queries
 
 ### Expected Features
 
-**Must have (table stakes):**
-- 照片/视频上传与展示 — 用户核心需求
-- 相册/分类管理 — 作品组织必需
-- 响应式设计 — 多设备访问
-- 管理员登录 — 访问控制基础
+**P1 — Must have (bug fixes + core optimizations):**
+- Bug: Watermark integration — photographers' work is unprotected without it
+- Bug: Download returns file — core functionality broken for private shares
+- Bug: View count increment — statistics inaccurate
+- MD5 deduplication — storage optimization, prevents duplicate files
+- Smart thumbnail generation — performance optimization for small images
+- Work file info display — basic UX improvement (file size, count)
 
-**Should have (competitive):**
-- 私密链接分享 — 区别于公开社交平台的关键特性
-- 高清原图下载 — 专业客户需求
-- 自动水印 — 作品保护
-- 访问统计 — 了解作品影响力
+**P2 — Should have (enhanced functionality):**
+- Admin link to frontend — quick navigation improvement
+- Work file management (add/remove files from existing works)
+- Album-level private sharing — extend existing share system
 
-**Defer (v2+):**
-- 多管理员账号 — 单工作室 v1 不需要
-- 视频转码 — 复杂度高，v1 可仅支持常见格式
+**P3 — Defer to later:**
+- Studio introduction page — new feature area, requires design decisions
+- Retroactive deduplication — complex migration, risk of breaking references
+- Full CMS for studio pages — scope creep for single-purpose gallery
 
 ### Architecture Approach
 
-前后端分离架构，前端 SPA 通过 REST API 与后端通信。后端采用分层架构：Routes → Controllers → Services → Repositories，TypeORM 处理数据持久化。文件上传使用 Multer 流式处理，Sharp 异步处理图片。
+The existing architecture follows a clean three-tier pattern: Frontend (Vue 3 SPA with Pinia stores) → Backend (Express routes → services → TypeORM models) → Data (MySQL + Redis + Local filesystem). No architectural changes needed for v1.1 features.
 
-**Major components:**
-1. **Frontend (Vue3)** — 公开展示页、管理后台、私密链接页三大部分
-2. **Backend API (Node/Express)** — 认证、作品管理、文件上传、分享链接、统计
-3. **Data Layer** — MySQL 存作品/用户/分类，Redis 存会话/统计/临时 token
+**Major components affected:**
+
+1. **uploadService + imageService** — Add MD5 hash computation, smart thumbnail logic, watermark integration
+2. **shareService** — Extend ShareTokenData to support `albumId` alongside `workIds`
+3. **StudioSettings (NEW model)** — Singleton pattern for studio configuration with rich text introduction
+4. **Admin routes + views** — New settings page, enhanced share creation UI
+
+**Key integration patterns:**
+- Use streaming MD5 computation for large files (avoid blocking event loop)
+- Use Sharp's `withoutEnlargement: true` for smart thumbnails
+- Sanitize rich text on both frontend (display) and backend (storage)
+- Reference counting for deduplicated files before deletion
 
 ### Critical Pitfalls
 
-1. **大文件上传超时** — 使用 Multer 流式上传，配置合理的文件大小限制和超时
-2. **图片处理阻塞主线程** — 异步处理，先返回后处理，限制并发数
-3. **私密链接安全隐患** — 使用加密安全随机 token，设置过期时间
-4. **数据库连接泄漏** — 正确配置连接池，使用 try-finally 确保释放
+1. **MD5 Deduplication Race Condition** — Two simultaneous uploads of the same file create duplicates. Use file locking or atomic temp-file-rename pattern, store hash in DB with unique constraint.
+
+2. **XSS in Studio Introduction** — Rich text editors allow arbitrary HTML. Sanitize with DOMPurify (frontend) and sanitize-html (backend), whitelist allowed tags, strip ALL event handlers.
+
+3. **Orphaned Files on Transaction Failure** — Files uploaded but DB transaction fails. Use staging pattern: upload to temp, move to final only after DB commit, implement periodic cleanup job.
+
+4. **Thumbnail Upscaling** — Small images enlarged to 300px waste storage and reduce quality. Check dimensions with `sharp.metadata()`, use `withoutEnlargement: true`, skip generation for images below threshold.
+
+5. **Share Token Points to Deleted Work** — Share links show confusing errors. Filter invalid works at load time, show clear "work no longer available" message, consider soft-delete for works with active shares.
 
 ## Implications for Roadmap
 
-Based on research, suggested phase structure:
+Based on dependency analysis and risk mitigation, suggested phase structure:
 
-### Phase 1: 项目基础架构
-**Rationale:** 必须先搭建好前后端框架和数据库，后续功能才能在此基础上构建
-**Delivers:** 可运行的前后端骨架，数据库连接，基本的文件上传能力
-**Addresses:** 认证、文件上传、数据库设计
-**Avoids:** 大文件上传超时、数据库连接泄漏
+### Phase 1: Bug Fixes & Quick Wins
+**Rationale:** Address broken functionality before adding features. These are low-risk, high-value fixes that users expect to work.
+**Delivers:** Functional watermark, working downloads, accurate view counts, admin navigation
+**Addresses:** Watermark integration (P1), Download returns file (P1), View count (P1), Admin link (P2)
+**Avoids:** Users losing trust in platform reliability
 
-### Phase 2: 作品管理功能
-**Rationale:** 核心业务逻辑，需要在基础设施就绪后实现
-**Delivers:** 作品 CRUD、分类管理、图片处理（水印、缩略图）
-**Uses:** Sharp 图片处理，TypeORM 数据访问
-**Implements:** Service 层业务逻辑
+### Phase 2: File Storage Optimization
+**Rationale:** Storage optimizations benefit all future uploads. Complete before file management features to ensure consistent behavior.
+**Delivers:** MD5 deduplication, smart thumbnails, storage savings, consistent thumbnail quality
+**Uses:** Node.js crypto (built-in), Sharp `withoutEnlargement` option
+**Avoids:** Duplicate files wasting storage, upscaled thumbnails degrading quality, orphaned files from failed uploads
 
-### Phase 3: 公开展示与私密分享
-**Rationale:** 依赖作品管理功能，是面向用户的核心价值
-**Delivers:** 公开画廊页面、私密链接生成、访问权限控制
-**Avoids:** 私密链接安全隐患
+### Phase 3: Work File Management Enhancement
+**Rationale:** Builds on Phase 2's deduplication system. Users need to manage files in existing works without recreating.
+**Delivers:** Add/remove files from existing works, file info display, last-item validation
+**Uses:** Existing MediaItemService, enhanced upload flow from Phase 2
+**Implements:** Work file info display (P1), Work file management UI (P2)
+**Avoids:** Empty works from deleting last item, orphaned file references
 
-### Phase 4: 增强功能
-**Rationale:** 在核心功能稳定后添加
-**Delivers:** 批量上传、访问统计、客户管理、主题切换
+### Phase 4: Studio Introduction Page
+**Rationale:** New feature area independent of core upload/display flow. Requires new model and admin UI.
+**Delivers:** Configurable studio info page, rich text introduction, contact information display
+**Uses:** @wangeditor/editor-for-vue, new StudioSettings model
+**Implements:** Studio introduction page (P3)
+**Avoids:** XSS vulnerabilities through strict sanitization, CMS over-engineering through simple single-page approach
 
-### Phase 5: 部署与优化
-**Rationale:** 开发完成后进行生产环境部署
-**Delivers:** 生产环境配置、性能优化、监控告警
+### Phase 5: Album-Level Private Sharing
+**Rationale:** Extends existing share system. More complex UI changes and requires careful handling of album-work relationships.
+**Delivers:** Share entire albums via single link, share creation UI for albums
+**Uses:** Extended ShareTokenData, existing share infrastructure
+**Implements:** Album-level sharing (P2)
+**Avoids:** Stale share data by fetching works dynamically, confusing UX when shared works are deleted
 
 ### Phase Ordering Rationale
 
-- Phase 1 必须最先：基础设施是所有功能的依赖
-- Phase 2 在 Phase 1 之后：需要数据库和上传功能
-- Phase 3 在 Phase 2 之后：展示功能依赖作品数据
-- Phase 4 在 Phase 3 之后：增强功能在核心功能稳定后添加
-- Phase 5 最后：整体优化和部署
+- **Phase 1 first:** Bug fixes establish trust; broken features undermine all other work
+- **Phase 2 before 3:** File management depends on consistent deduplication behavior
+- **Phases 1, 2, 4, 5 parallel-capable:** No dependencies between these tracks
+- **Phase 3 depends on 2:** File management adds to existing deduplication flow
+- **Phase 4 and 5 independent:** Can be developed by different team members simultaneously
 
 ### Research Flags
 
 Phases likely needing deeper research during planning:
-- **Phase 1:** 图片处理库 Sharp 的具体配置和优化参数
-- **Phase 3:** Token 安全策略和过期机制的详细设计
+- **Phase 2:** MD5 deduplication edge cases (concurrent uploads, video files, cleanup strategy)
+- **Phase 4:** Rich text sanitization library selection and configuration, XSS test cases
+- **Phase 5:** Album-work relationship edge cases (album deleted, work removed from album)
 
 Phases with standard patterns (skip research-phase):
-- **Phase 2:** CRUD 操作有成熟模式
-- **Phase 4:** 统计和管理功能有标准实现方式
+- **Phase 1:** Bug fixes with clear implementation paths in existing codebase
+- **Phase 3:** MediaItemService already exists, UI follows established patterns
 
 ## Confidence Assessment
 
 | Area | Confidence | Notes |
 |------|------------|-------|
-| Stack | HIGH | 用户明确指定，Vue3+Node 生态成熟 |
-| Features | HIGH | 需求清晰，竞品分析充分 |
-| Architecture | HIGH | 标准的前后端分离架构，有成熟模式 |
-| Pitfalls | HIGH | 基于实际项目经验的常见问题 |
+| Stack | HIGH | Core stack already in production; new dependencies well-documented |
+| Features | HIGH | Based on existing codebase analysis, clear implementation paths documented |
+| Architecture | HIGH | Existing code structure analyzed, integration points mapped, build order defined |
+| Pitfalls | HIGH | Each pitfall has specific prevention strategy with code examples |
 
 **Overall confidence:** HIGH
 
 ### Gaps to Address
 
-无明显研究缺口。需求明确，技术栈选定，可直接进入规划阶段。
+- **Video file handling in deduplication:** Large video files may have slower MD5 computation. Consider progress indication for uploads >50MB.
+- **Reference counting for deduplicated files:** Implementation details for "how many works reference this file" not fully specified. Decide: track count in DB, or scan on delete?
+- **Album share edge cases:** What happens when a work is removed from an album that has an active share? Dynamic resolution needs test cases.
+- **Rich text image upload:** wangEditor supports image upload; need to decide where images are stored and if they need deduplication.
 
 ## Sources
 
 ### Primary (HIGH confidence)
-- Vue 3 官方文档 — Composition API, 响应式系统
-- TypeORM 文档 — 实体定义, 关系映射, 迁移
-- Sharp 文档 — 图片处理 API, 性能优化
+- Existing codebase analysis (`backend/src/**/*.ts`, `frontend/src/**/*.ts`) — All service patterns, routes, models verified
+- Sharp documentation (sharp.pixelplumbing.com) — `withoutEnlargement` option, streaming API, metadata extraction
+- wangEditor GitHub (github.com/wangeditor-team/wangEditor) — 18.3k stars, Vue 3 integration verified
+- Node.js crypto documentation (nodejs.org/api/crypto.html) — MD5 hashing built-in, streaming support
+- TypeORM documentation — Entity patterns, relations, migrations
 
 ### Secondary (MEDIUM confidence)
-- Element Plus 文档 — 组件使用
-- 个人经验 — 摄影平台开发实践
+- OWASP XSS Prevention Cheat Sheet — Sanitization strategies, stored XSS prevention
+- Express streaming patterns — `stream.pipeline()` for proper error handling
+- Redis patterns for rate limiting — Session-based view counting with TTL
 
 ### Tertiary (LOW confidence)
-- 竞品分析 — 功能对标参考
+- Personal experience — Photo gallery platform development patterns (validated against codebase)
 
 ---
-*Research completed: 2026-03-24*
+*Research completed: 2026-03-26*
 *Ready for roadmap: yes*

@@ -1,151 +1,284 @@
-# Pitfalls Research
+# Pitfalls Research: v1.1 Enhancement Features
 
-**Domain:** Photography Studio Portfolio Platform
-**Researched:** 2026-03-24
-**Confidence:** HIGH
+**Domain:** Photo Gallery Platform — Adding enhancement features to existing v1.0 system
+**Researched:** 2026-03-26
+**Confidence:** HIGH (based on codebase analysis + official documentation)
+
+---
 
 ## Critical Pitfalls
 
-### Pitfall 1: 大文件上传超时
+### Pitfall 1: MD5 Deduplication Race Condition
 
 **What goes wrong:**
-上传大尺寸照片（如 50MB RAW 文件）时，请求超时或内存溢出，服务器崩溃。
+Two simultaneous uploads of the same file create duplicate files with different UUIDs, or one upload overwrites the other's database record.
 
 **Why it happens:**
-默认 Express body-parser 将整个文件加载到内存，大文件占用过多内存，处理时间过长触发超时。
+MD5 calculation + file existence check + file save are not atomic. Between checking "does file with MD5 X exist?" and "save file with MD5 X", another upload could complete the same operation.
 
 **How to avoid:**
-- 使用 Multer 流式上传，设置内存限制
-- 前端分片上传或压缩后再传
-- 配置 Nginx/服务器超时时间
+- Use file locking or named temporary files during deduplication check
+- Calculate MD5 first, then use atomic file operations (write to temp, then rename)
+- Store file hash in database with unique constraint to catch duplicates at DB level
+- Implement reference counting: track how many works reference each file
 
 **Warning signs:**
-- 上传 10MB+ 文件时响应变慢
-- 服务器内存使用飙升
-- 偶发的 504 Gateway Timeout
+- Same file appearing twice in gallery with different thumbnails
+- 404 errors when downloading (file deleted by one work's deletion)
+- Database constraint violations during concurrent uploads
 
-**Phase to address:**
-Phase 1 (文件上传功能)
+**Phase to address:** File Storage Optimization (MD5 deduplication)
 
 ---
 
-### Pitfall 2: 图片处理阻塞主线程
+### Pitfall 2: Orphaned Files on Transaction Failure
 
 **What goes wrong:**
-添加水印、生成缩略图时，API 响应变慢，其他请求被阻塞。
+Files uploaded to disk but database transaction fails, leaving orphaned files that are never cleaned up. Or, database record deleted but file system deletion fails.
 
 **Why it happens:**
-Sharp 虽然高效，但大量图片同步处理会占用 CPU，Node 单线程特性导致其他请求等待。
+File system operations and database transactions are not atomic. A crash between `fs.writeFile()` and `mediaItemRepo.save()` leaves inconsistent state.
 
 **How to avoid:**
-- 使用异步处理，上传后立即返回，后台处理图片
-- 限制并发处理数量
-- 考虑使用 Worker Threads 处理大量图片
+- Use "staging" pattern: upload to temp location, move to final only after DB commit
+- Implement periodic cleanup job for files not referenced in database
+- Add transaction hooks to rollback file operations on DB failure
+- Store file path in DB BEFORE moving file to final location (optimistic lock)
+
+```typescript
+// Anti-pattern
+await fs.writeFile(finalPath, buffer);
+await mediaItemRepo.save(mediaItem); // If this fails, file is orphaned
+
+// Better pattern
+await fs.writeFile(tempPath, buffer);
+await mediaItemRepo.save(mediaItem); // If this fails, temp file can be cleaned
+await fs.rename(tempPath, finalPath); // Atomic on same filesystem
+```
 
 **Warning signs:**
-- 上传后 API 响应时间 > 3秒
-- 服务器 CPU 100% 占用
-- 其他用户反馈页面卡顿
+- Disk usage growing faster than database records
+- Files in upload directory with no corresponding DB entries
+- Out of disk space errors
 
-**Phase to address:**
-Phase 1 (图片处理)
+**Phase to address:** File Storage Optimization (MD5 deduplication must handle this)
 
 ---
 
-### Pitfall 3: 私密链接安全隐患
+### Pitfall 3: Thumbnail Generation for Small Images
 
 **What goes wrong:**
-私密链接被猜测、泄露，或链接永不过期导致作品长期暴露。
+Images smaller than target thumbnail size (e.g., 200x150 image) get enlarged to 300px, wasting storage and reducing quality. Or, exactly-sized images generate redundant thumbnails.
 
 **Why it happens:**
-- 使用简单递增 ID 作为 token
-- Token 无过期时间
-- 未限制访问次数
+Sharp's `resize(300, undefined, { fit: 'inside' })` only prevents enlarging when `withoutEnlargement: true` is set. Default behavior allows upscaling.
 
 **How to avoid:**
-- 使用加密安全的随机 token（crypto.randomBytes）
-- 设置合理的过期时间（如 7 天）
-- 可选：限制访问次数或 IP
-- Redis 存储并设置 TTL
+- Check image dimensions before generating thumbnails
+- Use Sharp's `withoutEnlargement: true` option
+- Skip thumbnail generation entirely for images below threshold
+- For exactly-sized images, use symbolic links or copy instead of processing
+
+```typescript
+// Correct approach
+const metadata = await sharp(inputPath).metadata();
+if (metadata.width && metadata.width <= 300) {
+  // Use original file as "small" thumbnail
+  thumbnailSmall = filePath; // No generation needed
+} else {
+  await sharp(inputPath)
+    .resize(300, undefined, { fit: 'inside', withoutEnlargement: true })
+    .toFile(smallPath);
+}
+```
 
 **Warning signs:**
-- Token 看起来像递增数字
-- Token 长度 < 16 字符
-- 没有过期时间字段
+- Thumbnails larger than originals
+- Pixelated small thumbnails
+- Storage bloat from unnecessary processing
 
-**Phase to address:**
-Phase 3 (私密分享功能)
+**Phase to address:** File Storage Optimization (smart thumbnails)
 
 ---
 
-### Pitfall 4: 数据库连接未释放
+### Pitfall 4: XSS in Studio Introduction Rich Text
 
 **What goes wrong:**
-随着使用时间增长，数据库连接数达到上限，新请求全部失败。
+Malicious scripts injected into studio introduction get executed in admin panel or public page, potentially stealing admin session or defacing site.
 
 **Why it happens:**
-- TypeORM 连接未正确配置池
-- 事务未提交或回滚
-- 错误处理中忘记释放连接
+Rich text editors allow arbitrary HTML. Without proper sanitization, `<script>`, `onerror`, `onclick` handlers persist to database and execute when rendered.
 
 **How to avoid:**
-- 配置连接池大小和超时
-- 使用 try-finally 确保连接释放
-- 监控连接池状态
+- Use a well-maintained sanitizer (DOMPurify on frontend, sanitize-html on backend)
+- Whitelist allowed HTML tags: `p, br, strong, em, h1-h6, ul, ol, li, a, img`
+- Strip ALL event handlers: `onclick`, `onerror`, `onload`, etc.
+- Sanitize on BOTH frontend (for display) and backend (for storage)
+- Use Content Security Policy headers as defense-in-depth
+
+```typescript
+// Backend sanitization
+import sanitizeHtml from 'sanitize-html';
+
+const cleanIntro = sanitizeHtml(richText, {
+  allowedTags: ['p', 'br', 'strong', 'em', 'h1', 'h2', 'h3', 'ul', 'ol', 'li', 'a', 'img'],
+  allowedAttributes: {
+    a: ['href', 'title'],
+    img: ['src', 'alt', 'title']
+  },
+  allowedSchemes: ['https'], // Only https links
+});
+```
 
 **Warning signs:**
-- 运行一段时间后开始报 "Too many connections"
-- 重启服务器后恢复正常
-- 数据库 SHOW PROCESSLIST 显示大量 Sleep 连接
+- `<script>` tags visible in stored content
+- Console errors about blocked scripts (CSP working but XSS attempted)
+- Unexpected redirects when viewing studio page
 
-**Phase to address:**
-Phase 1 (数据库初始化)
+**Phase to address:** Studio Introduction Page
 
 ---
 
-### Pitfall 5: 前端状态丢失
+### Pitfall 5: Share Token Points to Deleted Work
 
 **What goes wrong:**
-用户刷新页面后，主题设置、筛选条件丢失，体验不连贯。
+Share link shows "work not found" errors because the work was deleted after the share was created. Or, album share shows stale work list (works added/removed after share creation).
 
 **Why it happens:**
-Vue SPA 的状态存储在内存中，刷新后重置。
+Share tokens store `workIds` array at creation time. No mechanism updates or invalidates shares when works are deleted or albums change.
 
 **How to avoid:**
-- 使用 Pinia 持久化插件（pinia-plugin-persistedstate）
-- 重要设置存 localStorage
-- URL 参数记录筛选状态
+- Filter out non-existent works when loading share (already partially implemented)
+- Track share references in Work model (soft dependency)
+- Consider "soft delete" for works with active shares
+- For album shares, decide: snapshot at creation time OR dynamic (current works in album)
+- Document behavior clearly: what happens when shared work is deleted?
+
+**Current code partially handles this:**
+```typescript
+// In share.ts - filters nulls
+const validWorks = works.filter(w => w !== null);
+```
+
+But doesn't inform user that some works are missing.
 
 **Warning signs:**
-- 刷新后主题重置
-- 分页跳转后筛选条件丢失
-- 用户抱怨需要重复操作
+- Share pages showing fewer works than expected
+- Client complaints about missing photos
+- 404 errors in share download endpoints
 
-**Phase to address:**
-Phase 2 (前端状态管理)
+**Phase to address:** Share Extension (work/album sharing)
 
 ---
 
-### Pitfall 6: 文件名冲突
+### Pitfall 6: View Count Inflation
 
 **What goes wrong:**
-上传同名文件时，新文件覆盖旧文件，导致数据丢失。
+View counts are inflated by page refreshes, bot crawlers, or malicious requests. A single user viewing a work 10 times adds 10 to view count.
 
 **Why it happens:**
-直接使用原始文件名存储，未做唯一性处理。
+Current implementation increments count on every `getPublicWorkById` call with no deduplication.
+
+```typescript
+// Current implementation
+await this.workRepo.increment({ id }, 'viewCount', 1); // Called every time
+```
 
 **How to avoid:**
-- 使用 UUID 或时间戳重命名文件
-- 保留原始文件名在数据库中
-- 检查文件是否存在
+- Use Redis for rate-limited view counting (one view per IP/session per time window)
+- Store view events in a queue, aggregate periodically
+- Exclude known bot user agents from counting
+- Consider unique view counting (per session or per user fingerprint)
+- Separate "views" from "impressions" (scrolling past vs. actually viewing)
+
+```typescript
+// Better approach with Redis rate limiting
+const viewKey = `view:${workId}:${sessionId}`;
+const alreadyViewed = await redis.get(viewKey);
+if (!alreadyViewed) {
+  await redis.setex(viewKey, 3600, '1'); // 1 hour window
+  await this.workRepo.increment({ id }, 'viewCount', 1);
+}
+```
 
 **Warning signs:**
-- 文件名直接使用 req.file.originalname
-- 上传目录中出现同名文件
-- 历史图片被替换
+- View counts disproportionately high vs. expected traffic
+- View counts spike during crawl events
+- Same IP showing hundreds of views
 
-**Phase to address:**
-Phase 1 (文件上传)
+**Phase to address:** Bug Fix (view count should increment properly)
+
+---
+
+### Pitfall 7: Large File Download Memory Exhaustion
+
+**What goes wrong:**
+Large video downloads (50MB+) cause memory spikes, especially with concurrent downloads. Server becomes unresponsive.
+
+**Why it happens:**
+While current code uses streaming (`fs.createReadStream().pipe(res)`), error handling and back-pressure aren't properly managed. Connection drops can leave file handles open.
+
+**How to avoid:**
+- Use `stream.pipeline()` instead of `.pipe()` for proper error handling
+- Implement Range request support for large files (HTTP 206 Partial Content)
+- Set connection timeouts for slow clients
+- Limit concurrent downloads per IP
+- Use `res.writeHead()` with proper headers before streaming
+
+```typescript
+// Better streaming with pipeline
+import { pipeline } from 'node:stream/promises';
+
+try {
+  await pipeline(
+    fs.createReadStream(filePath),
+    res
+  );
+} catch (err) {
+  // Handle errors properly - stream cleanup is automatic
+  if (!res.headersSent) {
+    res.status(500).json(errorResponse(ErrorCodes.UNKNOWN, 'Download failed'));
+  }
+}
+```
+
+**Warning signs:**
+- Server memory usage climbing during downloads
+- Timeout errors for large file downloads
+- EPIPE errors in logs (client disconnected)
+
+**Phase to address:** Bug Fix (download returns source file)
+
+---
+
+### Pitfall 8: Removing the Last Media Item from a Work
+
+**What goes wrong:**
+User removes the only media item from a work, leaving an "empty" work with no files. Work record exists but displays nothing.
+
+**Why it happens:**
+Current `deleteMediaItem` in mediaItemService deletes the file immediately without checking if it's the last item. Work model allows empty `mediaItems` array.
+
+**How to avoid:**
+- Check media item count before deletion
+- Prompt user: "This is the last image. Delete the entire work?" or "Work will be empty"
+- Either: prevent deletion of last item, OR auto-delete the work
+- Add validation: work must have at least one media item (business rule)
+
+```typescript
+// In deleteMediaItem
+const itemCount = await this.getMediaItemCount(mediaItem.workId);
+if (itemCount === 1) {
+  throw new Error('Cannot delete the last media item. Delete the work instead.');
+}
+```
+
+**Warning signs:**
+- Works showing "No images" in gallery
+- Empty work cards in admin panel
+- Confused clients seeing blank shares
+
+**Phase to address:** Work File Management Enhancement
 
 ---
 
@@ -155,10 +288,14 @@ Shortcuts that seem reasonable but create long-term problems.
 
 | Shortcut | Immediate Benefit | Long-term Cost | When Acceptable |
 |----------|-------------------|----------------|-----------------|
-| 跳过图片缩略图 | 快速完成上传功能 | 列表页加载慢，带宽浪费 | 原型阶段，立即重构 |
-| 硬编码管理员密码 | 跳过认证实现 | 安全风险，难以修改 | 仅本地开发测试 |
-| 前端直接存 JWT | 快速实现认证 | XSS 攻击风险 | 永远不可接受 |
-| 不做错误边界 | 代码简单 | 一个组件错误导致整页崩溃 | 永远不可接受 |
+| Skip MD5 deduplication | Faster uploads | Duplicate files, wasted storage | Never — essential for photo gallery |
+| Always generate thumbnails | Simpler code | Wasted storage, quality loss for small images | Never — check dimensions first |
+| Delete files immediately | Simpler logic | Can't recover from mistakes | Use soft delete or trash folder |
+| Store raw HTML in intro | Fastest implementation | XSS vulnerabilities, security debt | Never — always sanitize |
+| Increment view count on every load | Simplest code | Inflated metrics, meaningless data | Use rate-limited counting |
+| Ignore orphaned files | Save dev time | Disk bloat, eventual storage crisis | Never — implement cleanup job |
+
+---
 
 ## Integration Gotchas
 
@@ -166,10 +303,14 @@ Common mistakes when connecting to external services.
 
 | Integration | Common Mistake | Correct Approach |
 |-------------|----------------|------------------|
-| Redis | 不设置连接超时和重试 | 配置 retryStrategy 和 maxRetries |
-| MySQL | 使用 root 账户连接 | 创建专用用户，限制权限 |
-| TypeORM | 同步模式 (synchronize: true) 用于生产 | 使用迁移脚本，关闭同步 |
-| Multer | 不限制文件类型 | 使用 fileFilter 验证 MIME 类型 |
+| Sharp image processing | Ignoring memory limits with large batches | Process in batches, monitor memory, use streaming |
+| Redis for share tokens | No TTL management, manual cleanup | Use SETEX for auto-expiration (already implemented) |
+| Redis for view counting | Increment on every request | Rate-limit with session/IP key + TTL |
+| Multer file upload | No file type validation | Check MIME type AND file signature |
+| File streaming | Using `.pipe()` without error handling | Use `stream.pipeline()` with try/catch |
+| TypeORM cascade | Cascade delete without checking shares | Check for active shares before deleting work |
+
+---
 
 ## Performance Traps
 
@@ -177,10 +318,14 @@ Patterns that work at small scale but fail as usage grows.
 
 | Trap | Symptoms | Prevention | When It Breaks |
 |------|----------|------------|----------------|
-| 单张图片加载 | 画廊页面加载慢 | 懒加载 + 缩略图 | > 20 张图片 |
-| 同步统计更新 | Redis 写入阻塞 | 批量写入或消息队列 | > 100 QPS |
-| 全量数据查询 | 分页失效，内存溢出 | 分页 + 索引 | > 1000 条记录 |
-| 无缓存的重复查询 | 数据库连接池耗尽 | Redis 缓存热点数据 | > 50 并发 |
+| Increment view count synchronously | Slow page loads under traffic | Async queue + periodic aggregation | 100+ concurrent viewers |
+| Generate thumbnails on upload | Upload timeouts for batch operations | Background job queue | 20+ images in one batch |
+| Full file scan for MD5 | Slow uploads for large files | Stream MD5 calculation during upload | Files > 10MB |
+| Store shares in Redis only | Lost shares on Redis restart | Persist to database, Redis for speed | Redis restart/crash |
+| No download rate limiting | Server overload from scrapers | Rate limit per IP, per token | Any public gallery |
+| N+1 queries for media items | Slow work listing | Eager load relations | 100+ works displayed |
+
+---
 
 ## Security Mistakes
 
@@ -188,10 +333,14 @@ Domain-specific security issues beyond general web security.
 
 | Mistake | Risk | Prevention |
 |---------|------|------------|
-| 私密链接 token 可预测 | 任意作品可被访问 | 使用加密安全的随机 token |
-| 文件上传无类型检查 | 恶意文件上传 | 验证 MIME 类型，限制扩展名 |
-| 路径遍历攻击 | 服务器文件泄露 | 验证路径，使用白名单 |
-| 无访问日志 | 无法追踪异常行为 | 记录所有管理操作和私密链接访问 |
+| No file type validation | Malicious files uploaded (e.g., PHP shell) | Validate MIME type AND file signature, not just extension |
+| Predictable share tokens | Attackers guess share URLs | Use crypto.randomBytes(32) — already implemented |
+| No download auth check | Anyone can download via direct URL | Verify share token before every download (already implemented) |
+| Rich text without sanitization | Stored XSS in admin panel | Sanitize on both frontend and backend |
+| File path in URL parameters | Path traversal attacks | Never use user input in file paths directly |
+| No rate limiting on downloads | Resource exhaustion | Limit concurrent downloads per IP/token |
+
+---
 
 ## UX Pitfalls
 
@@ -199,21 +348,30 @@ Common user experience mistakes in this domain.
 
 | Pitfall | User Impact | Better Approach |
 |---------|-------------|-----------------|
-| 上传无进度指示 | 用户不确定是否成功 | 显示进度条和预计时间 |
-| 图片加载无占位 | 布局跳动，体验差 | 使用骨架屏或占位图 |
-| 无筛选重置按钮 | 用户被困在筛选结果 | 提供明显的重置/清空选项 |
-| 移动端点击区域小 | 难以操作，误触 | 最小 44px 点击区域 |
-| 深色模式对比度不足 | 文字难以辨认 | 确保文字与背景对比度 > 4.5 |
+| Share link shows "work not found" | Confusion, client thinks product deleted | Show "work no longer available" with context |
+| Empty work after removing last file | Work exists but shows nothing | Prompt before removing last file, or auto-delete work |
+| Thumbnail quality issues | Professional photos look amateur | Quality-first thumbnail settings, test with real photos |
+| View count never updates | Stats feel broken | Real-time update or clear "updated every X" indicator |
+| Download starts without progress | Large files seem frozen | Show progress bar or file size estimate |
+| No indication of duplicate upload | User re-uploads same file, confused | Show "file already exists" with option to use existing |
+| Share created without confirmation | User unsure if link was generated | Show success toast with link preview |
+
+---
 
 ## "Looks Done But Isn't" Checklist
 
 Things that appear complete but are missing critical pieces.
 
-- [ ] **文件上传:** 往往缺少类型验证 — 验证 MIME 类型、文件大小限制
-- [ ] **私密链接:** 往往缺少过期机制 — 检查 token TTL 设置
-- [ ] **图片展示:** 往往缺少懒加载 — 检查长列表页面性能
-- [ ] **错误处理:** 往往缺少用户友好提示 — 验证错误页面和 toast 提示
-- [ ] **统计功能:** 往往缺少数据持久化 — 验证 Redis 数据是否同步到 MySQL
+- [ ] **MD5 Deduplication:** Often missing reference counting — verify deleting one work doesn't break shared files
+- [ ] **Smart Thumbnails:** Often missing edge case for exactly-sized images — verify no redundant thumbnails
+- [ ] **File Management:** Often missing orphan cleanup — verify no files left when DB operation fails
+- [ ] **Rich Text:** Often missing backend sanitization — verify `<script>` tags are stripped on save
+- [ ] **Share Extension:** Often missing work deletion handling — verify share shows clear error for deleted works
+- [ ] **View Counting:** Often missing bot filtering — verify crawler traffic doesn't inflate counts
+- [ ] **File Download:** Often missing Range support — verify large video files resume after pause
+- [ ] **Last Media Item:** Often missing validation — verify user can't leave work empty
+
+---
 
 ## Recovery Strategies
 
@@ -221,31 +379,80 @@ When pitfalls occur despite prevention, how to recover.
 
 | Pitfall | Recovery Cost | Recovery Steps |
 |---------|---------------|----------------|
-| 文件名冲突 | HIGH | 从备份恢复，或检查数据库记录重建 |
-| 连接池耗尽 | MEDIUM | 重启服务，调整池大小，检查连接泄漏 |
-| Token 泄露 | LOW | 使旧 token 失效，重新生成 |
-| 内存溢出 | MEDIUM | 重启服务，检查大文件处理逻辑 |
+| Duplicate files (no deduplication) | MEDIUM | Script to find MD5 duplicates, consolidate with reference counting |
+| Orphaned files | LOW | Query DB for all paths, delete files not in result set |
+| Corrupted thumbnails | LOW | Delete all thumbnails, regenerate on-demand or in batch |
+| XSS in rich text | HIGH | Find all stored HTML, sanitize, update DB, review for damage |
+| Broken share links | MEDIUM | Query shares with invalid workIds, notify admins or auto-clean |
+| Inflated view counts | LOW | Reset counts, implement proper tracking going forward |
+| Memory exhaustion from downloads | LOW | Restart server, implement proper streaming + rate limits |
+| Empty works (last item deleted) | LOW | Query for works with no mediaItems, prompt for action |
+
+---
 
 ## Pitfall-to-Phase Mapping
 
-How roadmap phases should address these pitfalls.
+How v1.1 roadmap phases should address these pitfalls.
 
 | Pitfall | Prevention Phase | Verification |
 |---------|------------------|--------------|
-| 大文件上传超时 | Phase 1 | 上传测试 50MB+ 文件 |
-| 图片处理阻塞 | Phase 1 | 并发上传测试，监控 CPU |
-| 私密链接安全 | Phase 3 | Token 安全性审计 |
-| 数据库连接泄漏 | Phase 1 | 长时间运行压力测试 |
-| 前端状态丢失 | Phase 2 | 刷新页面测试 |
-| 文件名冲突 | Phase 1 | 上传同名文件测试 |
+| MD5 Race Condition | File Storage Optimization | Test concurrent upload of same file |
+| Orphaned Files | File Storage Optimization | Kill process mid-upload, run cleanup job |
+| Thumbnail Small Images | File Storage Optimization | Upload 200x150 image, verify no enlargement |
+| XSS Rich Text | Studio Introduction | Submit `<script>alert(1)</script>`, verify stripped |
+| Share Deleted Works | Share Extension | Create share, delete work, verify clear error |
+| View Count Inflation | Bug Fix (view count) | Refresh page 10x, verify 1 count increment |
+| Large File Memory | Bug Fix (download) | Download 100MB video, monitor memory usage |
+| Last Media Item | Work File Management | Delete last item, verify prompt or auto-delete |
+
+---
+
+## Codebase-Specific Considerations
+
+### Current Patterns to Preserve
+
+1. **Share token format:** `crypto.randomBytes(32).toString('base64url')` — already secure
+2. **Streaming downloads:** `fs.createReadStream().pipe(res)` — already implemented, needs `pipeline()`
+3. **Cascade delete:** TypeORM `cascade: true` on mediaItems — already handles DB consistency
+4. **Month-based folders:** `YYYY-MM` structure — keep for organization, add MD5-based naming
+5. **Redis TTL for shares:** Using `setex` for auto-expiration — already correct
+
+### Current Gaps to Address
+
+1. **No MD5 calculation:** Files stored with UUID names, no deduplication
+2. **No thumbnail size check:** Always generates 300px/1200px regardless of source
+3. **No orphan cleanup:** If process dies mid-upload, temp files remain
+4. **No view rate limiting:** Every `getPublicWorkById` call increments
+5. **No rich text storage:** Studio intro doesn't exist yet, start with sanitization
+6. **No last-item validation:** Can delete last media item without warning
+
+---
+
+## v1.0 Pitfalls (Preserved for Reference)
+
+The following pitfalls from v1.0 are still relevant:
+
+| Pitfall | Status | Notes |
+|---------|--------|-------|
+| 大文件上传超时 | ✅ Addressed | Multer streaming + size limits implemented |
+| 图片处理阻塞 | ⚠️ Partial | Sharp is async but batch operations could still block |
+| 私密链接安全隐患 | ✅ Addressed | crypto.randomBytes + TTL implemented |
+| 数据库连接未释放 | ✅ Addressed | TypeORM connection pooling configured |
+| 前端状态丢失 | ✅ Addressed | VueUse + localStorage for theme |
+| 文件名冲突 | ⚠️ Partial | UUID naming used, but MD5 deduplication not yet |
+
+---
 
 ## Sources
 
-- Node.js 最佳实践 — 错误处理、性能优化
-- Sharp 文档 — 图片处理性能建议
-- OWASP — 文件上传安全
-- 个人经验 — 摄影平台开发中的实际问题
+- Sharp documentation — `withoutEnlargement` option, streaming API, memory management
+- OWASP XSS Prevention Cheat Sheet — sanitization strategies, stored XSS risks
+- Node.js Stream documentation — `pipeline()` for error handling, back-pressure
+- Codebase analysis — Current patterns in shareService, uploadService, publicService, mediaItemService
+- Personal experience — Photo gallery platform development patterns
 
 ---
-*Pitfalls research for: Photography Studio Portfolio Platform*
-*Researched: 2026-03-24*
+
+*Pitfalls research for: Photo Gallery v1.1 Enhancement Features*
+*Researched: 2026-03-26*
+*Previous version: v1.0 PITFALLS.md (2026-03-24)*
