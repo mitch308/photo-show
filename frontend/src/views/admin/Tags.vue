@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, watch, onMounted } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { tagsApi } from '@/api/tags';
 import type { Tag } from '@/api/types';
@@ -7,16 +7,28 @@ import type { Tag } from '@/api/types';
 const tags = ref<Tag[]>([]);
 const loading = ref(false);
 
+// Search state
+const searchQuery = ref('');
+
 const dialogVisible = ref(false);
 const editingTag = ref<Tag | null>(null);
 const form = ref({ name: '' });
 
 onMounted(() => loadTags());
 
-async function loadTags() {
+// Search with debounce
+let searchTimeout: ReturnType<typeof setTimeout>;
+watch(searchQuery, () => {
+  clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(() => {
+    loadTags(searchQuery.value || undefined);
+  }, 300);
+});
+
+async function loadTags(q?: string) {
   loading.value = true;
   try {
-    tags.value = await tagsApi.getTags();
+    tags.value = await tagsApi.getTags(q);
   } finally {
     loading.value = false;
   }
@@ -66,6 +78,12 @@ async function deleteTag(tag: Tag) {
   <div class="tags-page">
     <div class="page-header">
       <h2>标签管理</h2>
+      <el-input
+        v-model="searchQuery"
+        placeholder="搜索标签名称..."
+        clearable
+        style="width: 200px; margin-right: 12px"
+      />
       <el-button type="primary" @click="openCreateDialog">新建标签</el-button>
     </div>
 

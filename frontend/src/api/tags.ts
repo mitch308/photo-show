@@ -2,8 +2,11 @@ import api from './index';
 import type { ApiResponse, Tag } from './types';
 
 export const tagsApi = {
-  async getTags(): Promise<Tag[]> {
-    const response = await api.get<ApiResponse<Tag[]>>('/tags');
+  async getTags(q?: string): Promise<Tag[]> {
+    const params = new URLSearchParams();
+    if (q) params.append('q', q);
+    const url = params.toString() ? `/tags?${params.toString()}` : '/tags';
+    const response = await api.get<ApiResponse<Tag[]>>(url);
     return response.data.data;
   },
 
