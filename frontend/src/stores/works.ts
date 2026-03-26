@@ -58,8 +58,17 @@ export const useWorksStore = defineStore('works', {
     },
 
     // Media item management
-    async addMediaItem(workId: string, formData: FormData): Promise<MediaItem> {
-      const mediaItem = await mediaItemsApi.addMediaItem(workId, formData);
+    async addMediaItem(workId: string, data: {
+      filePath: string;
+      thumbnailSmall?: string | null;
+      thumbnailLarge?: string | null;
+      originalFilename: string;
+      fileType: 'image' | 'video';
+      mimeType: string;
+      fileSize: number;
+      fileHash?: string;
+    }): Promise<MediaItem> {
+      const mediaItem = await mediaItemsApi.addMediaItem(workId, data);
       const work = this.works.find(w => w.id === workId);
       if (work) {
         if (!work.mediaItems) {

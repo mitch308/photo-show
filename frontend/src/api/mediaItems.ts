@@ -16,13 +16,19 @@ export const mediaItemsApi = {
   /**
    * Add a media item to a work
    */
-  async addMediaItem(workId: string, data: FormData): Promise<MediaItem> {
+  async addMediaItem(workId: string, data: {
+    filePath: string;
+    thumbnailSmall?: string | null;
+    thumbnailLarge?: string | null;
+    originalFilename: string;
+    fileType: 'image' | 'video';
+    mimeType: string;
+    fileSize: number;
+    fileHash?: string;
+  }): Promise<MediaItem> {
     const response = await api.post<ApiResponse<MediaItem>>(
       `/works/${workId}/media`,
-      data,
-      {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      }
+      data
     );
     return response.data.data;
   },

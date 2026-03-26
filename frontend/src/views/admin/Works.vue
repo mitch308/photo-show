@@ -118,19 +118,18 @@ async function handleAddFile(result: UploadResult & { isDuplicate?: boolean }) {
   
   addingFile.value = true;
   try {
-    const formData = new FormData();
-    formData.append('filePath', result.filePath);
-    formData.append('thumbnailSmall', result.thumbnailSmall || '');
-    formData.append('thumbnailLarge', result.thumbnailLarge || '');
-    formData.append('originalFilename', result.originalFilename);
-    formData.append('fileType', result.fileType);
-    formData.append('mimeType', result.mimeType);
-    formData.append('fileSize', String(result.fileSize));
-    if (result.fileHash) {
-      formData.append('fileHash', result.fileHash);
-    }
+    const data = {
+      filePath: result.filePath,
+      thumbnailSmall: result.thumbnailSmall || null,
+      thumbnailLarge: result.thumbnailLarge || null,
+      originalFilename: result.originalFilename,
+      fileType: result.fileType,
+      mimeType: result.mimeType,
+      fileSize: result.fileSize,
+      fileHash: result.fileHash || undefined,
+    };
     
-    await mediaItemsApi.addMediaItem(editingWork.value.id, formData);
+    await mediaItemsApi.addMediaItem(editingWork.value.id, data);
     
     ElMessage.success('文件添加成功');
     showAddFile.value = false;
