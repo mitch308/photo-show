@@ -107,7 +107,11 @@
 **Success Criteria** (what must be TRUE):
   1. 访客无需登录即可访问"关于我们"页面
   2. 作品缩略图正确显示（使用第一个 mediaItem，兼容旧数据）
-**Plans:** TBD
+**Plans:** 2 plans
+
+Plans:
+- [ ] 13-01-PLAN.md — 验证并确保访客无需登录即可访问"关于我们"页面
+- [ ] 13-02-PLAN.md — 创建 useWorkThumbnail composable 修复缩略图显示
 
 ---
 
@@ -210,7 +214,7 @@ v1.0 Complete ──→ v1.1 Complete ──→ v1.2
 | 10. 作品文件管理 | v1.1 | 2/2 | Complete | 2026-03-26 |
 | 11. 工作室介绍 | v1.1 | 3/3 | Complete | 2026-03-26 |
 | 12. 相册分享 | v1.1 | 2/2 | Complete | 2026-03-26 |
-| 13. Bug 修复 | v1.2 | 0/2 | Not started | - |
+| 13. Bug 修复 | v1.2 | 0/2 | Planning | - |
 | 14. 作品详情页 | v1.2 | 0/3 | Not started | - |
 | 15. 后台筛选 | v1.2 | 0/4 | Not started | - |
 | 16. 布局优化 | v1.2 | 0/2 | Not started | - |
