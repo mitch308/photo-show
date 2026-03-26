@@ -9,8 +9,8 @@ v1.2 UI/UX 优化与修复需求。
 
 ### Bug 修复
 
-- [ ] **BUG-01**: 关于我们页面无需登录即可访问
-- [ ] **BUG-02**: 作品缩略图正确显示（使用第一个 mediaItem，兼容旧数据）
+- [x] **BUG-01**: 关于我们页面无需登录即可访问
+- [x] **BUG-02**: 作品缩略图正确显示（使用第一个 mediaItem，兼容旧数据）
 
 ### 公开画廊
 
@@ -89,8 +89,8 @@ v1.2 UI/UX 优化与修复需求。
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| BUG-01 | Phase 13 | Pending |
-| BUG-02 | Phase 13 | Pending |
+| BUG-01 | Phase 13 | Complete |
+| BUG-02 | Phase 13 | Complete |
 | GALL-01 | Phase 14 | Pending |
 | GALL-02 | Phase 14 | Pending |
 | GALL-03 | Phase 14 | Pending |

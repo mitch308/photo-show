@@ -4,13 +4,13 @@ milestone: v1.2
 milestone_name: UI/UX 优化与修复
 status: planning
 stopped_at: Phase 13 context gathered
-last_updated: "2026-03-26T15:16:52.651Z"
+last_updated: "2026-03-26T15:24:33.370Z"
 last_activity: 2026-03-26 — v1.2 Roadmap created
 progress:
   total_phases: 5
-  completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
+  completed_phases: 1
+  total_plans: 2
+  completed_plans: 2
   percent: 0
 ---
 
