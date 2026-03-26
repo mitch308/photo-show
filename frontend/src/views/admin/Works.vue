@@ -127,6 +127,17 @@ function formatFileSize(bytes: number): string {
   return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
 }
 
+function getFileCount(work: Work): number {
+  return work.mediaItems?.length || 1;
+}
+
+function getTotalFileSize(work: Work): number {
+  if (work.mediaItems && work.mediaItems.length > 0) {
+    return work.mediaItems.reduce((sum, item) => sum + item.fileSize, 0);
+  }
+  return work.fileSize || 0;
+}
+
 // Batch selection handlers
 function handleSelectionChange(selection: Work[]) {
   selectedWorks.value = selection.map(w => w.id);
@@ -330,9 +341,15 @@ async function handleBatchDelete() {
         </template>
       </el-table-column>
       
+      <el-table-column label="文件" width="70" align="center">
+        <template #default="{ row }">
+          <span>{{ getFileCount(row) }}</span>
+        </template>
+      </el-table-column>
+      
       <el-table-column label="大小" width="100">
         <template #default="{ row }">
-          {{ formatFileSize(row.fileSize) }}
+          {{ formatFileSize(getTotalFileSize(row)) }}
         </template>
       </el-table-column>
       
