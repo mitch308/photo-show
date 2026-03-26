@@ -42,6 +42,9 @@ function handleThemeToggle() {
         <router-link to="/admin/settings" class="nav-item">系统设置</router-link>
       </nav>
       <div class="sidebar-footer">
+        <a href="/" target="_blank" class="gallery-link" title="在新窗口打开前台画廊">
+          <span class="icon-gallery">🖼️</span>
+        </a>
         <button class="theme-toggle" @click="handleThemeToggle" :title="isDark ? '切换到浅色模式' : '切换到深色模式'">
           <span v-if="isDark" class="icon-sun">☀️</span>
           <span v-else class="icon-moon">🌙</span>
@@ -103,6 +106,27 @@ function handleThemeToggle() {
   border-top: 1px solid var(--sidebar-hover-bg);
   display: flex;
   gap: 10px;
+}
+
+.gallery-link {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid var(--sidebar-hover-bg);
+  color: var(--sidebar-text);
+  border-radius: 4px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 16px;
+}
+
+.gallery-link:hover {
+  background: var(--sidebar-hover-bg);
+  color: var(--sidebar-text-active);
 }
 
 .theme-toggle {
