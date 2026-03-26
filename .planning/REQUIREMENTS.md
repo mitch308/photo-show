@@ -1,48 +1,73 @@
-# Requirements: 摄影工作室作品展示平台 v1.1
+# Requirements: 摄影工作室作品展示平台
 
 **Defined:** 2026-03-26
 **Core Value:** 让摄影师轻松管理作品，让客户优雅地查看和获取作品
 
-## v1.1 Requirements
+## v1.2 Requirements
+
+v1.2 UI/UX 优化与修复需求。
+
+### Bug 修复
+
+- [ ] **BUG-01**: 关于我们页面无需登录即可访问
+- [ ] **BUG-02**: 作品缩略图正确显示（使用第一个 mediaItem，兼容旧数据）
+
+### 公开画廊
+
+- [ ] **GALL-01**: 用户可点击作品查看详情页
+- [ ] **GALL-02**: 作品详情页展示所有文件（网格布局）
+- [ ] **GALL-03**: 用户可在灯箱中查看文件（支持缩放/平移/旋转）
+
+### 后台体验
+
+- [ ] **AUX-01**: 管理员可按标题/状态筛选作品
+- [ ] **AUX-02**: 管理员可按名称筛选相册
+- [ ] **AUX-03**: 管理员可按名称筛选标签
+- [ ] **AUX-04**: 管理员可按客户/类型筛选分享
+- [ ] **AUX-05**: 侧边栏导航独立滚动
+- [ ] **AUX-06**: 系统设置卡片自适应宽度
+- [ ] **AUX-07**: 分享/客户管理表格样式与其他页面统一
+
+## v1.1 Requirements (Complete ✓)
 
 ### Bug Fixes
 
-- [x] **BUG-01**: 管理员可以为作品配置水印，公开展示时自动应用水印
-- [x] **BUG-02**: 客户通过私密链接下载文件时返回源文件而非 JSON
-- [x] **BUG-03**: 作品浏览量在访问时正确递增
+- [x] **BUG-01**: 管理员可以为作品配置水印，公开展示时自动应用水印 — Phase 7
+- [x] **BUG-02**: 客户通过私密链接下载文件时返回源文件而非 JSON — Phase 7
+- [x] **BUG-03**: 作品浏览量在访问时正确递增 — Phase 7
 
 ### File Storage Optimization
 
-- [x] **FILE-01**: 文件使用 MD5 哈希作为文件名存储，相同文件自动去重
-- [x] **FILE-02**: 图片尺寸小于缩略图尺寸时不生成缩略图，访问缩略图时返回原图
+- [x] **FILE-01**: 文件使用 MD5 哈希作为文件名存储，相同文件自动去重 — Phase 8
+- [x] **FILE-02**: 图片尺寸小于缩略图尺寸时不生成缩略图，访问缩略图时返回原图 — Phase 8
 
 ### Work Management Enhancement
 
-- [ ] **WORK-01**: 作品列表展示文件总大小和文件数量
-- [ ] **WORK-02**: 后台管理页面增加跳转前台画廊的入口
-- [ ] **WORK-03**: 管理员可以为已有作品添加新文件
-- [ ] **WORK-04**: 管理员可以从已有作品中删除文件
+- [x] **WORK-01**: 作品列表展示文件总大小和文件数量 — Phase 9
+- [x] **WORK-02**: 后台管理页面增加跳转前台画廊的入口 — Phase 9
+- [x] **WORK-03**: 管理员可以为已有作品添加新文件 — Phase 10
+- [x] **WORK-04**: 管理员可以从已有作品中删除文件 — Phase 10
 
 ### Studio Introduction
 
-- [ ] **STUD-01**: 管理员可以在后台配置工作室基本信息（名称、Logo、联系方式）
-- [ ] **STUD-02**: 管理员可以使用富文本编辑器编辑工作室介绍内容
-- [ ] **STUD-03**: 访客可以在前台查看工作室介绍页面
+- [x] **STUD-01**: 管理员可以在后台配置工作室基本信息 — Phase 11
+- [x] **STUD-02**: 管理员可以使用富文本编辑器编辑工作室介绍内容 — Phase 11
+- [x] **STUD-03**: 访客可以在前台查看工作室介绍页面 — Phase 11
 
 ### Private Sharing Extension
 
-- [ ] **SHAR-01**: 管理员可以生成私密链接分享相册
-- [ ] **SHAR-02**: 客户通过私密链接可以查看相册中的所有作品
-- [ ] **SHAR-03**: 客户通过私密链接可以下载相册中的作品原图
+- [x] **SHAR-01**: 管理员可以生成私密链接分享相册 — Phase 12
+- [x] **SHAR-02**: 客户通过私密链接可以查看相册中的所有作品 — Phase 12
+- [x] **SHAR-03**: 客户通过私密链接可以下载相册中的作品原图 — Phase 12
 
 ## v2 Requirements
 
-Deferred to future release.
+延期至未来版本。
 
 ### View Statistics Enhancement
 
 - **VIEW-01**: 浏览量按会话/IP 去重，避免重复计数
-- **VIEW-02**: 浏览量统计支持时间窗口（如 24 小时内同一用户只计一次）
+- **VIEW-02**: 浏览量统计支持时间窗口
 
 ### Advanced Features
 
@@ -60,39 +85,35 @@ Deferred to future release.
 
 ## Traceability
 
-Which phases cover which requirements. Updated during roadmap creation.
+需求与阶段对应关系。
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| BUG-01 | Phase 7 | Complete |
-| BUG-02 | Phase 7 | Complete |
-| BUG-03 | Phase 7 | Complete |
-| FILE-01 | Phase 8 | Complete |
-| FILE-02 | Phase 8 | Complete |
-| WORK-01 | Phase 9 | Pending |
-| WORK-02 | Phase 9 | Pending |
-| WORK-03 | Phase 10 | Pending |
-| WORK-04 | Phase 10 | Pending |
-| STUD-01 | Phase 11 | Pending |
-| STUD-02 | Phase 11 | Pending |
-| STUD-03 | Phase 11 | Pending |
-| SHAR-01 | Phase 12 | Pending |
-| SHAR-02 | Phase 12 | Pending |
-| SHAR-03 | Phase 12 | Pending |
+| BUG-01 | Phase 13 | Pending |
+| BUG-02 | Phase 13 | Pending |
+| GALL-01 | Phase 14 | Pending |
+| GALL-02 | Phase 14 | Pending |
+| GALL-03 | Phase 14 | Pending |
+| AUX-01 | Phase 15 | Pending |
+| AUX-02 | Phase 15 | Pending |
+| AUX-03 | Phase 15 | Pending |
+| AUX-04 | Phase 15 | Pending |
+| AUX-05 | Phase 16 | Pending |
+| AUX-06 | Phase 16 | Pending |
+| AUX-07 | Phase 17 | Pending |
 
 **Coverage:**
-- v1.1 requirements: 15 total
-- Mapped to phases: 15
+- v1.2 requirements: 12 total
+- Mapped to phases: 12
 - Unmapped: 0 ✓
 
 **Phase Summary:**
-- Phase 7 (Bug 修复): BUG-01, BUG-02, BUG-03
-- Phase 8 (文件存储优化): FILE-01, FILE-02
-- Phase 9 (作品信息增强): WORK-01, WORK-02
-- Phase 10 (作品文件管理): WORK-03, WORK-04
-- Phase 11 (工作室介绍): STUD-01, STUD-02, STUD-03
-- Phase 12 (相册分享): SHAR-01, SHAR-02, SHAR-03
+- Phase 13 (Bug 修复): BUG-01, BUG-02
+- Phase 14 (作品详情页): GALL-01, GALL-02, GALL-03
+- Phase 15 (后台筛选): AUX-01, AUX-02, AUX-03, AUX-04
+- Phase 16 (布局优化): AUX-05, AUX-06
+- Phase 17 (样式统一): AUX-07
 
 ---
 *Requirements defined: 2026-03-26*
-*Last updated: 2026-03-26 after v1.1 requirements defined*
+*Last updated: 2026-03-26 after v1.2 requirements defined*
