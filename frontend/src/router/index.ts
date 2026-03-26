@@ -9,6 +9,12 @@ const routes: RouteRecordRaw[] = [
     meta: { title: '首页' },
   },
   {
+    path: '/about',
+    name: 'About',
+    component: () => import('@/views/About.vue'),
+    meta: { title: '关于我们' },
+  },
+  {
     path: '/login',
     name: 'Login',
     component: () => import('@/views/admin/Login.vue'),

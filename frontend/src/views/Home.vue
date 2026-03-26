@@ -48,6 +48,7 @@ const navigateLightbox = async (work: Work) => {
     <header class="header">
       <h1>摄影工作室</h1>
       <nav>
+        <router-link to="/about">关于我们</router-link>
         <router-link to="/login">管理登录</router-link>
       </nav>
     </header>
@@ -100,11 +101,22 @@ const navigateLightbox = async (work: Work) => {
   color: var(--text-primary);
 }
 
+.header nav {
+  display: flex;
+  gap: 12px;
+}
+
 .header nav a {
   padding: 8px 16px;
   background: var(--color-primary);
   color: white;
   border-radius: 4px;
+  text-decoration: none;
+  transition: opacity 0.2s;
+}
+
+.header nav a:hover {
+  opacity: 0.85;
 }
 
 .main {
