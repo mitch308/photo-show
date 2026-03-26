@@ -8,238 +8,184 @@
 
 | Statistic | Value |
 |-----------|-------|
-| Total Phases | 5 |
-| v1 Requirements | 48 |
+| Total Phases | 12 |
+| v1.0 Requirements | 48 (Complete) |
+| v1.1 Requirements | 15 |
 | Coverage | 100% |
 
 ---
 
-## Phase 1: 项目基础架构
+## Milestones
 
+- ✅ **v1.0 摄影工作室作品展示平台** - Phases 1-6 (shipped 2026-03-25)
+- 🚧 **v1.1 增强与修复** - Phases 7-12 (in progress)
+
+---
+
+<details>
+<summary>✅ v1.0 摄影工作室作品展示平台 (Phases 1-6) - SHIPPED 2026-03-25</summary>
+
+### Phase 1: 项目基础架构
 **Goal:** 搭建前后端基础框架，实现管理员认证和文件上传能力
+**Plans:** 4 plans (Complete)
 
-### Requirements Covered
-
-AUTH-01, AUTH-02, AUTH-03
-
-### Success Criteria
-
-1. 管理员可以通过登录页面进入后台
-2. 登录状态在浏览器关闭后仍然保持
-3. 退出登录后无法访问管理功能
-4. 前后端项目可以正常启动和运行
-5. 数据库连接正常，表结构已创建
-
-### Key Decisions
-
-| Decision | Options Considered | Chosen | Rationale |
-|----------|-------------------|--------|-----------|
-| 认证方案 | Session vs JWT | JWT | 无状态，适合单服务器部署 |
-| 文件存储路径 | 绝对路径 vs 相对路径 | 相对路径 | 便于迁移 |
-
-### Technical Notes
-
-- 前端使用 Vue3 + Vite + TypeScript
-- 后端使用 Express + TypeScript + Vite
-- 数据库使用 TypeORM 连接 MySQL
-- 使用 Redis 存储 JWT 黑名单（退出登录时使用）
-
-### Plans
-
-**Plans:** 4 plans in 3 waves
-
-- [ ] 01-01-PLAN.md — Backend Infrastructure (Wave 1)
-- [ ] 01-02-PLAN.md — Frontend Infrastructure (Wave 1, parallel)
-- [ ] 01-03-PLAN.md — Authentication Backend (Wave 2)
-- [ ] 01-04-PLAN.md — Authentication Frontend (Wave 3, checkpoint)
-
----
-
-## Phase 2: 作品管理功能
-
+### Phase 2: 作品管理功能
 **Goal:** 实现完整的作品和相册管理，包括上传、编辑、删除、分类、水印
+**Plans:** 4 plans (Complete)
 
-### Requirements Covered
-
-WORK-01, WORK-02, WORK-03, WORK-04, WORK-05, WORK-06, WORK-07, WORK-08, WORK-09, WORK-10, WORK-11, ALBM-01, ALBM-02, ALBM-03, ALBM-04, ALBM-05, WATR-01, WATR-02, WATR-03
-
-### Success Criteria
-
-1. 管理员可以上传照片和视频
-2. 上传的照片自动生成缩略图
-3. 管理员可以创建和管理相册
-4. 管理员可以为作品设置标题、描述、标签
-5. 公开展示的照片自动添加水印
-6. 管理员可以调整作品和相册的展示顺序
-
-### Key Decisions
-
-| Decision | Options Considered | Chosen | Rationale |
-|----------|-------------------|--------|-----------|
-| 图片处理库 | Sharp vs Jimp vs Canvas | Sharp | 性能最佳，原生模块 |
-| 缩略图尺寸 | 固定 vs 自适应 | 固定几种尺寸 | 简化实现，满足展示需求 |
-| 水印位置 | 固定 vs 可配置 | 可配置位置和透明度 | 摄影师偏好不同 |
-
-### Technical Notes
-
-- 使用 Multer 处理文件上传
-- 使用 Sharp 生成缩略图和添加水印
-- 作品排序使用 position 字段，支持拖拽排序
-- 文件名使用 UUID 避免冲突
-
-### Plans
-
-**Plans:** 4 plans in 4 waves
-
-- [ ] 02-01-PLAN.md — Database Models (Wave 1)
-- [ ] 02-02-PLAN.md — Upload & Processing Service (Wave 2)
-- [ ] 02-03-PLAN.md — Backend API Routes (Wave 3)
-- [ ] 02-04-PLAN.md — Frontend Admin UI (Wave 4, checkpoint)
-
----
-
-## Phase 3: 公开展示与私密分享
-
+### Phase 3: 公开展示与私密分享
 **Goal:** 实现公开画廊和私密链接分享功能，让客户可以查看和下载作品
+**Plans:** 4 plans (Complete)
 
-**UI hint:** yes
-
-### Requirements Covered
-
-PUBL-01, PUBL-02, PUBL-03, PUBL-04, PUBL-05, PUBL-06, PUBL-07, PRIV-01, PRIV-02, PRIV-03, PRIV-04
-
-### Success Criteria
-
-1. 访客可以在首页看到公开作品的瀑布流展示
-2. 访客可以按相册、标签筛选作品
-3. 访客可以搜索作品
-4. 移动端可以正常浏览
-5. 管理员可以生成私密分享链接
-6. 客户通过私密链接可以看到选定的作品
-7. 客户通过私密链接可以下载高清无水印原图
-8. 私密链接到期后无法访问
-
-### Key Decisions
-
-| Decision | Options Considered | Chosen | Rationale |
-|----------|-------------------|--------|-----------|
-| Token 生成 | UUID vs randomBytes | crypto.randomBytes(32) | 更安全，不可预测 |
-| Token 存储 | MySQL vs Redis | Redis + TTL | 自动过期，性能好 |
-| 画廊布局 | 网格 vs 瀑布流 | 瀑布流 | 适合不同比例照片 |
-
-### Technical Notes
-
-- 前端使用 CSS Grid 或 Masonry 实现瀑布流
-- 私密链接 token 使用 Base64URL 编码，适合 URL
-- Redis 存储 token → 作品 IDs 映射，设置 TTL
-- 下载原图时验证 token 有效性
-
-### Plans
-
-**Plans:** 4 plans in 4 waves
-
-- [x] 03-01-PLAN.md — Backend Public API (Wave 1)
-- [x] 03-02-PLAN.md — Backend Share API (Wave 2)
-- [x] 03-03-PLAN.md — Frontend Public Gallery (Wave 3)
-- [x] 03-04-PLAN.md — Share Page & Admin UI (Wave 4, checkpoint)
-
----
-
-## Phase 4: 增强功能
-
+### Phase 4: 增强功能
 **Goal:** 添加批量操作、统计、客户管理、主题切换等增强功能
+**Plans:** 5 plans (Complete)
 
-**UI hint:** yes
+### Phase 5: 部署与优化
+**Goal:** 完成生产环境部署，进行性能优化和安全加固
+**Plans:** (Complete)
 
-### Requirements Covered
+### Phase 6: 数据模型重构
+**Goal:** 重构数据模型以支持作品包含多个媒体项（图片/视频），相册包含多个作品的三层结构
+**Plans:** 5 plans (Complete)
 
-BATCH-01, BATCH-02, BATCH-03, BATCH-04, PRIV-05, PRIV-06, STAT-01, STAT-02, STAT-03, STAT-04, CLNT-01, CLNT-02, CLNT-03, CLNT-04, THEM-01, THEM-02, THEM-03
-
-### Success Criteria
-
-1. 管理员可以一次上传多个作品并看到进度
-2. 管理员可以批量移动和删除作品
-3. 管理员可以看到作品的浏览和下载统计
-4. 管理员可以管理客户信息
-5. 管理员可以查看私密链接的访问记录
-6. 用户可以切换深色/浅色主题
-7. 主题选择在刷新后保持
-
-### Key Decisions
-
-| Decision | Options Considered | Chosen | Rationale |
-|----------|-------------------|--------|-----------|
-| 统计存储 | MySQL vs Redis | Redis 计数 + 定期同步 MySQL | 高性能写入 |
-| 主题持久化 | Cookie vs localStorage | localStorage | 简单可靠 |
-| 批量上传 | 同步 vs 异步 | 异步 + 进度推送 | 大批量不阻塞 |
-
-### Technical Notes
-
-- 批量上传使用 Promise.all 并发控制
-- 统计使用 Redis INCR，定时任务同步到 MySQL
-- 客户管理关联私密链接记录
-- 主题使用 CSS 变量 + VueUse useDark
-
-### Plans
-
-**Plans:** 5 plans in 5 waves
-
-- [x] 04-01-PLAN.md — Client & AccessLog Models (Wave 1)
-- [x] 04-02-PLAN.md — Backend Enhancement APIs (Wave 2)
-- [x] 04-03-PLAN.md — Batch & Stats UI (Wave 3)
-- [x] 04-04-PLAN.md — Client Management UI (Wave 4)
-- [x] 04-05-PLAN.md — Theme Switching & UI Polish (Wave 5, checkpoint)
+</details>
 
 ---
 
-## Phase 5: 部署与优化
+### 🚧 v1.1 增强与修复 (In Progress)
 
-**Goal:** 完成生产环境部署，进行性能优化和安全加固
+**Milestone Goal:** 修复已知问题，增强文件处理、作品管理和私密分享功能
 
-### Requirements Covered
+#### Phase 7: Bug 修复
+**Goal:** 核心功能按预期工作
+**Depends on:** Phase 6
+**Requirements:** BUG-01, BUG-02, BUG-03
+**Success Criteria** (what must be TRUE):
+  1. 管理员配置水印后，公开展示的作品图片显示水印
+  2. 客户通过私密链接下载文件时，获得源文件而非 JSON 响应
+  3. 作品浏览量在每次访问时正确递增
+**Plans:** 3 plans
 
-(No new requirements - deployment and optimization phase)
+Plans:
+- [ ] 07-01-PLAN.md — 水印功能集成
+- [ ] 07-02-PLAN.md — 下载文件修复
+- [ ] 07-03-PLAN.md — 浏览量统计修复
 
-### Success Criteria
+---
 
-1. 应用可以在生产服务器正常运行
-2. 静态资源通过 Nginx 正确提供
-3. 数据库和 Redis 连接稳定
-4. 文件上传和访问正常
-5. 页面加载时间 < 3秒
-6. 无明显安全漏洞
+#### Phase 8: 文件存储优化
+**Goal:** 文件存储高效且智能
+**Depends on:** Phase 7
+**Requirements:** FILE-01, FILE-02
+**Success Criteria** (what must be TRUE):
+  1. 相同文件上传时自动去重，存储空间不浪费
+  2. 图片尺寸小于缩略图尺寸时，访问缩略图返回原图
+  3. 新上传的文件以 MD5 哈希命名
+**Plans:** 2 plans
 
-### Key Decisions
+Plans:
+- [ ] 08-01-PLAN.md — MD5 去重存储
+- [ ] 08-02-PLAN.md — 智能缩略图生成
 
-| Decision | Options Considered | Chosen | Rationale |
-|----------|-------------------|--------|-----------|
-| 进程管理 | PM2 vs systemd | PM2 | Node.js 生态，易于管理 |
-| 反向代理 | Nginx vs Caddy | Nginx | 成熟稳定，配置灵活 |
-| SSL 证书 | Let's Encrypt vs 自签名 | Let's Encrypt | 免费，自动续期 |
+---
 
-### Technical Notes
+#### Phase 9: 作品信息增强
+**Goal:** 管理员可以查看作品详情并快速访问前台
+**Depends on:** Phase 8
+**Requirements:** WORK-01, WORK-02
+**UI hint:** yes
+**Success Criteria** (what must be TRUE):
+  1. 作品列表显示每个作品的总文件大小
+  2. 作品列表显示每个作品的文件数量
+  3. 后台管理页面有跳转前台画廊的入口链接
+**Plans:** 2 plans
 
-- 前端构建后由 Nginx 提供静态文件服务
-- 后端使用 PM2 cluster 模式
-- 配置 Nginx 缓存静态资源
-- 设置日志轮转和备份策略
-- 配置防火墙规则
+Plans:
+- [ ] 09-01-PLAN.md — 文件信息展示
+- [ ] 09-02-PLAN.md — 前台跳转入口
+
+---
+
+#### Phase 10: 作品文件管理
+**Goal:** 管理员可以管理作品中的文件
+**Depends on:** Phase 9
+**Requirements:** WORK-03, WORK-04
+**UI hint:** yes
+**Success Criteria** (what must be TRUE):
+  1. 管理员可以为已有作品添加新的图片或视频文件
+  2. 管理员可以从作品中删除文件
+  3. 删除最后一个文件时提示确认或阻止操作
+**Plans:** 2 plans
+
+Plans:
+- [ ] 10-01-PLAN.md — 添加文件功能
+- [ ] 10-02-PLAN.md — 删除文件功能
+
+---
+
+#### Phase 11: 工作室介绍
+**Goal:** 访客可以了解工作室信息
+**Depends on:** Phase 7
+**Requirements:** STUD-01, STUD-02, STUD-03
+**UI hint:** yes
+**Success Criteria** (what must be TRUE):
+  1. 管理员可以在后台配置工作室名称、Logo 和联系方式
+  2. 管理员可以使用富文本编辑器编辑工作室介绍内容
+  3. 访客可以在前台查看工作室介绍页面
+**Plans:** 3 plans
+
+Plans:
+- [ ] 11-01-PLAN.md — 工作室设置模型
+- [ ] 11-02-PLAN.md — 后台设置页面
+- [ ] 11-03-PLAN.md — 前台介绍页面
+
+---
+
+#### Phase 12: 相册分享
+**Goal:** 管理员可以分享整个相册给客户
+**Depends on:** Phase 7
+**Requirements:** SHAR-01, SHAR-02, SHAR-03
+**UI hint:** yes
+**Success Criteria** (what must be TRUE):
+  1. 管理员可以生成私密链接分享整个相册
+  2. 客户通过私密链接可以查看相册中的所有作品
+  3. 客户通过私密链接可以下载相册中的作品原图
+**Plans:** 2 plans
+
+Plans:
+- [ ] 12-01-PLAN.md — 相册分享后端
+- [ ] 12-02-PLAN.md — 相册分享前端
 
 ---
 
 ## Phase Dependencies
 
 ```
-Phase 1 (基础架构)
+v1.0 (Complete)
+    │
     ↓
-Phase 2 (作品管理) ──requires── Phase 1
-    ↓
-Phase 3 (公开展示) ──requires── Phase 2
-    ↓
-Phase 4 (增强功能) ──requires── Phase 3
-    ↓
-Phase 5 (部署优化) ──requires── Phase 4
+Phase 7 (Bug 修复)
+    ├──────────────────┬────────────────────┐
+    ↓                  ↓                    ↓
+Phase 8            Phase 11             Phase 12
+(文件存储优化)     (工作室介绍)          (相册分享)
+    ↓                  │                    │
+Phase 9               │                    │
+(作品信息增强)        │                    │
+    ↓                  │                    │
+Phase 10              │                    │
+(作品文件管理)        │                    │
+    │                  │                    │
+    └──────────────────┴────────────────────┘
+                       │
+                       ↓
+                v1.1 Complete
 ```
+
+**Execution Order:**
+- Phases 7 → 8 → 9 → 10 (sequential chain)
+- Phases 11 and 12 can run in parallel after Phase 7
 
 ---
 
@@ -247,11 +193,10 @@ Phase 5 (部署优化) ──requires── Phase 4
 
 | Risk | Phase | Mitigation |
 |------|-------|------------|
-| 大文件上传超时 | Phase 1, 2 | 使用流式上传，设置合理的超时和大小限制 |
-| 图片处理阻塞 | Phase 2 | 异步处理，限制并发数 |
-| 私密链接泄露 | Phase 3 | 使用安全随机 token，设置过期时间 |
-| 数据库连接泄漏 | Phase 1, 5 | 正确配置连接池，监控连接状态 |
-| 性能问题 | Phase 5 | CDN 加速，缓存策略，代码优化 |
+| 水印影响原图质量 | Phase 7 | 只在公开展示时动态添加水印，不修改原图 |
+| MD5 计算大文件慢 | Phase 8 | 使用流式计算，显示进度 |
+| 富文本 XSS 风险 | Phase 11 | 使用 sanitize-html 过滤，白名单策略 |
+| 相册分享权限泄露 | Phase 12 | 使用安全随机 token，设置过期时间 |
 
 ---
 
@@ -259,55 +204,16 @@ Phase 5 (部署优化) ──requires── Phase 4
 
 | Phase | Requirements | Count |
 |-------|--------------|-------|
-| Phase 1 | AUTH-01, AUTH-02, AUTH-03 | 3 |
-| Phase 2 | WORK-01~11, ALBM-01~05, WATR-01~03 | 19 |
-| Phase 3 | PUBL-01~07, PRIV-01~04 | 11 |
-| Phase 4 | BATCH-01~04, PRIV-05~06, STAT-01~04, CLNT-01~04, THEM-01~03 | 15 |
-| Phase 5 | (部署优化，无新需求) | 0 |
+| Phase 7 | BUG-01, BUG-02, BUG-03 | 3 |
+| Phase 8 | FILE-01, FILE-02 | 2 |
+| Phase 9 | WORK-01, WORK-02 | 2 |
+| Phase 10 | WORK-03, WORK-04 | 2 |
+| Phase 11 | STUD-01, STUD-02, STUD-03 | 3 |
+| Phase 12 | SHAR-01, SHAR-02, SHAR-03 | 3 |
 
-**Total:** 48 requirements covered ✓
-
-## Phase 6: 数据模型重构
-
-**Goal:** 重构数据模型以支持作品包含多个媒体项（图片/视频），相册包含多个作品的三层结构
-
-### Requirements Covered
-
-DATA-01, DATA-02, DATA-03, DATA-04, DATA-05, DATA-06, DATA-07
-
-### Success Criteria
-
-1. 作品可以包含多个媒体项（图片或视频）
-2. 相册可以包含多个作品
-3. 现有数据可以平滑迁移到新结构
-4. 前端界面支持新的数据结构展示
-5. API 接口向后兼容或提供迁移路径
-
-### Key Decisions
-
-| Decision | Options Considered | Chosen | Rationale |
-|----------|-------------------|--------|-----------|
-| 媒体项类型 | 多态 vs 单表 | 单表 MediaItem | 简化实现，统一管理 |
-| 数据迁移策略 | 硬迁移 vs 软迁移 | 软迁移（保留旧字段） | 支持回滚，向后兼容 |
-
-### Technical Notes
-
-- 新数据库架构：Album → Work → MediaItem
-- MediaItem 存储文件路径、缩略图、类型等
-- Work 保留旧字段用于向后兼容
-- 提供迁移脚本支持数据转换
-
-### Plans
-
-**Plans:** 5 plans in 5 waves
-
-- [x] 06-01-PLAN.md — MediaItem Model (Wave 1)
-- [x] 06-02-PLAN.md — Backend Service Updates (Wave 2)
-- [x] 06-03-PLAN.md — Backend API Updates (Wave 3)
-- [x] 06-04-PLAN.md — Frontend Updates (Wave 4)
-- [x] 06-05-PLAN.md — Migration & Testing (Wave 5)
+**v1.1 Total:** 15 requirements covered ✓
 
 ---
 
 *Roadmap created: 2026-03-24*
-*Last updated: 2026-03-25 after Phase 6 completion*
+*Updated for v1.1: 2026-03-26*

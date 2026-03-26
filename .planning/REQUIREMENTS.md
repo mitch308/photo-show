@@ -85,6 +85,14 @@ Which phases cover which requirements. Updated during roadmap creation.
 - Mapped to phases: 15
 - Unmapped: 0 ✓
 
+**Phase Summary:**
+- Phase 7 (Bug 修复): BUG-01, BUG-02, BUG-03
+- Phase 8 (文件存储优化): FILE-01, FILE-02
+- Phase 9 (作品信息增强): WORK-01, WORK-02
+- Phase 10 (作品文件管理): WORK-03, WORK-04
+- Phase 11 (工作室介绍): STUD-01, STUD-02, STUD-03
+- Phase 12 (相册分享): SHAR-01, SHAR-02, SHAR-03
+
 ---
 *Requirements defined: 2026-03-26*
 *Last updated: 2026-03-26 after v1.1 requirements defined*
