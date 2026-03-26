@@ -453,6 +453,397 @@ The following pitfalls from v1.0 are still relevant:
 
 ---
 
-*Pitfalls research for: Photo Gallery v1.1 Enhancement Features*
+# v1.2 UI/UX Improvement Pitfalls
+
+**Domain:** Vue 3 UI/UX Improvements for Existing Photography Platform
+**Researched:** 2026-03-26
+**Confidence:** HIGH (based on codebase analysis and Vue.js/Element Plus best practices)
+
+---
+
+## Critical Pitfalls
+
+### Pitfall 1: CSS Layout Breaking When Adding Independent Scrolling
+
+**What goes wrong:**
+When adding independent scrolling to the sidebar (`.nav`), the flex layout can break, causing:
+- Sidebar footer to be pushed off-screen
+- Main content area to collapse
+- Scroll position not persisting between route changes
+
+**Why it happens:**
+Developers often add `overflow-y: auto` without considering the flex container's behavior. The sidebar uses `flex-direction: column` with `.nav` having `flex: 1`, but without proper height constraints, scrolling won't work as expected.
+
+**Consequences:**
+- Sidebar becomes unusable on smaller screens
+- Footer buttons (theme toggle, logout) become inaccessible
+- User frustration navigating admin panel
+
+**Prevention:**
+```css
+/* WRONG - This breaks the layout */
+.sidebar {
+  overflow-y: auto; /* Scrolls entire sidebar, hides footer */
+}
+
+/* CORRECT - Only the nav section scrolls */
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  height: 100vh; /* Fixed height constraint */
+}
+
+.nav {
+  flex: 1;
+  overflow-y: auto; /* Only nav scrolls */
+  min-height: 0; /* Critical for flex overflow */
+}
+```
+
+**Warning signs:**
+- Sidebar footer disappears when nav items exceed viewport height
+- Horizontal scrollbar appears unexpectedly
+- Theme toggle button not visible without scrolling entire page
+
+**Phase to address:** UI beautification phase (sidebar scroll fix)
+
+---
+
+### Pitfall 2: Thumbnail Display Breaking After Switching to mediaItems
+
+**What goes wrong:**
+After changing thumbnail logic to use `work.mediaItems[0]`, images fail to load or show broken image placeholders.
+
+**Why it happens:**
+1. The `Work` type has both legacy fields (`thumbnailSmall`, `thumbnailLarge`) and `mediaItems` array
+2. Older works may not have `mediaItems` populated
+3. `mediaItems` could be empty or undefined
+4. Accessing `mediaItems[0].thumbnailLarge` without null checks causes errors
+
+**Consequences:**
+- Blank thumbnails in admin table and public gallery
+- Console errors: "Cannot read property 'thumbnailLarge' of undefined"
+- Works appear broken to users
+
+**Prevention:**
+```typescript
+// WRONG - Direct access causes crashes
+const thumbnail = work.mediaItems[0].thumbnailLarge;
+
+// CORRECT - Fallback chain with null checks
+function getWorkThumbnail(work: Work): string {
+  // Try first mediaItem
+  if (work.mediaItems?.length && work.mediaItems[0].thumbnailLarge) {
+    return work.mediaItems[0].thumbnailLarge;
+  }
+  // Fallback to legacy field
+  return work.thumbnailLarge || work.filePath;
+}
+```
+
+**Warning signs:**
+- Works with single file show correctly, multi-file works show broken images
+- Error in console about undefined access
+- Some thumbnails show, others don't
+
+**Phase to address:** Thumbnail fix phase
+
+---
+
+### Pitfall 3: Element Plus Table Filter State Not Persisting
+
+**What goes wrong:**
+After adding filters to admin tables, the filter state is lost when:
+- Navigating to another page and returning
+- Opening a dialog and closing it
+- Browser refresh
+
+**Why it happens:**
+Vue Router doesn't preserve component state by default. When a component is unmounted (route change) or the parent re-renders, local filter state is lost.
+
+**Consequences:**
+- Users lose their search context
+- Frustration having to re-enter filters
+- Poor user experience for power users
+
+**Prevention:**
+```typescript
+// Option 1: URL-based filters (recommended for shareable links)
+const { filters, syncToUrl } = useUrlFilters();
+
+// Option 2: Pinia store for cross-route persistence
+const worksStore = useWorksStore();
+// Filters stored in store, survive route changes
+
+// Option 3: KeepAlive for component caching
+<router-view v-slot="{ Component }">
+  <keep-alive include="WorksView">
+    <component :is="Component" />
+  </keep-alive>
+</router-view>
+```
+
+**Warning signs:**
+- Filter resets after opening edit dialog
+- Search term disappears after navigating away
+- Filters work but aren't visible in URL
+
+**Phase to address:** Admin list filters phase
+
+---
+
+### Pitfall 4: Style Inconsistency When Converting Plain Tables to Element Plus
+
+**What goes wrong:**
+After converting `Shares.vue` and `Clients.vue` from plain `<table>` to `el-table`:
+- Spacing and padding look different
+- Dark mode colors don't apply correctly
+- Custom status badges lose styling
+
+**Why it happens:**
+1. Plain tables use custom CSS with CSS variables like `--bg-card`, `--border-color`
+2. Element Plus uses its own design tokens (`--el-bg-color`, `--el-border-color`)
+3. Custom scoped styles may conflict with Element Plus internal styles
+4. Status badge classes defined for plain table don't match Element Plus cell structure
+
+**Consequences:**
+- Visual inconsistency between pages
+- Dark mode broken on converted pages
+- Extra CSS needed to override Element Plus defaults
+
+**Prevention:**
+1. Create a shared status badge component that works in both contexts
+2. Use Element Plus theming instead of custom styles
+3. Map custom CSS variables to Element Plus tokens:
+```css
+:root {
+  --el-bg-color: var(--bg-card);
+  --el-border-color: var(--border-color);
+}
+```
+4. Use `el-table` cell slots for custom content instead of overriding styles
+
+**Warning signs:**
+- Converted tables look "off" compared to original
+- Dark mode toggle doesn't affect table background
+- Custom classes no longer apply to cells
+
+**Phase to address:** Style unification phase (Shares/Clients styling)
+
+---
+
+### Pitfall 5: Lightbox Not Showing All MediaItems
+
+**What goes wrong:**
+After implementing work detail page, users can't see all files in a work. Lightbox only shows the primary file, not the additional mediaItems.
+
+**Why it happens:**
+Current `Lightbox.vue` only displays `work.filePath`:
+```vue
+<img :src="`/${work.filePath}`" :alt="work.title" />
+```
+It doesn't iterate over `work.mediaItems`.
+
+**Consequences:**
+- Multi-file works only show first file
+- Users can't access all photos/videos in a work
+- Client dissatisfaction with shared works
+
+**Prevention:**
+```vue
+<template>
+  <div class="lightbox-content">
+    <!-- Show all mediaItems with navigation -->
+    <div v-if="currentMediaItem" class="media-container">
+      <img v-if="currentMediaItem.fileType === 'image'" 
+           :src="`/${currentMediaItem.filePath}`" />
+      <video v-else :src="`/${currentMediaItem.filePath}`" controls />
+    </div>
+    
+    <!-- Thumbnail strip for navigation -->
+    <div class="thumbnail-strip">
+      <button v-for="(item, idx) in work.mediaItems" 
+              :key="item.id"
+              :class="{ active: idx === currentIndex }"
+              @click="currentIndex = idx">
+        <img :src="`/${item.thumbnailSmall}`" />
+      </button>
+    </div>
+  </div>
+</template>
+```
+
+**Warning signs:**
+- Works with 3+ files only show 1 file
+- No way to navigate between files in lightbox
+- Download button only downloads first file
+
+**Phase to address:** Work detail page phase
+
+---
+
+### Pitfall 6: About Page Accessible Without Auth Check
+
+**What goes wrong:**
+The `/about` page returns 401 or redirects to login when it should be publicly accessible.
+
+**Why it happens:**
+The router guard in `router/index.ts` may have overly broad auth requirements, or the route meta isn't configured correctly for public access.
+
+**Consequences:**
+- Public visitors can't see studio introduction
+- SEO impact (search engines can't index about page)
+- Broken user journey from home page
+
+**Prevention:**
+```typescript
+// In router/index.ts
+{
+  path: '/about',
+  name: 'About',
+  component: () => import('@/views/About.vue'),
+  meta: { title: '关于我们', public: true }, // Mark as public
+},
+
+// In router guard
+router.beforeEach((to, _from, next) => {
+  // Public routes bypass auth
+  if (to.meta.public) {
+    next();
+    return;
+  }
+  
+  // ... existing auth logic
+});
+```
+
+**Warning signs:**
+- About page redirects to login
+- Console shows auth errors on public pages
+- Navigation link to about appears broken
+
+**Phase to address:** About page public access fix
+
+---
+
+## Technical Debt Patterns (v1.2)
+
+Shortcuts that seem reasonable but create long-term problems.
+
+| Shortcut | Immediate Benefit | Long-term Cost | When Acceptable |
+|----------|-------------------|----------------|-----------------|
+| Inline styles for quick UI fixes | Fast implementation | Inconsistent, hard to maintain, breaks dark mode | Never |
+| Copy-paste table code between pages | Quick delivery | Duplicate code, inconsistent behavior, harder updates | Never |
+| CSS `!important` overrides | Force style to apply | Specificity wars, unmaintainable CSS | Never |
+| Skipping null checks on mediaItems | Less code | Runtime errors, broken thumbnails | Never |
+| Hardcoded pixel widths | Precise control | Breaks responsiveness, requires more overrides | Only for fixed-size elements |
+| Local state for filters | Simpler code | Lost on navigation, poor UX | Only for disposable filters |
+
+## Integration Gotchas (v1.2)
+
+Common mistakes when connecting UI changes to existing patterns.
+
+| Integration | Common Mistake | Correct Approach |
+|-------------|----------------|------------------|
+| Element Plus dark mode | Forgetting to set `el-config-provider` | Use CSS variables mapped to Element Plus tokens |
+| URL filters with router | Not updating query params | Use `useUrlFilters` composable pattern already in codebase |
+| Sidebar scroll with flex | Adding overflow to wrong container | Only `.nav` should scroll, with `min-height: 0` |
+| WorkCard thumbnail | Assuming legacy fields always exist | Check `mediaItems` first, fallback to legacy |
+| Status badges in el-table | Applying styles to `td` instead of slot content | Use template slot for custom cell content |
+| Public route access | Missing `meta.public` flag | Add `public: true` to route meta |
+
+## Performance Traps (v1.2)
+
+Patterns that work at small scale but fail as usage grows.
+
+| Trap | Symptoms | Prevention | When It Breaks |
+|------|----------|------------|----------------|
+| Rendering all mediaItems in lightbox | Sluggish navigation, memory issues | Lazy load thumbnails, virtualize large lists | 50+ items per work |
+| No debouncing on filter inputs | API spam, laggy search | Add 300ms debounce (pattern exists in Clients.vue) | 100+ concurrent users |
+| Heavy thumbnail strip in lightbox | Slow load, layout shift | Load thumbnails progressively, use `loading="lazy"` | 20+ files per work |
+| Not using `v-memo` for table rows | Slow re-renders on filter | Use `v-memo` for unchanged rows | 100+ works in list |
+
+## UX Pitfalls (v1.2)
+
+Common user experience mistakes when adding these features.
+
+| Pitfall | User Impact | Better Approach |
+|---------|-------------|-----------------|
+| Filter without clear button | User stuck with filter, can't see all items | Add clear/reset button to all filters |
+| Sidebar scroll without visual indicator | User doesn't know more items exist | Add subtle shadow or gradient at scroll edge |
+| Thumbnail strip without current indicator | User loses track of which file they're viewing | Highlight active thumbnail, show position (1/5) |
+| Status badges without color legend | User confused about meaning | Use consistent colors: green=active, red=expired, blue=info |
+| Settings cards not responsive | Horizontal scroll on narrow screens | Use `max-width: 100%` with container query support |
+| No loading state on filter | User thinks filter didn't work | Show loading indicator while filtering |
+
+## "Looks Done But Isn't" Checklist (v1.2)
+
+Things that appear complete but are missing critical pieces.
+
+- [ ] **Sidebar scroll:** Often missing `min-height: 0` on flex child — verify sidebar footer visible at 768px height
+- [ ] **Thumbnail fallback:** Often missing check for empty mediaItems — verify works with 0 files don't crash
+- [ ] **Filter persistence:** Often missing URL sync — verify filter survives page refresh
+- [ ] **Dark mode:** Often missing Element Plus token mapping — verify tables look correct in dark mode
+- [ ] **Responsive settings:** Often missing mobile breakpoint — verify at 375px width
+- [ ] **Lightbox media nav:** Often missing keyboard support — verify arrow keys work for media navigation
+- [ ] **Public about page:** Often missing route meta — verify about accessible without login
+
+## Recovery Strategies (v1.2)
+
+When pitfalls occur despite prevention, how to recover.
+
+| Pitfall | Recovery Cost | Recovery Steps |
+|---------|---------------|----------------|
+| Sidebar scroll broken | LOW | Add `min-height: 0` to `.nav`, verify flex layout |
+| Thumbnail crash | LOW | Add null check function, update all usage sites |
+| Filter state lost | MEDIUM | Implement URL sync or Pinia store persistence |
+| Style inconsistency | MEDIUM | Create shared components, migrate Element Plus tokens |
+| Lightbox incomplete | HIGH | Refactor lightbox component, add mediaItems iteration |
+| About page auth issue | LOW | Add `public: true` to route meta |
+
+## Pitfall-to-Phase Mapping (v1.2)
+
+How roadmap phases should address these pitfalls.
+
+| Pitfall | Prevention Phase | Verification |
+|---------|------------------|--------------|
+| CSS layout breaking | Sidebar scroll fix | Test sidebar at multiple viewport heights |
+| Thumbnail breaking | Thumbnail fix | Test with works having 0, 1, and multiple files |
+| Filter state lost | Admin list filters | Navigate away and back, verify filter persists |
+| Style inconsistency | Style unification | Toggle dark mode, compare all admin pages |
+| Lightbox incomplete | Work detail page | Open work with multiple files, verify all visible |
+| About page access | About page fix | Access /about without login, verify no redirect |
+
+## Codebase-Specific Patterns (v1.2)
+
+### Existing Patterns to Preserve
+
+1. **useUrlFilters composable** — Already exists in codebase, use for filter URL sync
+2. **Debounce pattern in Clients.vue** — Search has 300ms debounce, reuse this pattern
+3. **Element Plus in Works.vue** — Uses `el-table`, follow this pattern for consistency
+4. **CSS variables for theming** — `--bg-card`, `--border-color` etc., maintain for dark mode
+5. **Teleport for lightbox** — Already using `<Teleport to="body">`, preserve this
+
+### Codebase Gaps to Address
+
+1. **No filter on Works.vue** — Needs search/filter by title, album, tag, status
+2. **No filter on Shares.vue** — Needs filter by status (active/expired), client
+3. **Plain HTML tables** — Shares.vue and Clients.vue use `<table>`, not `el-table`
+4. **No fallback for mediaItems** — WorkCard directly uses `work.thumbnailLarge`
+5. **Settings card fixed width** — `max-width: 600px` hardcoded, needs adaptive width
+6. **Lightbox single file** — Only shows `work.filePath`, not all mediaItems
+
+---
+
+## Sources (v1.2)
+
+- Vue.js Performance Guide — Props stability, v-memo patterns
+- Element Plus Documentation — Table component, theming, dark mode
+- Codebase analysis — Existing patterns in `Clients.vue` (debounce), `useUrlFilters.ts`, `Dashboard.vue` layout
+- Personal experience — Common Vue 3 refactoring issues
+
+---
+
+*Pitfalls research for: Photo Gallery v1.2 UI/UX Improvements*
 *Researched: 2026-03-26*
-*Previous version: v1.0 PITFALLS.md (2026-03-24)*
+*Previous versions: v1.0 PITFALLS.md (2026-03-24), v1.1 PITFALLS.md (2026-03-26)*

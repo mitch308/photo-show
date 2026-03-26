@@ -1,323 +1,391 @@
 # Feature Research
 
-**Domain:** Photo gallery platform enhancement (v1.1)
+**Domain:** Photography Platform UI/UX Improvements (v1.2)
 **Researched:** 2026-03-26
 **Confidence:** HIGH
+
+> **Note:** This is a subsequent milestone. v1.1 features (deduplication, thumbnails, file management, album sharing, studio intro) are now validated. This research focuses on v1.2 UI/UX improvements only.
 
 ## Feature Landscape
 
 ### Table Stakes (Users Expect These)
 
-Features users assume exist. Missing these = product feels incomplete.
+Features users assume exist in a photography management platform.
 
 | Feature | Why Expected | Complexity | Notes |
 |---------|--------------|------------|-------|
-| File download returns actual file | Download links should download files, not JSON | LOW | Bug fix - current routes stream files but may have edge cases |
-| View count increments | Statistics should be accurate | LOW | Bug fix - publicService.getPublicWorkById increments, need to verify frontend calls |
-| Watermark on images | Photographers expect protection for public display | MEDIUM | Bug fix - addWatermark exists in imageService but not integrated into upload flow |
-| Work file info display | Users need to know file size/count | LOW | Aggregation from mediaItems (fileSize, count) |
-| Admin link to frontend | Admins need quick access to public view | LOW | Simple navigation addition |
+| Work detail view | Users need to see all files in a multi-file work | MEDIUM | Existing lightbox shows single image; need dedicated detail page showing all mediaItems |
+| Search in admin lists | Standard CRUD operation - admins need to find records quickly | LOW | Element Plus el-table supports this; Clients.vue already has search input |
+| Consistent admin styling | Professional appearance across all management pages | LOW | Shares/Clients use custom tables; Works uses el-table - unify |
+| Responsive layouts | Platform supports mobile/tablet per constraints | MEDIUM | Cards must adapt; sidebar collapses on mobile |
+| Sidebar navigation | Admin panels need persistent navigation | LOW | Already exists, needs independent scrolling fix |
 
 ### Differentiators (Competitive Advantage)
 
-Features that set the product apart. Not required, but valuable.
+Features that improve UX beyond baseline expectations.
 
 | Feature | Value Proposition | Complexity | Notes |
 |---------|-------------------|------------|-------|
-| MD5-based file deduplication | Saves storage space, prevents duplicate uploads | MEDIUM | Replace UUID naming with MD5 hash; check if file exists before saving |
-| Smart thumbnail generation | Skip thumbnails for small images, save processing time | LOW | Check source dimensions before generating with Sharp |
-| Work-level file management | Add/remove files from existing work without recreating | MEDIUM | MediaItemService exists; need UI for add/remove from existing work |
-| Album-level private sharing | Share entire albums instead of individual works | MEDIUM | Extend ShareTokenData to support albumIds alongside workIds |
-| Studio introduction page | Professional branding, rich text content management | MEDIUM | New model + admin UI + public page; rich text editor integration |
+| Gallery-style detail page | Shows all media items elegantly, not just table row | MEDIUM | Could use carousel, grid, or slider layout - matches photography aesthetic |
+| Real-time filter feedback | Instant filtering as user types (debounced) | LOW | Use 300ms debounce like Clients.vue already does |
+| Visual filter chips | Show active filters as removable chips | MEDIUM | Better UX than hidden filter state |
+| Smooth sidebar scroll | Sidebar stays visible while scrolling content | LOW | CSS `position: sticky` + `overflow-y: auto` + `height: 100vh` |
+| Card hover effects | Subtle animations enhance professional feel | LOW | CSS transitions on scale/shadow |
 
 ### Anti-Features (Commonly Requested, Often Problematic)
 
-Features that seem good but create problems.
-
 | Feature | Why Requested | Why Problematic | Alternative |
 |---------|---------------|-----------------|-------------|
-| Real-time deduplication with progress | Users want instant feedback | Complex streaming + hash computation; UX complexity | Hash after upload, return dedup info in response |
-| Full CMS for studio intro | Flexible content management | Over-engineering for single-page intro | Simple rich text field + basic info form |
-| Dedupe existing files retroactively | Clean up storage | Risk of breaking existing references; complex migration | Dedupe only on upload going forward |
-| Multi-level album sharing with permissions | Granular access control | Scope creep; conflicts with simple private link model | Keep single-level share tokens; per-album shares |
+| Complex multi-column filters | Power users want advanced search | Clutters UI, confuses casual users; overkill for current data volume | Simple search + status dropdown filters |
+| Collapsible sidebar | Save screen space | Adds complexity; only ~220px width; desktop-focused admin | Fixed sidebar is fine for admin panel |
+| Infinite scroll in admin tables | Modern feel | Pagination is clearer for admin tasks; need to know total count | Keep pagination, add search/filter instead |
+| Masonry layout in admin | Match public gallery | Admin needs consistent row heights for scanning data; not for data tables | Keep tables in admin, masonry only for public |
 
 ## Feature Dependencies
 
 ```
-[File Deduplication]
-    └──requires──> [MD5 hash computation in upload middleware]
-    └──requires──> [Check if file exists before saving]
+Work Detail Page
+    └──requires──> MediaItems API (EXISTS - v1.1)
+    └──requires──> Work data with mediaItems populated (EXISTS)
 
-[Smart Thumbnail]
-    └──requires──> [Sharp metadata() to get dimensions]
-    └──enhances──> [Faster upload for small images]
+Admin List Filters
+    └──requires──> Backend filter endpoints (PARTIAL - some exist)
+    └──enhances──> Consistent UI styling
 
-[Work File Management]
-    └──requires──> [MediaItemService (EXISTS)]
-    └──requires──> [MediaItemManager.vue component (EXISTS)]
-    └──requires──> [Add/remove endpoints in works routes]
+Independent Sidebar Scroll
+    └──requires──> CSS-only fix (no dependencies)
 
-[Work Info Display]
-    └──requires──> [MediaItem.fileSize field (EXISTS)]
-    └──requires──> [Aggregation query or computed property]
+Responsive Card Layouts
+    └──requires──> CSS Grid/Flexbox (native)
+    └──enhances──> Mobile/tablet experience
 
-[Studio Introduction]
-    └──requires──> [New StudioConfig model]
-    └──requires──> [Rich text editor (recommend: @wangeditor/editor-for-vue or tiptap)]
-    └──requires──> [Admin settings page]
-    └──requires──> [Public about page]
-
-[Album-level Sharing]
-    └──requires──> [ShareTokenData to support albumIds]
-    └──requires──> [Resolve album → works at share time]
-    └──enhances──> [Existing work-level sharing]
-
-[Watermark Integration]
-    └──requires──> [ImageService.addWatermark (EXISTS)]
-    └──requires──> [Work watermark settings]
-    └──requires──> [Apply on public view, exclude from download]
-
-[Download Fix]
-    └──conflicts──> [Returning JSON instead of file]
-    └──requires──> [Proper Content-Disposition and Content-Type headers (EXISTS in share.ts)]
-
-[View Count Fix]
-    └──requires──> [Public API endpoint to increment (EXISTS in publicService)]
-    └──requires──> [Frontend to call view endpoint on work detail]
+UI Beautification
+    └──requires──> Design tokens / CSS variables (exist via theme)
+    └──enhances──> All other features
 ```
 
 ### Dependency Notes
 
-- **Smart Thumbnail requires Sharp metadata():** Sharp's `metadata()` method is synchronous and fast - no additional dependencies needed. Use `withoutEnlargement: true` option for resize.
-- **Studio Introduction requires rich text editor:** Recommend lightweight options compatible with Vue 3. WangEditor is Chinese-friendly; Tiptap is more flexible but heavier.
-- **Album-level Sharing extends existing:** ShareService stores `workIds[]`. Add `albumIds[]` field; when both exist, merge the resulting work lists.
-- **Work File Management has existing foundation:** MediaItemService and MediaItemManager.vue already exist. Need to add API endpoints and integrate with work edit dialog.
+- **Work Detail Page requires MediaItems API:** Already exists from v1.1 (`mediaItemsApi.addMediaItem()`, `mediaItemsApi.deleteMediaItem()`)
+- **Admin List Filters requires backend support:** Some endpoints support search (Clients), others may need filter params added
+- **Independent Sidebar Scroll:** Pure CSS fix, no backend changes needed
+- **UI Beautification enhances all features:** Apply consistent spacing, shadows, transitions across components
 
-## MVP Definition for v1.1
+## Detailed Feature Analysis
 
-### Launch With (v1.1 Minimum)
+### 1. Work Detail Page (Showing All Files in a Work)
 
-Minimum viable product — what's needed to fix bugs and add core enhancements.
+**Current State:**
+- Works.vue has file management in edit dialog (v1.1)
+- Lightbox shows single image at a time
+- No dedicated public-facing detail view for multi-file works
+- Clicking work card in public gallery opens lightbox for first image only
 
-- [ ] **Bug: Watermark integration** — Photographers' work is unprotected without it
-- [ ] **Bug: Download returns file** — Core functionality broken for private shares
-- [ ] **Bug: View count increment** — Statistics inaccurate without it
-- [ ] **MD5 deduplication** — Storage optimization, prevents duplicate files
-- [ ] **Smart thumbnail generation** — Performance optimization for small images
-- [ ] **Work file info display** — Basic UX improvement (file size, count)
-- [ ] **Admin link to frontend** — Quick navigation improvement
+**Expected Behavior:**
+- User clicks a work card in public gallery
+- Opens detail view showing ALL media items in that work
+- Each file can be viewed full-size
+- Grid or carousel layout for multiple files
+- Download available for private links
 
-### Add After Validation (v1.1 Extended)
+**Implementation Options:**
+| Option | Pros | Cons | Recommendation |
+|--------|------|------|----------------|
+| Expand existing Lightbox | Reuses component | Lightbox not designed for multi-file navigation | No |
+| New WorkDetail component | Clean separation, reusable | More code | Yes |
+| Modal/Drawer from WorkCard | Quick to implement | Limited space for many files | No |
 
-Features to add once core bugs are fixed.
+**Recommended Approach:** Create new `WorkDetail.vue` component with:
+- Grid layout showing all thumbnails
+- Click thumbnail to open full-size viewer
+- Swipe/arrow navigation between files
+- Download button (for private links)
+- Work title, description, metadata
 
-- [ ] **Work file management (add/remove)** — Requires careful UX for existing works
-- [ ] **Album-level private sharing** — Extends existing share system
-- [ ] **Studio introduction page** — New feature area, requires design decisions
+**Complexity:** MEDIUM - New component, routing, state management
+
+**Backend:** No changes needed - existing `/api/public/works/:id` returns work with mediaItems
+
+### 2. Admin List Filter/Search
+
+**Current State:**
+| Page | Search | Filter | Status |
+|------|--------|--------|--------|
+| Works.vue | No | No | Needs both |
+| Shares.vue | No | No | Needs both |
+| Clients.vue | Yes (debounced) | No | Has search, needs filter |
+| Albums.vue | No | No | Needs search |
+| Tags.vue | No | No | Needs search |
+
+**Expected Behavior:**
+- Search input in page header
+- Filter dropdowns for common filters:
+  - Works: status (public/private), album, tag, type (image/video)
+  - Shares: status (active/expired), type (work/album)
+  - Clients: (search only is sufficient)
+  - Albums: (search only is sufficient)
+  - Tags: (search only is sufficient)
+- Debounced search (300ms) - pattern exists in Clients.vue
+- Clear filters button
+
+**Implementation Pattern (from Clients.vue):**
+```typescript
+// Debounced search - REUSE THIS PATTERN
+let searchTimeout: ReturnType<typeof setTimeout>;
+watch(searchQuery, () => {
+  clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(() => {
+    clientsStore.fetchClients({ search: searchQuery.value });
+  }, 300);
+});
+```
+
+**Backend Requirements:**
+- Most list endpoints already support `search` query param
+- Add filter params: `status`, `albumId`, `tagId`, `type` to works endpoint
+- Add filter params: `status`, `type` to shares endpoint
+
+**Complexity:** LOW - Standard Element Plus components, some backend additions
+
+### 3. Responsive Card Layouts
+
+**Current State:**
+- Settings.vue has fixed `max-width: 600px` on `.settings-card`
+- Overview.vue uses `grid-template-columns: repeat(auto-fit, minmax(200px, 1fr))`
+- Inconsistent responsive behavior across pages
+
+**Expected Behavior:**
+- Cards adapt to container width
+- Mobile: Single column
+- Tablet: Two columns
+- Desktop: Auto-fit based on content
+
+**Solution:**
+```css
+.cards-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+/* Settings page - remove fixed max-width */
+.settings-card {
+  /* Remove: max-width: 600px; */
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+  .cards-container {
+    grid-template-columns: 1fr;
+  }
+}
+```
+
+**Affected Pages:**
+- Settings.vue - Watermark card, Studio info card
+- Overview.vue - Stat cards (already good)
+
+**Complexity:** LOW - CSS-only fix
+
+### 4. Independent Sidebar Scrolling
+
+**Current State (Dashboard.vue):**
+```css
+.admin-layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+.sidebar {
+  width: 220px;
+  /* No height/overflow constraints - scrolls with page */
+}
+
+.main {
+  flex: 1;
+  overflow-y: auto;
+}
+```
+
+**Problem:** 
+- Sidebar content can push footer buttons off-screen on long nav lists
+- When main content is long, sidebar scrolls away with it
+- User loses navigation context
+
+**Expected Behavior:**
+- Sidebar scrolls independently from main content
+- Logo and footer buttons remain visible
+- Nav items scroll when list is long
+- Main content scrolls independently
+
+**Solution:**
+```css
+.sidebar {
+  width: 220px;
+  height: 100vh;
+  position: sticky;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.nav {
+  flex: 1;
+  overflow-y: auto;  /* Independent scroll for nav items */
+}
+
+.sidebar-footer {
+  flex-shrink: 0;  /* Always visible at bottom */
+}
+```
+
+**Complexity:** LOW - CSS-only fix
+
+### 5. UI Beautification
+
+**Current Issues:**
+- Inconsistent spacing (16px vs 20px vs 24px padding)
+- Mixed component styles (custom tables vs Element Plus tables)
+- Limited visual hierarchy
+- No hover/transition effects on some interactive elements
+
+**Beautification Checklist:**
+- [ ] Standardize spacing using CSS variables
+- [ ] Add subtle shadows on cards
+- [ ] Smooth transitions on hovers (0.2s ease)
+- [ ] Consistent border-radius (8px for cards, 4px for inputs)
+- [ ] Better empty states
+- [ ] Loading skeleton states
+
+**CSS Variables to Add:**
+```css
+:root {
+  /* Spacing scale */
+  --spacing-xs: 8px;
+  --spacing-sm: 12px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  
+  /* Border radius scale */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  
+  /* Shadows */
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
+  --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
+  --shadow-lg: 0 10px 15px rgba(0,0,0,0.1);
+  
+  /* Transitions */
+  --transition-fast: 0.15s ease;
+  --transition-normal: 0.2s ease;
+}
+```
+
+**Unified Admin Styling:**
+| Page | Current Style | Target Style |
+|------|--------------|--------------|
+| Works.vue | el-table (Element Plus) | Keep, add filter |
+| Shares.vue | Custom `<table>` | Convert to el-table |
+| Clients.vue | Custom `<table>` | Convert to el-table |
+| Albums.vue | el-table | Keep, add search |
+| Tags.vue | el-table | Keep, add search |
+
+**Complexity:** LOW-MEDIUM - Systematic CSS updates, no logic changes
+
+## MVP Definition for v1.2
+
+### Launch With (v1.2 Minimum)
+
+Minimum for this milestone — fixes and improvements.
+
+- [ ] **Work detail page** — Core new feature, users need to see multi-file works in public gallery
+- [ ] **Independent sidebar scroll** — CSS fix, improves admin navigation UX
+- [ ] **Admin list filters** — Essential for finding records (Works, Shares minimum)
+- [ ] **Responsive card layouts** — Mobile/tablet support per project constraints
+- [ ] **Unified admin styling** — Professional consistency across Shares/Clients pages
+
+### Add After Validation (v1.3+)
+
+- [ ] Visual filter chips — Enhanced UX for complex filtering
+- [ ] Gallery-style detail view with carousel — Polish beyond basic grid
+- [ ] Keyboard shortcuts in admin — Power user feature
+- [ ] Bulk action improvements — Already has batch operations, can enhance
 
 ### Future Consideration (v2+)
 
-Features to defer until product-market fit is established.
-
-- [ ] **Retroactive deduplication** — Complex migration, potential for breaking references
-- [ ] **Full CMS for studio pages** — Scope creep for single-purpose gallery
-- [ ] **Share analytics dashboard** — Enhanced statistics beyond views/downloads
+- [ ] Advanced multi-column filters — If user feedback requests it
+- [ ] Customizable admin dashboard — Widget-based layout
+- [ ] Export data functionality — CSV/Excel export
 
 ## Feature Prioritization Matrix
 
 | Feature | User Value | Implementation Cost | Priority |
 |---------|------------|---------------------|----------|
-| Bug: Watermark integration | HIGH | MEDIUM | P1 |
-| Bug: Download returns file | HIGH | LOW | P1 |
-| Bug: View count increment | HIGH | LOW | P1 |
-| MD5 deduplication | MEDIUM | MEDIUM | P1 |
-| Smart thumbnail generation | MEDIUM | LOW | P1 |
-| Work file info display | MEDIUM | LOW | P1 |
-| Admin link to frontend | LOW | LOW | P2 |
-| Work file management (add/remove) | MEDIUM | MEDIUM | P2 |
-| Album-level sharing | MEDIUM | MEDIUM | P2 |
-| Studio introduction page | MEDIUM | MEDIUM | P3 |
+| Work detail page | HIGH | MEDIUM | P1 |
+| Independent sidebar scroll | MEDIUM | LOW | P1 |
+| Admin list filters | HIGH | LOW | P1 |
+| Responsive cards | MEDIUM | LOW | P1 |
+| UI beautification | MEDIUM | MEDIUM | P2 |
+| Unified admin styling | HIGH | LOW | P1 |
+| Filter chips | LOW | MEDIUM | P3 |
 
 **Priority key:**
-- P1: Must have for v1.1 - bug fixes and core optimizations
-- P2: Should have - enhanced functionality
-- P3: Nice to have - can defer if time-constrained
+- P1: Must have for this milestone
+- P2: Should have, add when possible
+- P3: Nice to have, future consideration
 
-## Implementation Details
+## Implementation Notes
 
-### 1. MD5 File Deduplication
+### Reusing Existing Patterns
 
-**Current State:** Files named with UUID (`upload.ts:14-17`)
+1. **Search pattern from Clients.vue (REUSE):**
 ```typescript
-filename: (req, file, cb) => {
-  const ext = path.extname(file.originalname);
-  const uuid = uuidv4();
-  cb(null, `${uuid}${ext}`);
+// Debounced search - already implemented
+let searchTimeout: ReturnType<typeof setTimeout>;
+watch(searchQuery, () => {
+  clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(() => {
+    clientsStore.fetchClients({ search: searchQuery.value });
+  }, 300);
+});
+```
+
+2. **Grid layout from Overview.vue (REUSE):**
+```css
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
 }
 ```
 
-**Implementation Approach:**
-1. Use `crypto.createHash('md5')` or `fast-md5` package (faster for large files)
-2. Compute hash before saving (stream-based for large files)
-3. Use hash as filename: `{md5hash}{ext}`
-4. Check if file exists: `fs.existsSync(hashPath)`
-5. If exists: skip save, return existing path
-6. Store hash in MediaItem for reference
-
-**Edge Cases:**
-- Same content, different extension: Different files (keep both)
-- Concurrent uploads of same file: Race condition, use temp file + rename
-- Video files: Hash computation time; consider progress indication
-
-### 2. Smart Thumbnail Generation
-
-**Current State:** Always generates 300px and 1200px thumbnails (`imageService.ts:33-41`)
-```typescript
-await sharp(inputPath)
-  .resize(300, undefined, { fit: 'inside' })
-  .toFile(smallPath);
+3. **Element Plus table with selection (Works.vue - REUSE):**
+```vue
+<el-table :data="items" @selection-change="handleSelectionChange">
+  <el-table-column type="selection" width="55" />
+  <!-- ... columns ... -->
+</el-table>
 ```
 
-**Implementation Approach:**
-1. Get source dimensions: `await sharp(inputPath).metadata()`
-2. Check if source < target: `if (width < 300) skip small thumbnail`
-3. Use `withoutEnlargement: true` option for Sharp
-4. Return `null` for skipped thumbnails
-5. Frontend falls back to original for null thumbnails
+### New Patterns Needed
 
-**Thresholds:**
-- Small thumbnail (300px): Skip if source width < 300px
-- Large thumbnail (1200px): Skip if source width < 1200px
-- Video thumbnails: Always generate (frame extraction)
-
-### 3. Work File Management (Add/Remove)
-
-**Current State:**
-- MediaItemService: CRUD operations exist
-- MediaItemManager.vue: UI for managing items exists but not integrated into work edit
-- Works.vue: Upload dialog, no edit dialog with file management
-
-**Implementation Approach:**
-1. Add "Manage Files" button to Works.vue table
-2. Open MediaItemManager in edit mode
-3. Add API endpoints:
-   - `POST /api/works/:id/media` - Add media item to existing work
-   - `DELETE /api/works/:id/media/:mediaId` - Remove media item
-4. Handle position updates when adding/removing
-
-### 4. Work Info Display (File Size, File Count)
-
-**Current State:**
-- Work.fileSize is deprecated (single file model)
-- MediaItem.fileSize exists for each item
-- No aggregation endpoint
-
-**Implementation Approach:**
-1. Add computed fields to Work response:
-   - `totalFileSize`: Sum of all mediaItems.fileSize
-   - `fileCount`: Count of mediaItems
-2. Either: Compute in service (SQL aggregation) or virtual property
-3. Display in Works.vue table: "3 files · 12.5 MB"
-
-### 5. Studio Introduction Page
-
-**Current State:** No implementation
-
-**Implementation Approach:**
-1. Create StudioConfig model (MySQL):
-   - `id`, `name`, `logo`, `description` (rich text), `contact`, `socialLinks` (JSON)
-2. Admin settings page: Form with rich text editor for description
-3. Public `/about` page: Display studio info
-4. Rich text editor options:
-   - **WangEditor** (推荐): Chinese docs, Vue 3 support, lightweight
-   - **Tiptap**: More flexible, headless, but heavier
-   - **Quill**: Classic, well-documented, medium weight
-
-### 6. Private Sharing Extension (Work OR Album)
-
-**Current State:**
-- ShareTokenData: `{ workIds: string[], ... }`
-- ShareService validates workIds
-- No albumIds support
-
-**Implementation Approach:**
-1. Extend ShareTokenData:
-   ```typescript
-   interface ShareTokenData {
-     workIds: string[];
-     albumIds?: string[];  // NEW
-     // ... existing fields
-   }
-   ```
-2. When creating share: Accept either workIds OR albumIds OR both
-3. When validating: Resolve albumIds → workIds, merge with workIds
-4. Update admin share creation UI to support album selection
-5. Update Share.vue to display album info if shared
-
-### 7. Watermark Integration Fix
-
-**Current State:**
-- `ImageService.addWatermark()` exists but unused
-- No watermark settings on Work model
-- No integration in upload/display flow
-
-**Implementation Approach:**
-1. Add watermark settings to Work:
-   - `watermarkEnabled: boolean`
-   - `watermarkText?: string`
-   - `watermarkPosition?: string`
-   - `watermarkOpacity?: number`
-2. On public display: Apply watermark to thumbnail
-3. On private download: Return original (no watermark)
-4. Global default watermark in admin settings
-
-### 8. Download Fix
-
-**Current State:** `share.ts` routes appear correct (streaming files)
-```typescript
-res.setHeader('Content-Disposition', `attachment; filename="..."`);
-res.setHeader('Content-Type', mimeType);
-const fileStream = fs.createReadStream(filePath);
-fileStream.pipe(res);
-```
-
-**Potential Issues:**
-1. Path resolution: Check if `filePath.replace('uploads/works/', '')` works correctly
-2. Missing file: Returns JSON error instead of proper HTTP error
-3. Frontend handling: May expect JSON response
-
-**Debug Steps:**
-1. Test download endpoint directly with curl/browser
-2. Check file paths in database vs actual files
-3. Verify media item references
-
-### 9. View Count Fix
-
-**Current State:** `publicService.getPublicWorkById()` increments viewCount
-```typescript
-if (work) {
-  await this.workRepo.increment({ id }, 'viewCount', 1);
-}
-```
-
-**Potential Issues:**
-1. Frontend may not call this endpoint (using list endpoint instead)
-2. Private shares may not increment view count
-3. Gallery view vs detail view confusion
-
-**Implementation Approach:**
-1. Verify frontend calls `/api/public/works/:id` on detail view
-2. Add view increment to private share access
-3. Consider: Deduplicate views (same session/IP within time window)
+1. **WorkDetail component** - Create new, follow existing card/gallery patterns
+2. **FilterBar component** - Reusable across admin pages (search + filters)
+3. **Design tokens** - Centralize CSS variables for consistent theming
 
 ## Sources
 
+- **Element Plus Table documentation** — HIGH confidence, official docs at element-plus.org
+- **CSS-Tricks sticky sidebar article** — HIGH confidence, CSS pattern for independent scrolling
 - **Existing codebase analysis** — HIGH confidence, direct file reading
-- **Sharp documentation** — HIGH confidence, official docs at sharp.pixelplumbing.com
-- **TypeORM patterns** — HIGH confidence, official docs
-- **Vue 3 ecosystem** — MEDIUM confidence, standard patterns for rich text editors
+  - Clients.vue: Search debounce pattern
+  - Overview.vue: Responsive grid pattern
+  - Works.vue: Element Plus table with batch operations
+  - Dashboard.vue: Current sidebar layout
+  - Settings.vue: Card layout with fixed width issue
 
 ---
-
-*Feature research for: Photo gallery platform v1.1 enhancements*
+*Feature research for: Photography Platform UI/UX Improvements (v1.2)*
 *Researched: 2026-03-26*

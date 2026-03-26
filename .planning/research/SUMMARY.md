@@ -1,172 +1,195 @@
 # Project Research Summary
 
 **Project:** 摄影工作室作品展示平台 (Photography Studio Portfolio Platform)
-**Domain:** Photo Gallery Platform — v1.1 Enhancement Features
+**Domain:** Photography Gallery Management — v1.2 UI/UX Improvements
 **Researched:** 2026-03-26
 **Confidence:** HIGH
 
+---
+
 ## Executive Summary
 
-This is an enhancement phase for an existing v1.0 photo gallery platform. The system already has a solid foundation with Vue 3 + TypeScript + Vite frontend, Node.js + Express + TypeORM backend, MySQL for persistence, and Redis for sessions/share tokens. The v1.1 focus is on fixing critical bugs (watermark, download, view count), optimizing storage (MD5 deduplication, smart thumbnails), and adding quality-of-life features (studio introduction, album sharing).
+This is a Vue 3-based photography platform with existing v1.0 core functionality and v1.1 enhancements (file deduplication, thumbnails, sharing). The v1.2 milestone focuses on **UI/UX polish and feature completion** rather than new architecture — incremental improvements with minimal risk.
 
-The recommended approach follows a dependency-aware build order: start with bug fixes and low-risk enhancements (view count, admin link), then optimize core systems (file storage, thumbnails), and finally add new features (studio intro, album sharing). The existing codebase is well-structured with clear service layers, making integration straightforward.
+The recommended approach prioritizes fixing the thumbnail display bug first (affects user trust across all components), adding the work detail page (most requested feature for multi-file works), then systematically improving admin UX with filters, responsive layouts, and style consistency. Each improvement follows established patterns already in the codebase.
 
-Key risks center on concurrent file operations (MD5 deduplication race conditions), security in rich text handling (XSS prevention), and data integrity (orphaned files, deleted works with active shares). Each has documented prevention strategies that should be implemented during their respective phases.
+Key risks center on **breaking existing functionality** while modernizing — particularly around thumbnail fallback logic (works may have 0, 1, or multiple mediaItems), CSS layout changes affecting sidebar, and style migration from plain HTML tables to Element Plus. Prevention requires thorough null-checking and maintaining fallback paths for legacy data.
+
+---
 
 ## Key Findings
 
 ### Recommended Stack
 
-**No major stack changes required** — this is an enhancement of an existing v1.0 system. Core technologies remain: Vue 3.5, Element Plus 2.9, Sharp 0.34.5, TypeORM 0.3, Express 4.21, MySQL 8.0, Redis 7.2.
+The platform uses a mature Vue 3 + TypeScript + Vite stack with Element Plus for UI components. For v1.2, the key addition is **vue-easy-lightbox** (^1.19.0) to replace the basic custom Lightbox.vue with a production-ready gallery component supporting zoom, pan, rotate, keyboard navigation, and video.
 
-**New dependencies for v1.1:**
-- **@wangeditor/editor + @wangeditor/editor-for-vue** — Rich text editor for studio introduction page. Chosen for Vue 3 native support, Chinese documentation, and lightweight footprint (18.3k stars, active maintenance).
-- **Node.js crypto module (built-in)** — MD5 hash computation for file deduplication. No new dependency needed; `createHash('md5')` is native.
+**Core technologies:**
+- **Vue 3 (^3.5.13)** + TypeScript — Composition API with excellent performance
+- **Element Plus (^2.9.1)** — UI components including el-scrollbar for sidebar fix
+- **vue-easy-lightbox** — Gallery lightbox with zoom/pan/rotate, replaces basic Lightbox.vue
+- **Sharp (^0.33)** — Backend image processing (already in place)
+- **wangEditor** — Rich text editor for studio intro (added in v1.1)
 
-**Database schema changes:**
-- New `studio_settings` table for configurable studio info (name, logo, introduction, contact)
-- Add `md5_hash` column to `media_items` with unique index for deduplication queries
+**Optional additions:**
+- **@vueuse/motion** — Animation composables for UI beautification (<20kb)
+- **fuse.js** — Client-side fuzzy search for admin filters (~5kb)
 
 ### Expected Features
 
-**P1 — Must have (bug fixes + core optimizations):**
-- Bug: Watermark integration — photographers' work is unprotected without it
-- Bug: Download returns file — core functionality broken for private shares
-- Bug: View count increment — statistics inaccurate
-- MD5 deduplication — storage optimization, prevents duplicate files
-- Smart thumbnail generation — performance optimization for small images
-- Work file info display — basic UX improvement (file size, count)
+**Must have (table stakes):**
+- **Work detail page** — Users expect to see all files in a multi-file work, not just the first image
+- **Admin list filters** — Standard CRUD operation: search/filter in Works, Shares, Clients pages
+- **Consistent admin styling** — Professional appearance: Shares.vue and Clients.vue use plain `<table>`, should use `el-table` like Works.vue
+- **Responsive card layouts** — Mobile/tablet support per project constraints
 
-**P2 — Should have (enhanced functionality):**
-- Admin link to frontend — quick navigation improvement
-- Work file management (add/remove files from existing works)
-- Album-level private sharing — extend existing share system
+**Should have (competitive):**
+- **Independent sidebar scroll** — Admin navigation stays visible while content scrolls
+- **Gallery-style detail view** — Elegant presentation matching photography aesthetic
+- **Real-time filter feedback** — Debounced search with instant results
 
-**P3 — Defer to later:**
-- Studio introduction page — new feature area, requires design decisions
-- Retroactive deduplication — complex migration, risk of breaking references
-- Full CMS for studio pages — scope creep for single-purpose gallery
+**Defer (v2+):**
+- Visual filter chips — Enhanced UX for complex filtering
+- Keyboard shortcuts in admin — Power user feature
+- Collapsible sidebar — Not needed at current sidebar width
 
 ### Architecture Approach
 
-The existing architecture follows a clean three-tier pattern: Frontend (Vue 3 SPA with Pinia stores) → Backend (Express routes → services → TypeORM models) → Data (MySQL + Redis + Local filesystem). No architectural changes needed for v1.1 features.
+The architecture follows a clean **view-component-store-API** separation. Public pages (Home, About, Share) and admin pages (Dashboard with nested routes) share common components in `gallery/` and `shared/` directories.
 
-**Major components affected:**
+**Major components:**
+1. **Views layer** — Public (Home, About, Share) + Admin (Works, Shares, Clients, etc.)
+2. **Components layer** — `gallery/` (WorkCard, Lightbox, FilterBar), `shared/` (Upload, BatchActionBar), `admin/` (AdminFilterBar - NEW)
+3. **State layer** — Pinia stores (gallery, works, clients, share)
+4. **API layer** — Axios-based modules (public.ts, works.ts, clients.ts, share.ts)
 
-1. **uploadService + imageService** — Add MD5 hash computation, smart thumbnail logic, watermark integration
-2. **shareService** — Extend ShareTokenData to support `albumId` alongside `workIds`
-3. **StudioSettings (NEW model)** — Singleton pattern for studio configuration with rich text introduction
-4. **Admin routes + views** — New settings page, enhanced share creation UI
-
-**Key integration patterns:**
-- Use streaming MD5 computation for large files (avoid blocking event loop)
-- Use Sharp's `withoutEnlargement: true` for smart thumbnails
-- Sanitize rich text on both frontend (display) and backend (storage)
-- Reference counting for deduplicated files before deletion
+**Key pattern:** Existing `useUrlFilters` composable and debounce pattern in Clients.vue should be reused for new admin filters.
 
 ### Critical Pitfalls
 
-1. **MD5 Deduplication Race Condition** — Two simultaneous uploads of the same file create duplicates. Use file locking or atomic temp-file-rename pattern, store hash in DB with unique constraint.
+1. **Thumbnail display breaking** — After switching from `work.thumbnailLarge` to `work.mediaItems[0].thumbnailLarge`, works without mediaItems show broken images. Prevention: Create `useWorkThumbnail` composable with fallback chain (mediaItems[0] → legacy thumbnail → filePath).
 
-2. **XSS in Studio Introduction** — Rich text editors allow arbitrary HTML. Sanitize with DOMPurify (frontend) and sanitize-html (backend), whitelist allowed tags, strip ALL event handlers.
+2. **CSS layout breaking with sidebar scroll** — Adding `overflow-y: auto` without `min-height: 0` on flex child breaks layout, pushing footer off-screen. Prevention: Only `.nav` should scroll with `flex: 1; min-height: 0; overflow-y: auto`.
 
-3. **Orphaned Files on Transaction Failure** — Files uploaded but DB transaction fails. Use staging pattern: upload to temp, move to final only after DB commit, implement periodic cleanup job.
+3. **Filter state lost on navigation** — Vue Router unmounts components, losing local filter state. Prevention: Use URL-based filters via `useUrlFilters` composable (already exists in codebase).
 
-4. **Thumbnail Upscaling** — Small images enlarged to 300px waste storage and reduce quality. Check dimensions with `sharp.metadata()`, use `withoutEnlargement: true`, skip generation for images below threshold.
+4. **Style inconsistency with Element Plus migration** — Converting plain tables to el-table breaks dark mode if CSS variables aren't mapped. Prevention: Map `--bg-card` → `--el-bg-color`, use cell slots for custom content.
 
-5. **Share Token Points to Deleted Work** — Share links show confusing errors. Filter invalid works at load time, show clear "work no longer available" message, consider soft-delete for works with active shares.
+5. **Lightbox not showing all mediaItems** — Current Lightbox.vue only shows `work.filePath`, ignoring additional files. Prevention: Replace with vue-easy-lightbox or refactor to iterate mediaItems.
+
+---
 
 ## Implications for Roadmap
 
-Based on dependency analysis and risk mitigation, suggested phase structure:
+Based on research, suggested phase structure:
 
-### Phase 1: Bug Fixes & Quick Wins
-**Rationale:** Address broken functionality before adding features. These are low-risk, high-value fixes that users expect to work.
-**Delivers:** Functional watermark, working downloads, accurate view counts, admin navigation
-**Addresses:** Watermark integration (P1), Download returns file (P1), View count (P1), Admin link (P2)
-**Avoids:** Users losing trust in platform reliability
+### Phase 1: Thumbnail Foundation
+**Rationale:** Fixes a bug affecting user trust; establishes shared composable that all other phases depend on.
+**Delivers:** Correct thumbnail display across all components
+**Addresses:** Thumbnail fix from FEATURES.md
+**Avoids:** Pitfall #2 — thumbnail breaking with null mediaItems
+**New file:** `composables/useWorkThumbnail.ts`
 
-### Phase 2: File Storage Optimization
-**Rationale:** Storage optimizations benefit all future uploads. Complete before file management features to ensure consistent behavior.
-**Delivers:** MD5 deduplication, smart thumbnails, storage savings, consistent thumbnail quality
-**Uses:** Node.js crypto (built-in), Sharp `withoutEnlargement` option
-**Avoids:** Duplicate files wasting storage, upscaled thumbnails degrading quality, orphaned files from failed uploads
+### Phase 2: Work Detail Page
+**Rationale:** Highest-value feature; users need to see multi-file works in public gallery.
+**Delivers:** New `/work/:id` route showing all mediaItems in a work
+**Uses:** vue-easy-lightbox from STACK.md
+**Implements:** WorkMediaGallery.vue, WorkInfo.vue, WorkDetail.vue
+**Avoids:** Pitfall #5 — lightbox incomplete
 
-### Phase 3: Work File Management Enhancement
-**Rationale:** Builds on Phase 2's deduplication system. Users need to manage files in existing works without recreating.
-**Delivers:** Add/remove files from existing works, file info display, last-item validation
-**Uses:** Existing MediaItemService, enhanced upload flow from Phase 2
-**Implements:** Work file info display (P1), Work file management UI (P2)
-**Avoids:** Empty works from deleting last item, orphaned file references
+### Phase 3: Admin Filters
+**Rationale:** Essential for managing growing data; builds on existing debounce pattern.
+**Delivers:** Search/filter in Works, Shares, Albums, Tags pages
+**Uses:** `useUrlFilters` composable pattern from ARCHITECTURE.md
+**Avoids:** Pitfall #3 — filter state lost
+**New file:** `components/admin/AdminFilterBar.vue`
 
-### Phase 4: Studio Introduction Page
-**Rationale:** New feature area independent of core upload/display flow. Requires new model and admin UI.
-**Delivers:** Configurable studio info page, rich text introduction, contact information display
-**Uses:** @wangeditor/editor-for-vue, new StudioSettings model
-**Implements:** Studio introduction page (P3)
-**Avoids:** XSS vulnerabilities through strict sanitization, CMS over-engineering through simple single-page approach
+### Phase 4: Sidebar & Layout Polish
+**Rationale:** Low-risk CSS improvements; improves admin navigation UX.
+**Delivers:** Independent sidebar scroll, responsive card layouts
+**Uses:** Element Plus el-scrollbar from STACK.md
+**Avoids:** Pitfall #1 — CSS layout breaking
 
-### Phase 5: Album-Level Private Sharing
-**Rationale:** Extends existing share system. More complex UI changes and requires careful handling of album-work relationships.
-**Delivers:** Share entire albums via single link, share creation UI for albums
-**Uses:** Extended ShareTokenData, existing share infrastructure
-**Implements:** Album-level sharing (P2)
-**Avoids:** Stale share data by fetching works dynamically, confusing UX when shared works are deleted
+### Phase 5: Style Unification
+**Rationale:** Visual consistency; converts plain tables to Element Plus.
+**Delivers:** Unified styling for Shares.vue and Clients.vue
+**Avoids:** Pitfall #4 — style inconsistency with Element Plus migration
 
 ### Phase Ordering Rationale
 
-- **Phase 1 first:** Bug fixes establish trust; broken features undermine all other work
-- **Phase 2 before 3:** File management depends on consistent deduplication behavior
-- **Phases 1, 2, 4, 5 parallel-capable:** No dependencies between these tracks
-- **Phase 3 depends on 2:** File management adds to existing deduplication flow
-- **Phase 4 and 5 independent:** Can be developed by different team members simultaneously
+- **Thumbnail first:** Foundation for all other features — WorkCard, Works table, and Lightbox all need this fix
+- **Work detail before filters:** More user-visible value, independent of admin improvements
+- **Filters before layout:** Admin filters benefit from consistent styling that comes later
+- **Layout before style unification:** Sidebar and card fixes establish responsive patterns, then tables are unified
 
 ### Research Flags
 
 Phases likely needing deeper research during planning:
-- **Phase 2:** MD5 deduplication edge cases (concurrent uploads, video files, cleanup strategy)
-- **Phase 4:** Rich text sanitization library selection and configuration, XSS test cases
-- **Phase 5:** Album-work relationship edge cases (album deleted, work removed from album)
+- **Phase 2 (Work Detail):** May need `/gsd-research-phase` for vue-easy-lightbox integration details, video handling in gallery
+- **Phase 5 (Style Unification):** May need research on Element Plus dark mode token mapping
 
 Phases with standard patterns (skip research-phase):
-- **Phase 1:** Bug fixes with clear implementation paths in existing codebase
-- **Phase 3:** MediaItemService already exists, UI follows established patterns
+- **Phase 1 (Thumbnail):** Clear fallback logic, no external dependencies
+- **Phase 3 (Filters):** Existing debounce and URL filter patterns in codebase
+- **Phase 4 (Layout):** CSS-only changes, well-documented patterns
+
+---
 
 ## Confidence Assessment
 
 | Area | Confidence | Notes |
 |------|------------|-------|
-| Stack | HIGH | Core stack already in production; new dependencies well-documented |
-| Features | HIGH | Based on existing codebase analysis, clear implementation paths documented |
-| Architecture | HIGH | Existing code structure analyzed, integration points mapped, build order defined |
-| Pitfalls | HIGH | Each pitfall has specific prevention strategy with code examples |
+| Stack | HIGH | vue-easy-lightbox verified with 470+ stars, Element Plus well-documented |
+| Features | HIGH | Based on direct codebase analysis and existing patterns |
+| Architecture | HIGH | Component structure already established, clear integration points |
+| Pitfalls | HIGH | Identified from codebase analysis and Vue.js best practices |
 
 **Overall confidence:** HIGH
 
 ### Gaps to Address
 
-- **Video file handling in deduplication:** Large video files may have slower MD5 computation. Consider progress indication for uploads >50MB.
-- **Reference counting for deduplicated files:** Implementation details for "how many works reference this file" not fully specified. Decide: track count in DB, or scan on delete?
-- **Album share edge cases:** What happens when a work is removed from an album that has an active share? Dynamic resolution needs test cases.
-- **Rich text image upload:** wangEditor supports image upload; need to decide where images are stored and if they need deduplication.
+- **Video handling in work detail:** vue-easy-lightbox supports video, but integration pattern with existing mediaItems needs verification during Phase 2 planning
+- **About page public access:** ROUTER meta `guest: true` flag needed — single-line fix identified, verify during Phase 1
+- **Backend filter support:** Works endpoint may need `status`, `albumId`, `tagId` filter params added — verify during Phase 3
+
+---
 
 ## Sources
 
 ### Primary (HIGH confidence)
-- Existing codebase analysis (`backend/src/**/*.ts`, `frontend/src/**/*.ts`) — All service patterns, routes, models verified
-- Sharp documentation (sharp.pixelplumbing.com) — `withoutEnlargement` option, streaming API, metadata extraction
-- wangEditor GitHub (github.com/wangeditor-team/wangEditor) — 18.3k stars, Vue 3 integration verified
-- Node.js crypto documentation (nodejs.org/api/crypto.html) — MD5 hashing built-in, streaming support
-- TypeORM documentation — Entity patterns, relations, migrations
+- **vue-easy-lightbox** — GitHub (470 stars, 3.6k users, v1.19.0) — Gallery lightbox with zoom/pan
+- **Element Plus documentation** — el-table, el-scrollbar, dark mode theming
+- **Existing codebase** — Clients.vue (debounce pattern), useUrlFilters.ts (filter pattern), Dashboard.vue (sidebar layout)
 
 ### Secondary (MEDIUM confidence)
-- OWASP XSS Prevention Cheat Sheet — Sanitization strategies, stored XSS prevention
-- Express streaming patterns — `stream.pipeline()` for proper error handling
-- Redis patterns for rate limiting — Session-based view counting with TTL
+- **Vue.js Performance Guide** — v-memo patterns, props stability
+- **CSS-Tricks** — Sticky sidebar pattern for independent scrolling
+- **Sharp documentation** — withoutEnlargement option for smart thumbnails
 
 ### Tertiary (LOW confidence)
-- Personal experience — Photo gallery platform development patterns (validated against codebase)
+- **@vueuse/motion docs** — Optional animations, needs validation during beautification
 
 ---
+
+## Files Summary
+
+**New files (5):**
+- `views/WorkDetail.vue` — Public work detail page
+- `components/gallery/WorkMediaGallery.vue` — Media grid component
+- `components/gallery/WorkInfo.vue` — Info panel component
+- `components/admin/AdminFilterBar.vue` — Reusable admin filter
+- `composables/useWorkThumbnail.ts` — Shared thumbnail logic
+
+**Modified files (8):**
+- `router/index.ts` — Add work detail route, fix About meta
+- `components/gallery/WorkCard.vue` — Thumbnail fix
+- `components/gallery/Lightbox.vue` — Replace with vue-easy-lightbox
+- `views/admin/Works.vue` — Thumbnail fix, add filters
+- `views/admin/Dashboard.vue` — Sidebar scroll
+- `views/admin/Settings.vue` — Card responsive width
+- `views/admin/Shares.vue` — Convert to el-table, style unification
+- `views/admin/Clients.vue` — Convert to el-table, style unification
+
+---
+
 *Research completed: 2026-03-26*
 *Ready for roadmap: yes*

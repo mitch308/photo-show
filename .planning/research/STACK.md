@@ -1,12 +1,128 @@
-# Stack Research — v1.1 Enhancements
+# Stack Research — Photography Platform
 
-**Domain:** Photography Studio Portfolio Platform (v1.1 Enhancement Features)
-**Researched:** 2026-03-26
+**Domain:** Photography Studio Portfolio Platform
+**Researched:** 2026-03-26 (v1.2 UI/UX)
 **Confidence:** HIGH
 
-## v1.1 New Dependencies
+---
 
-### Frontend — Required Additions
+## v1.2 UI/UX Improvements — NEW Additions
+
+### Required New Libraries
+
+| Library | Version | Purpose | Why Recommended |
+|---------|---------|---------|-----------------|
+| vue-easy-lightbox | ^1.19.0 | File gallery lightbox with zoom/pan/rotate | Vue 3 native, 470+ stars, 3.6k users, zero-config, handles multiple images, video support |
+
+### Optional Libraries
+
+| Library | Version | Purpose | When to Use |
+|---------|---------|---------|-------------|
+| @vueuse/motion | ^2.2.0 | Animation composables for UI beautification | If enhanced animations are desired (<20kb, Popmotion-based) |
+| fuse.js | ^7.1.0 | Client-side fuzzy search | If admin list filters need fuzzy matching |
+
+### Feature-to-Library Mapping
+
+| Target Feature | Solution | Library Needed |
+|---------------|----------|----------------|
+| Work detail page with file gallery | Replace basic Lightbox.vue with vue-easy-lightbox | **vue-easy-lightbox** |
+| Thumbnail fixes | Backend fix (use first mediaItem) | None (code change) |
+| Filter functionality for admin lists | Use Element Plus components | None (use existing el-input, el-select) |
+| Sidebar independent scrolling | Wrap nav in `el-scrollbar` | None (use existing el-scrollbar) |
+| Responsive card layouts | Already implemented with CSS columns | None (existing MasonshipGrid.vue) |
+| UI beautification | frontend-design skill + CSS | Optional: @vueuse/motion |
+| System settings card auto-width | CSS Grid with auto-fit | None (CSS change) |
+
+### vue-easy-lightbox Integration
+
+**Replace existing `Lightbox.vue`:**
+```vue
+<script setup lang="ts">
+import VueEasyLightbox from 'vue-easy-lightbox'
+import 'vue-easy-lightbox/dist/external-css/vue-easy-lightbox.css'
+import { ref } from 'vue'
+
+const visibleRef = ref(false)
+const indexRef = ref(0)
+const imgsRef = ref<string[]>([])
+
+const show = (index: number, images: string[]) => {
+  imgsRef.value = images
+  indexRef.value = index
+  visibleRef.value = true
+}
+</script>
+
+<template>
+  <VueEasyLightbox
+    :visible="visibleRef"
+    :imgs="imgsRef"
+    :index="indexRef"
+    @hide="visibleRef = false"
+  />
+</template>
+```
+
+**Key features for photography workflow:**
+- Zoom in/out with mouse wheel
+- Pan/drag images
+- Rotate images
+- Keyboard navigation (arrow keys, escape)
+- Swipe on mobile
+- Video support (for media items)
+
+### el-scrollbar Integration for Sidebar
+
+**Wrap sidebar nav (Dashboard.vue):**
+```vue
+<aside class="sidebar">
+  <div class="logo">...</div>
+  <el-scrollbar class="nav-scrollbar">
+    <nav class="nav">
+      <router-link ...>...</router-link>
+    </nav>
+  </el-scrollbar>
+  <div class="sidebar-footer">...</div>
+</aside>
+
+<style scoped>
+.nav-scrollbar {
+  flex: 1;
+  height: 0; /* Important: let flex control height */
+}
+</style>
+```
+
+### @vueuse/motion Integration (Optional)
+
+**For UI beautification animations:**
+```vue
+<script setup>
+import { useMotion } from '@vueuse/motion'
+</script>
+
+<template>
+  <!-- Fade in with spring animation -->
+  <div v-motion-fade-visible>
+    Content
+  </div>
+
+  <!-- Custom animation -->
+  <div
+    v-motion
+    :initial="{ opacity: 0, y: 100 }"
+    :enter="{ opacity: 1, y: 0 }"
+  >
+    Card content
+  </div>
+</template>
+```
+
+---
+
+## v1.1 Enhancements — Previously Added
+
+### Frontend Additions
 
 | Library | Version | Purpose | Why Recommended |
 |---------|---------|---------|-----------------|
@@ -18,182 +134,120 @@
 | Feature | Implementation | Why No New Library |
 |---------|---------------|-------------------|
 | File deduplication | Node.js `crypto.createHash('md5')` | Built-in, native, no dependency needed |
-| Smart thumbnails | Sharp `withoutEnlargement` + metadata check | Already have Sharp 0.34.5, code change only |
+| Smart thumbnails | Sharp `withoutEnlargement` + metadata check | Already have Sharp, code change only |
 
-## Integration Details
-
-### Rich Text Editor (wangEditor)
-
-**Installation:**
-```bash
-# Frontend
-npm install @wangeditor/editor @wangeditor/editor-for-vue@next
-```
-
-**Why wangEditor over alternatives:**
-
-| Editor | Pros | Cons | Verdict |
-|--------|------|------|---------|
-| wangEditor 5 | Chinese docs, Vue 3 native, simple API, 18.3k stars | Less customizable than headless | ✅ Recommended |
-| Tiptap | Headless, highly customizable, 35.9k stars | Requires building UI, more complex | Overkill for studio intro |
-| Vue-Quill | Quill wrapper, mature | VueQuill less active, Quill aging | Second choice |
-
-**Usage pattern with Vue 3:**
-```typescript
-import { Editor, Toolbar } from '@wangeditor/editor-for-vue'
-import '@wangeditor/editor/dist/css/style.css'
-
-// Must use shallowRef for editor instance
-const editorRef = shallowRef()
-
-// Destroy on unmount
-onBeforeUnmount(() => {
-  const editor = editorRef.value
-  if (editor == null) return
-  editor.destroy()
-})
-```
-
-**Key considerations:**
-- Use `shallowRef()` for editor instance (not `ref()`)
-- Always destroy editor in `onBeforeUnmount`
-- Supports image upload customization via `MENU_CONF`
-- Works with Element Plus styling
-
-### File Deduplication
-
-**Use Node.js built-in crypto, NOT fast-md5:**
-
-```typescript
-import { createHash } from 'crypto'
-import fs from 'fs'
-
-async function computeFileMD5(filePath: string): Promise<string> {
-  const buffer = fs.readFileSync(filePath)
-  return createHash('md5').update(buffer).digest('hex')
-}
-```
-
-**Why NOT fast-md5:**
-- `fast-md5` adds an unnecessary dependency
-- Node.js `crypto` module is native, no installation needed
-- For large files, use streaming with `crypto.createHash('md5')`:
-  ```typescript
-  async function computeLargeFileMD5(filePath: string): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const hash = createHash('md5')
-      const stream = fs.createReadStream(filePath)
-      stream.on('data', chunk => hash.update(chunk))
-      stream.on('end', () => resolve(hash.digest('hex')))
-      stream.on('error', reject)
-    })
-  }
-  ```
-
-**Database change:**
-- Add `md5Hash` column to `media_items` table
-- Create unique index on `md5Hash` for deduplication queries
-
-### Smart Thumbnail Generation
-
-**Use Sharp's `withoutEnlargement` option:**
-
-```typescript
-async generateThumbnails(
-  inputPath: string,
-  outputDir: string,
-  originalName: string
-): Promise<ThumbnailResult | null> {
-  const image = sharp(inputPath)
-  const metadata = await image.metadata()
-  
-  // Skip if image is smaller than both thumbnail sizes
-  const MIN_WIDTH = 300
-  if ((metadata.width ?? 0) < MIN_WIDTH) {
-    return null // Signal: no thumbnails needed
-  }
-  
-  // Use withoutEnlargement to prevent upscaling
-  await sharp(inputPath)
-    .resize(300, undefined, { 
-      fit: 'inside', 
-      withoutEnlargement: true 
-    })
-    .toFile(smallPath)
-  
-  // ... rest of logic
-}
-```
-
-**Benefits:**
-- No upscaling artifacts
-- Saves storage for small images
-- Faster processing (skip unnecessary resize)
+---
 
 ## Existing Stack (No Changes)
 
-The following are already in place from v1.0 and require no changes:
+The following are already in place and support both v1.1 and v1.2:
 
-| Component | Version | Status |
-|-----------|---------|--------|
-| Vue 3 | ^3.5.13 | ✅ No change |
-| Element Plus | ^2.9.1 | ✅ No change |
-| Sharp | ^0.34.5 | ✅ No change |
-| TypeORM | ^0.3.21 | ✅ No change |
-| Express | ^4.21.2 | ✅ No change |
+| Component | Version | Purpose |
+|-----------|---------|---------|
+| Vue 3 | ^3.5.13 | Frontend framework |
+| TypeScript | ^5.7.3 | Type safety |
+| Vite | ^6.0.7 | Build tool |
+| Element Plus | ^2.9.1 | UI components (includes el-scrollbar) |
+| Pinia | ^2.3.0 | State management |
+| Vue Router | ^4.5.0 | Routing |
+| VueUse | ^12.2.0 | Utilities (useBreakpoints, useScroll) |
+| Axios | ^1.7.9 | HTTP client |
+| Sass | ^1.83.4 | CSS preprocessing |
+
+---
+
+## Installation Commands
+
+```bash
+# v1.2 UI/UX — Required
+cd frontend
+npm install vue-easy-lightbox
+
+# v1.2 UI/UX — Optional (animations)
+npm install @vueuse/motion
+
+# v1.2 UI/UX — Optional (fuzzy search)
+npm install fuse.js
+
+# v1.1 — Already installed
+npm install @wangeditor/editor @wangeditor/editor-for-vue@next
+```
+
+---
+
+## Alternatives Considered
+
+### v1.2 Alternatives
+
+| Recommended | Alternative | Why Not |
+|-------------|-------------|---------|
+| vue-easy-lightbox | PhotoSwipe 5 | More setup, requires predefined dimensions, larger bundle |
+| vue-easy-lightbox | Enhance existing Lightbox.vue | Time-consuming, no zoom/pan, wheel reinvention |
+| Element Plus el-scrollbar | CSS overflow-y | el-scrollbar provides consistent styling across browsers |
+| fuse.js | Server-side search | Overkill for admin lists, adds latency |
+| @vueuse/motion | CSS transitions only | Less interactive, no spring physics |
+
+### v1.1 Alternatives
+
+| Editor | Pros | Cons | Verdict |
+|--------|------|------|---------|
+| wangEditor 5 | Chinese docs, Vue 3 native, simple API, 18.3k stars | Less customizable than headless | ✅ Chosen |
+| Tiptap | Headless, highly customizable, 35.9k stars | Requires building UI, more complex | Overkill |
+| Vue-Quill | Quill wrapper, mature | VueQuill less active, Quill aging | Second choice |
+
+---
 
 ## What NOT to Add
 
 | Avoid | Why | Use Instead |
 |-------|-----|-------------|
 | fast-md5 | Unnecessary dependency | Node.js `crypto` module (built-in) |
+| vue-masonry-css | Already have CSS column implementation | Existing MasonshipGrid.vue |
+| vuetify/quasar | Already using Element Plus | Element Plus components |
+| animate.css | Less control, generic animations | @vueuse/motion or CSS |
+| lodash.debounce | VueUse has useDebounceFn | `import { useDebounceFn } from '@vueuse/core'` |
 | Tiptap | Overkill for simple studio intro | wangEditor (simpler, better fit) |
-| Quill | Older architecture | wangEditor (modern, Vue 3 native) |
-| Any image resizing lib | Already have Sharp | Sharp `withoutEnlargement` option |
 
-## Database Schema Changes
+---
 
-### New Table: `studio_settings`
+## Version Compatibility
 
-```sql
-CREATE TABLE studio_settings (
-  id VARCHAR(36) PRIMARY KEY,
-  setting_key VARCHAR(100) UNIQUE NOT NULL,
-  setting_value TEXT,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
+| Package | Compatible With | Notes |
+|---------|-----------------|-------|
+| vue-easy-lightbox ^1.19 | Vue 3.3+ | Vue 3 only, Vue 2 has separate package |
+| @vueuse/motion ^2.2 | VueUse 12+ | Must match VueUse major version |
+| fuse.js ^7.1 | Any framework | Pure JS, framework-agnostic |
+| wangEditor ^5.1 | Vue 3.x | Use shallowRef for editor instance |
 
--- Default studio intro
-INSERT INTO studio_settings (id, setting_key, setting_value) 
-VALUES (UUID(), 'studio_intro', '<p>欢迎来到我们的摄影工作室</p>');
-```
+---
 
-### MediaItem Table Addition
+## Bundle Size Impact
 
-```sql
-ALTER TABLE media_items ADD COLUMN md5_hash VARCHAR(32);
-CREATE INDEX idx_media_items_md5 ON media_items(md5_hash);
-```
+| Library | Size (min+gzip) | Impact |
+|---------|-----------------|--------|
+| vue-easy-lightbox | ~8kb | Low — tree-shakeable |
+| @vueuse/motion | ~20kb | Medium — optional |
+| fuse.js | ~5kb | Low — optional |
+| wangEditor | ~50kb | Medium — already added in v1.1 |
 
-## Installation Commands
-
-```bash
-# Frontend — add rich text editor
-cd frontend
-npm install @wangeditor/editor @wangeditor/editor-for-vue@next
-
-# Backend — no new packages needed
-# crypto is built-in to Node.js
-```
+---
 
 ## Sources
 
+### v1.2 Sources
+- **vue-easy-lightbox** — GitHub (470 stars, 3.6k users, v1.19.0 Mar 2024) — HIGH confidence
+- **PhotoSwipe** — Official docs (v5.4.4, v6 in dev) — MEDIUM confidence
+- **@vueuse/motion** — Official docs (<20kb, Popmotion-based) — HIGH confidence
+- **Element Plus Scrollbar** — Official docs (built-in component) — HIGH confidence
+- **Fuse.js** — Official docs (v7.1.0, fuzzy search) — HIGH confidence
+- **Existing codebase** — Lightbox.vue, MasonshipGrid.vue, Dashboard.vue analysis — HIGH confidence
+
+### v1.1 Sources
 - wangEditor GitHub: https://github.com/wangeditor-team/wangEditor — 18.3k stars, Vue 3 support verified
 - wangEditor docs: https://www.wangeditor.com/v5/for-frame.html — Vue 3 integration guide
 - Node.js crypto docs: https://nodejs.org/api/crypto.html — MD5 hashing built-in
 - Sharp resize docs: https://sharp.pixelplumbing.com/api-resize — `withoutEnlargement` option
 
 ---
-*Stack research for: v1.1 Enhancement Features*
-*Researched: 2026-03-26*
+*Stack research for: Photography Platform (v1.1 + v1.2)*
+*Last updated: 2026-03-26*

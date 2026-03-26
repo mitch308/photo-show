@@ -1,538 +1,389 @@
-# Architecture Research: v1.1 Enhancement Features
+# Architecture Research: v1.2 UI/UX Improvements
 
-**Domain:** Photography Studio Portfolio Platform
+**Domain:** Photography Studio Platform - v1.2 UI/UX Optimization
 **Researched:** 2026-03-26
 **Confidence:** HIGH (based on existing codebase analysis)
 
 ## Current Architecture Overview
 
 ```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                              Frontend (Vue 3 SPA)                            │
-├─────────────────────────────────────────────────────────────────────────────┤
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐    │
-│  │    Views     │  │  Components  │  │    Stores    │  │     API      │    │
-│  │  (Pages)     │  │   (UI)       │  │   (Pinia)    │  │   (Axios)    │    │
-│  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘    │
-│         │                 │                 │                 │            │
-│  ┌──────┴─────────────────┴─────────────────┴─────────────────┴───────┐    │
-│  │                        Vue Router                                    │    │
-│  └─────────────────────────────────────────────────────────────────────┘    │
-└─────────────────────────────────────────────────────────────────────────────┘
-                                      │
-                                      ▼ HTTP/REST
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                              Backend (Express)                               │
-├─────────────────────────────────────────────────────────────────────────────┤
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐    │
-│  │    Routes    │  │  Middlewares │  │   Services   │  │    Models    │    │
-│  │  (Endpoints) │  │  (Auth/      │  │  (Business   │  │  (TypeORM    │    │
-│  │              │  │   Upload)    │  │   Logic)     │  │   Entities)  │    │
-│  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘    │
-│         │                 │                 │                 │            │
-├─────────┴─────────────────┴─────────────────┴─────────────────┴────────────┤
-│                              Data Layer                                      │
-├─────────────────────────────────────────────────────────────────────────────┤
-│  ┌────────────────────────────┐      ┌────────────────────────────┐         │
-│  │     MySQL 8.0              │      │     Redis 7.2              │         │
-│  │  (Persistent Storage)      │      │  (Sessions, Share Tokens)  │         │
-│  └────────────────────────────┘      └────────────────────────────┘         │
-├─────────────────────────────────────────────────────────────────────────────┤
-│                              File Storage                                    │
-│  ┌────────────────────────────┐                                              │
-│  │     Local Filesystem       │                                              │
-│  │  uploads/works/YYYY-MM/    │                                              │
-│  └────────────────────────────┘                                              │
-└─────────────────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────┐
+│                           Frontend (Vue 3)                               │
+├─────────────────────────────────────────────────────────────────────────┤
+│  ┌──────────────────┐  ┌──────────────────┐  ┌──────────────────┐       │
+│  │   Public Views   │  │   Admin Views    │  │   Shared Views   │       │
+│  │   Home.vue       │  │   Dashboard.vue  │  │   Share.vue      │       │
+│  │   About.vue      │  │   Works.vue      │  │   AlbumShare.vue │       │
+│  │                  │  │   Shares.vue     │  │                  │       │
+│  │                  │  │   Clients.vue    │  │                  │       │
+│  └────────┬─────────┘  └────────┬─────────┘  └────────┬─────────┘       │
+│           │                     │                     │                  │
+├───────────┴─────────────────────┴─────────────────────┴──────────────────┤
+│                          Components Layer                                 │
+│  ┌─────────────────────┐  ┌─────────────────────┐  ┌─────────────────┐   │
+│  │  gallery/           │  │  shared/            │  │  admin/         │   │
+│  │  - MasonryGrid      │  │  - Upload           │  │  (inline in    │   │
+│  │  - WorkCard         │  │  - BatchActionBar   │  │   views)        │   │
+│  │  - FilterBar        │  │  - AccessLogDialog  │  │                 │   │
+│  │  - Lightbox         │  │                     │  │                 │   │
+│  └─────────────────────┘  └─────────────────────┘  └─────────────────┘   │
+├─────────────────────────────────────────────────────────────────────────┤
+│                          State Management (Pinia)                        │
+│  ┌────────────┐  ┌────────────┐  ┌────────────┐  ┌────────────┐         │
+│  │ gallery    │  │ works      │  │ clients    │  │ share      │         │
+│  │ store      │  │ store      │  │ store      │  │ store      │         │
+│  └────────────┘  └────────────┘  └────────────┘  └────────────┘         │
+├─────────────────────────────────────────────────────────────────────────┤
+│                          API Layer                                        │
+│  ┌────────────┐  ┌────────────┐  ┌────────────┐  ┌────────────┐         │
+│  │ public.ts  │  │ works.ts   │  │ clients.ts │  │ share.ts   │         │
+│  └────────────┘  └────────────┘  └────────────┘  └────────────┘         │
+└─────────────────────────────────────────────────────────────────────────┘
 ```
 
-## Existing Component Responsibilities
+## Integration Points for UI/UX Improvements
 
-| Component | Responsibility | Implementation |
-|-----------|----------------|----------------|
-| **Models** | Database entities with TypeORM decorators | `backend/src/models/*.ts` |
-| **Services** | Business logic, data operations | `backend/src/services/*.ts` |
-| **Routes** | HTTP endpoints, request handling | `backend/src/routes/*.ts` |
-| **Stores** | Frontend state management with Pinia | `frontend/src/stores/*.ts` |
-| **API** | HTTP client functions with Axios | `frontend/src/api/*.ts` |
-| **Views** | Page-level Vue components | `frontend/src/views/**/*.vue` |
+### 1. Work Detail Page (New Feature)
 
----
+**Current State:** 
+- Home.vue uses Lightbox component for work preview
+- No dedicated work detail page exists
+- Lightbox shows single image from `work.filePath`
 
-## v1.1 Feature Integration Analysis
+**Required Changes:**
 
-### Feature 1: MD5-based File Deduplication
+| Component | Status | Integration Point |
+|-----------|--------|-------------------|
+| `views/WorkDetail.vue` | **NEW** | New route `/work/:id` |
+| `components/gallery/WorkMediaGallery.vue` | **NEW** | Display all mediaItems |
+| `components/gallery/WorkInfo.vue` | **NEW** | Work metadata, tags, description |
+| Router | **MODIFY** | Add new route in `router/index.ts` |
+| `public.ts` API | **EXISTS** | `getWork(id)` already available |
 
-**What:** Use file content hash as filename, skip upload if file already exists.
-
-**Integration Points:**
-
+**Data Flow:**
 ```
-┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
-│  upload.ts      │ ──► │  uploadService  │ ──► │  storage.ts     │
-│  (middleware)   │     │  (processing)   │     │  (dedup check)  │
-└─────────────────┘     └─────────────────┘     └─────────────────┘
+User clicks work card
+    ↓
+Navigate to /work/:id
+    ↓
+WorkDetail.vue created
+    ↓
+Call publicApi.getWork(id)
+    ↓
+Render WorkMediaGallery + WorkInfo
 ```
 
-**Changes Required:**
+### 2. Thumbnail Display Fix
 
-| File | Change Type | Description |
-|------|-------------|-------------|
-| `backend/src/middlewares/upload.ts` | MODIFY | Compute MD5 hash before saving, use hash as filename |
-| `backend/src/services/uploadService.ts` | MODIFY | Add deduplication check logic, return existing file info if duplicate |
-| `backend/src/config/storage.ts` | MODIFY | Add MD5 file lookup helper (optional: Redis cache for hash→path mapping) |
+**Current Implementation (WorkCard.vue:14-15):**
+```vue
+<img :src="`/${work.thumbnailLarge}`" />
+```
 
-**Architecture Pattern:**
+**Problem:** Uses deprecated `work.thumbnailLarge` instead of first `mediaItem`
 
+**Solution Pattern:**
 ```typescript
-// New flow in upload middleware
-1. Receive file in memory buffer (not disk)
-2. Compute MD5 hash using crypto.createHash('md5')
-3. Check if file with hash exists in uploads directory
-4. If exists: return existing file metadata (skip upload)
-5. If not exists: save file with hash as filename, generate thumbnails
-```
-
-**Data Model Impact:** None - MediaItem already stores `filePath`. Only file naming convention changes.
-
-**Build Order:** 1 (no dependencies on other features)
-
----
-
-### Feature 2: Smart Thumbnail Logic
-
-**What:** Skip thumbnail generation if source image is smaller than target thumbnail size.
-
-**Integration Points:**
-
-```
-┌─────────────────┐     ┌─────────────────┐
-│  uploadService  │ ──► │  imageService   │
-│  (orchestrates) │     │  (generates)    │
-└─────────────────┘     └─────────────────┘
-```
-
-**Changes Required:**
-
-| File | Change Type | Description |
-|------|-------------|-------------|
-| `backend/src/services/imageService.ts` | MODIFY | Check source dimensions before resize, return source path if smaller |
-
-**Architecture Pattern:**
-
-```typescript
-// In imageService.generateThumbnails()
-async generateThumbnails(inputPath, outputDir, originalName): Promise<ThumbnailResult> {
-  const metadata = await sharp(inputPath).metadata();
-  const width = metadata.width;
-  
-  // Smart logic: if source < 300px, use source for small
-  // if source < 1200px, use source for large
-  const small = width <= 300 
-    ? inputPath 
-    : await this.resize(inputPath, outputDir, 300);
-    
-  const large = width <= 1200 
-    ? inputPath 
-    : await this.resize(inputPath, outputDir, 1200);
-    
-  return { small, large };
+// Computed thumbnail helper
+function getWorkThumbnail(work: Work): string {
+  // Priority: first mediaItem > legacy thumbnail
+  if (work.mediaItems?.length && work.mediaItems[0].thumbnailLarge) {
+    return work.mediaItems[0].thumbnailLarge;
+  }
+  return work.thumbnailLarge || work.thumbnailSmall || '';
 }
 ```
 
-**Data Model Impact:** None - thumbnail paths can point to source file.
+**Files to Modify:**
 
-**Build Order:** 2 (independent, can parallel with Feature 1)
+| File | Change | Complexity |
+|------|--------|------------|
+| `WorkCard.vue` | Add thumbnail computed property | Low |
+| `MasonryGrid.vue` | Pass work to WorkCard (no change needed) | - |
+| `admin/Works.vue` | Table thumbnail column (line 449-455) | Low |
+| `Lightbox.vue` | Preview image (line 73) | Low |
 
----
+### 3. Filter Component Integration
 
-### Feature 3: Work File Management (Add/Remove MediaItems)
+**Current State:**
+- Public gallery: FilterBar component exists in `components/gallery/`
+- Admin pages: No reusable filter component (each page implements own)
 
-**What:** Allow adding and removing files from existing works.
-
-**Current State:** Already implemented!
-- `POST /api/works/:workId/media` - Add media item
-- `DELETE /api/media/:id` - Delete media item
-- `POST /api/works/:workId/media/reorder` - Reorder items
-
-**Integration Points:**
-
+**Existing FilterBar Pattern:**
 ```
-┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
-│  Works.vue      │ ──► │  worksStore     │ ──► │  mediaItemsApi  │
-│  (Admin UI)     │     │  (State)        │     │  (HTTP)         │
-└─────────────────┘     └─────────────────┘     └─────────────────┘
-```
-
-**Changes Required:**
-
-| File | Change Type | Description |
-|------|-------------|-------------|
-| `frontend/src/views/admin/Works.vue` | MODIFY | Add file management UI (upload button, delete button for each media item) |
-| `frontend/src/stores/works.ts` | ALREADY EXISTS | Has `addMediaItem`, `deleteMediaItem`, `reorderMediaItems` actions |
-| `backend/src/routes/mediaItems.ts` | ALREADY EXISTS | All endpoints exist |
-
-**Build Order:** 3 (depends on Feature 1 for dedup to work with new uploads)
-
----
-
-### Feature 4: Studio Introduction Page
-
-**What:** Configurable studio info page with rich text content, managed from admin.
-
-**New Architecture:**
-
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                           New Components                                     │
-├─────────────────────────────────────────────────────────────────────────────┤
-│  Backend:                                                                    │
-│  ┌─────────────────────┐  ┌─────────────────────┐  ┌─────────────────────┐  │
-│  │  StudioSettings     │  │  settingsService    │  │  routes/settings    │  │
-│  │  (Model)            │  │  (Service)          │  │  (Endpoints)        │  │
-│  └─────────────────────┘  └─────────────────────┘  └─────────────────────┘  │
-│                                                                              │
-│  Frontend:                                                                   │
-│  ┌─────────────────────┐  ┌─────────────────────┐  ┌─────────────────────┐  │
-│  │  About.vue          │  │  Admin/Settings.vue │  │  settingsApi        │  │
-│  │  (Public Page)      │  │  (Config UI)        │  │  (HTTP Client)      │  │
-│  └─────────────────────┘  └─────────────────────┘  └─────────────────────┘  │
-└─────────────────────────────────────────────────────────────────────────────┘
+FilterBar.vue
+├── Uses useGalleryStore
+├── Syncs with URL via useUrlFilters composable
+├── Supports: albumId, tagId, search filters
+└── Responsive: mobile toggle, desktop inline
 ```
 
-**New Model:**
+**Admin Pages Needing Filters:**
 
-```typescript
-// backend/src/models/StudioSettings.ts
-@Entity('studio_settings')
-export class StudioSettings {
-  @PrimaryColumn({ type: 'varchar', length: 36 })
-  id: string; // Singleton - always 'default'
-  
-  @Column({ type: 'varchar', length: 100 })
-  studioName: string;
-  
-  @Column({ type: 'varchar', length: 500, nullable: true })
-  logo: string; // Logo image path
-  
-  @Column({ type: 'varchar', length: 255, nullable: true })
-  address: string;
-  
-  @Column({ type: 'varchar', length: 50, nullable: true })
-  phone: string;
-  
-  @Column({ type: 'varchar', length: 100, nullable: true })
-  email: string;
-  
-  @Column({ type: 'text', nullable: true })
-  introduction: string; // Rich text HTML/Markdown
-  
-  @Column({ type: 'varchar', length: 500, nullable: true })
-  wechatQrcode: string; // WeChat QR code image
-  
-  @UpdateDateColumn({ type: 'datetime', name: 'updated_at' })
-  updatedAt: Date;
+| Page | Current Filter | Recommended Pattern |
+|------|----------------|---------------------|
+| Works.vue | None | Create AdminFilterBar component |
+| Albums.vue | None | Reuse AdminFilterBar |
+| Tags.vue | None | Reuse AdminFilterBar |
+| Shares.vue | None | Reuse AdminFilterBar |
+| Clients.vue | Search input only | Extend AdminFilterBar |
+
+**New Component Structure:**
+```
+components/
+├── admin/
+│   └── AdminFilterBar.vue  (NEW - reusable admin filter)
+└── gallery/
+    └── FilterBar.vue       (EXISTS - public gallery)
+```
+
+### 4. Admin Layout Improvements
+
+**Current Dashboard.vue Structure:**
+```
+.admin-layout (flex, min-height: 100vh)
+├── .sidebar (width: 220px, fixed)
+│   ├── .logo
+│   ├── .nav (flex: 1)
+│   └── .sidebar-footer
+└── .main (flex: 1, overflow-y: auto)
+    └── <router-view />
+```
+
+**Issue: Sidebar doesn't scroll independently**
+
+**Fix Pattern:**
+```css
+.sidebar {
+  height: 100vh;
+  overflow-y: auto;  /* Add independent scroll */
+  position: sticky;
+  top: 0;
 }
 ```
 
-**Changes Required:**
+### 5. Settings Card Responsive Width
 
-| File | Change Type | Description |
-|------|-------------|-------------|
-| `backend/src/models/StudioSettings.ts` | NEW | Studio settings entity |
-| `backend/src/services/settingsService.ts` | NEW | CRUD for settings (singleton pattern) |
-| `backend/src/routes/settings.ts` | NEW | Admin endpoints: GET/PUT /api/admin/settings |
-| `backend/src/routes/public.ts` | MODIFY | Add GET /api/public/settings (public info only) |
-| `frontend/src/views/About.vue` | NEW | Public studio introduction page |
-| `frontend/src/views/admin/Settings.vue` | NEW | Admin settings configuration page |
-| `frontend/src/api/settings.ts` | NEW | Settings API client |
-| `frontend/src/router/index.ts` | MODIFY | Add /about route |
-
-**Build Order:** 4 (independent feature)
-
----
-
-### Feature 5: Share Model Extension (share_type: work/album)
-
-**What:** Support sharing both individual works and entire albums via private links.
-
-**Current Architecture:**
-
-```typescript
-// Current ShareTokenData in Redis
-interface ShareTokenData {
-  workIds: string[];      // Only works supported
-  expiresAt: number;
-  createdAt: number;
-  clientId?: string;
-  maxAccess?: number;
-  accessCount?: number;
+**Current (Settings.vue:374-376):**
+```css
+.settings-card {
+  max-width: 600px;  /* Fixed width */
 }
 ```
 
-**Extended Architecture:**
-
-```typescript
-// Extended ShareTokenData
-interface ShareTokenData {
-  shareType: 'work' | 'album';  // NEW
-  workIds?: string[];           // Required if shareType === 'work'
-  albumId?: string;             // Required if shareType === 'album'
-  expiresAt: number;
-  createdAt: number;
-  clientId?: string;
-  maxAccess?: number;
-  accessCount?: number;
+**Responsive Pattern:**
+```css
+.settings-card {
+  max-width: 600px;
+  width: 100%;  /* Allow shrinking */
 }
 ```
 
-**Integration Points:**
+### 6. Shares & Clients Style Unification
 
-```
-┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
-│  Shares.vue     │ ──► │  shareService   │ ──► │  Redis Storage  │
-│  (Admin UI)     │     │  (Token Logic)  │     │  (Share Data)   │
-└─────────────────┘     └─────────────────┘     └─────────────────┘
-         │                      │
-         │                      ▼
-         │              ┌─────────────────┐
-         └─────────────►│  publicService  │
-                        │  (Fetch Works)  │
-                        └─────────────────┘
-```
+**Current Differences:**
 
-**Changes Required:**
+| Aspect | Shares.vue | Clients.vue |
+|--------|------------|-------------|
+| Page header | `<h1>` | `<h1>` with search |
+| Table wrapper | `.shares-list` | `.clients-list` |
+| Search input | None | In header |
+| Button style | `.btn-primary` | `.btn-primary` |
+| Dialog class | `.dialog` | `.dialog` |
 
-| File | Change Type | Description |
-|------|-------------|-------------|
-| `backend/src/services/shareService.ts` | MODIFY | Add shareType support, albumId field, album share validation |
-| `backend/src/routes/admin/share.ts` | MODIFY | Accept shareType and albumId in create request |
-| `backend/src/routes/share.ts` | MODIFY | Handle album shares, fetch all works from album |
-| `frontend/src/views/admin/Shares.vue` | MODIFY | Add share type selector (work/album), album picker |
-| `frontend/src/api/share.ts` | MODIFY | Update CreateShareRequest interface |
-| `backend/src/services/accessLogService.ts` | MODIFY | Handle album access logging |
-
-**Data Flow for Album Share:**
-
-```
-1. Admin creates share with shareType: 'album', albumId: 'xxx'
-2. shareService stores: { shareType: 'album', albumId: 'xxx', ... }
-3. Client visits /share/:token
-4. Backend validates token, fetches album with all works
-5. Returns works from album (with real-time data - album contents may change)
+**Recommended Shared Styles:**
+```css
+/* Create shared admin page styles */
+.admin-page { padding: 24px; }
+.admin-page-header { display: flex; justify-content: space-between; margin-bottom: 24px; }
+.admin-table { width: 100%; border-collapse: collapse; background: var(--bg-card); }
 ```
 
-**Build Order:** 5 (independent feature)
+## Component Organization
 
----
-
-### Feature 6: Admin Frontend Link
-
-**What:** Add link in admin panel to view the public frontend.
-
-**Integration Points:**
+### Recommended Structure for New Components
 
 ```
-┌─────────────────┐     ┌─────────────────┐
-│  Dashboard.vue  │ ──► │  External Link  │
-│  (Admin Layout) │     │  (Frontend URL) │
-└─────────────────┘     └─────────────────┘
+frontend/src/
+├── views/
+│   ├── WorkDetail.vue          (NEW - public work detail)
+│   └── admin/
+│       └── (existing files)
+├── components/
+│   ├── admin/
+│   │   └── AdminFilterBar.vue  (NEW - reusable admin filter)
+│   └── gallery/
+│       ├── WorkCard.vue        (MODIFY - thumbnail fix)
+│       ├── Lightbox.vue        (MODIFY - thumbnail fix)
+│       ├── WorkMediaGallery.vue (NEW - detail page media grid)
+│       └── WorkInfo.vue        (NEW - detail page info panel)
+└── composables/
+    └── useWorkThumbnail.ts     (NEW - shared thumbnail logic)
 ```
 
-**Changes Required:**
+## Data Model Reference
 
-| File | Change Type | Description |
-|------|-------------|-------------|
-| `frontend/src/views/admin/Dashboard.vue` | MODIFY | Add "View Frontend" link in header/sidebar |
-
-**Build Order:** 6 (simplest feature, no dependencies)
-
----
-
-## Bug Fixes Integration
-
-### Bug 1: Watermark Not Integrated
-
-**Current State:** `imageService.addWatermark()` exists but is not called in upload flow.
-
-**Fix Location:** `backend/src/services/uploadService.ts`
+### Work Type (from types.ts:56-82)
 
 ```typescript
-// In processImage(), after thumbnail generation:
-if (watermarkOptions) {
-  await imageService.addWatermark(filePath, watermarkedPath, watermarkOptions);
+interface Work {
+  id: string;
+  title: string;
+  description: string;
+  // Legacy single-file fields (deprecated)
+  filePath: string;
+  thumbnailSmall?: string | null;
+  thumbnailLarge?: string | null;
+  // New multi-media support
+  mediaItems?: MediaItem[];  // First item = representative thumbnail
+  // ... other fields
+}
+
+interface MediaItem {
+  id: string;
+  workId: string;
+  filePath: string;
+  thumbnailSmall?: string | null;
+  thumbnailLarge?: string | null;
+  position: number;
+  // ... other fields
 }
 ```
 
-**Requires:** Watermark configuration storage (in StudioSettings model)
+### Thumbnail Priority Logic
 
-### Bug 2: Download Returns JSON Instead of File
+```
+1. work.mediaItems[0].thumbnailLarge (if mediaItems exist)
+2. work.thumbnailLarge (legacy fallback)
+3. work.thumbnailSmall (last resort)
+```
 
-**Current State:** `share.ts` download endpoint should stream file. Need to verify headers.
+## Router Integration
 
-**Fix Location:** `backend/src/routes/share.ts` lines 128-134
+### Current Route Structure
 
-**Issue:** Likely `res.setHeader()` conflict or middleware issue.
+```typescript
+// router/index.ts
+routes: [
+  { path: '/', name: 'Home', component: Home },
+  { path: '/about', name: 'About', component: About },  // No guest meta!
+  { path: '/login', name: 'Login', component: Login, meta: { guest: true } },
+  { 
+    path: '/admin', 
+    meta: { requiresAuth: true },
+    children: [...] 
+  },
+]
+```
 
-### Bug 3: View Count Not Incrementing
+### Required Changes
 
-**Current State:** `workService.incrementDownloadCount()` exists but no `incrementViewCount()`.
+**1. About Page Auth Bypass:**
+```typescript
+{
+  path: '/about',
+  name: 'About',
+  component: About,
+  meta: { guest: true },  // ADD: Allow access when logged in
+}
+```
 
-**Fix Location:** 
-- Add `incrementViewCount()` to `workService.ts`
-- Call in `public.ts` when viewing public works
-- Call in `share.ts` when viewing shared works
+**2. New Work Detail Route:**
+```typescript
+{
+  path: '/work/:id',
+  name: 'WorkDetail',
+  component: () => import('@/views/WorkDetail.vue'),
+  meta: { title: '作品详情' },
+}
+```
 
----
+## Build Order (Dependency-Aware)
 
-## Recommended Build Order
+### Phase 1: Foundation (No Dependencies)
+1. **useWorkThumbnail composable** - Shared thumbnail logic
+2. **About route meta fix** - Single line change in router
 
-Based on dependencies and complexity:
+### Phase 2: Thumbnail Fixes (Depends on Phase 1)
+3. **WorkCard.vue** - Use thumbnail composable
+4. **admin/Works.vue** - Table thumbnail fix
+5. **Lightbox.vue** - Image source fix
 
-| Order | Feature | Dependencies | Complexity | Risk |
-|-------|---------|--------------|------------|------|
-| 1 | Bug Fix: View Count | None | Low | Low |
-| 2 | Bug Fix: Download File | None | Low | Low |
-| 3 | Feature 6: Admin Frontend Link | None | Low | Low |
-| 4 | Feature 2: Smart Thumbnail | None | Medium | Low |
-| 5 | Feature 1: MD5 Deduplication | None | Medium | Medium |
-| 6 | Feature 3: Work File Management UI | Feature 1 | Medium | Low |
-| 7 | Bug Fix: Watermark Integration | Feature 4 (settings) | Medium | Medium |
-| 8 | Feature 4: Studio Introduction | None | High | Low |
-| 9 | Feature 5: Share Extension | None | High | Medium |
+### Phase 3: New Features (Can Parallel with Phase 2)
+6. **WorkDetail.vue** - New page
+7. **WorkMediaGallery.vue** - Media grid component
+8. **WorkInfo.vue** - Info panel component
 
-**Parallel Work Opportunities:**
-- Features 1, 2, 4, 5, 6 can be developed in parallel
-- Feature 3 depends on Feature 1
-- Bug fix 7 depends on Feature 4 for settings storage
+### Phase 4: Admin Improvements
+9. **AdminFilterBar.vue** - Reusable filter
+10. **Dashboard.vue** - Sidebar scroll fix
+11. **Settings.vue** - Card responsive width
 
----
-
-## Database Migration Required
-
-| Feature | Migration | Description |
-|---------|-----------|-------------|
-| Feature 4 | NEW | `studio_settings` table |
-| Feature 5 | NONE | Redis-only, no MySQL changes |
-| Feature 1 | NONE | File naming convention only |
-| Feature 2 | NONE | Logic change only |
-
----
-
-## API Endpoints Summary
-
-### New Endpoints
-
-| Method | Path | Purpose |
-|--------|------|---------|
-| GET | `/api/public/settings` | Get public studio info |
-| GET | `/api/admin/settings` | Get all studio settings |
-| PUT | `/api/admin/settings` | Update studio settings |
-
-### Modified Endpoints
-
-| Method | Path | Changes |
-|--------|------|---------|
-| POST | `/api/admin/share` | Accept `shareType`, `albumId` |
-| GET | `/api/share/:token` | Handle album shares |
-| POST | `/api/upload` | Return dedup info, smart thumbnails |
-
----
-
-## Frontend Routes Summary
-
-### New Routes
-
-| Path | Component | Purpose |
-|------|-----------|---------|
-| `/about` | `About.vue` | Public studio introduction page |
-
-### New Admin Views
-
-| Path | Component | Purpose |
-|------|-----------|---------|
-| `/admin/settings` | `Settings.vue` | Studio settings configuration |
-
----
+### Phase 5: Style Unification
+12. **Shares.vue & Clients.vue** - Unify styles
 
 ## Anti-Patterns to Avoid
 
-### 1. Storing Album Works in Share Token
+### 1. Duplicating Thumbnail Logic
+**Wrong:** Inline thumbnail selection in each component
+**Right:** Single `useWorkThumbnail` composable
 
-**What NOT to do:** Store `workIds` from album in share token at creation time.
+### 2. Deep Prop Drilling
+**Wrong:** Pass work through 3+ component levels
+**Right:** Use provide/inject or direct store access
 
-**Why:** Albums can change (works added/removed), shares should reflect current state.
+### 3. Inconsistent Filter Patterns
+**Wrong:** Each admin page implements own filter UI
+**Right:** Single `AdminFilterBar` component
 
-**Do instead:** Store `albumId`, fetch works dynamically when share is accessed.
+### 4. Fixed-Width Layouts
+**Wrong:** `width: 600px`
+**Right:** `max-width: 600px; width: 100%`
 
-### 2. Duplicating Watermark Code
+## API Endpoints (Existing - No Changes Needed)
 
-**What NOT to do:** Add watermark logic in multiple places.
+| Endpoint | Purpose | Used By |
+|----------|---------|---------|
+| `GET /public/works/:id` | Single work detail | WorkDetail.vue |
+| `GET /public/works` | Work list with filters | Home.vue |
+| `GET /public/works/:id/view` | Record view count | Lightbox, WorkDetail |
 
-**Why:** Maintenance nightmare, inconsistent behavior.
+## Confidence Assessment
 
-**Do instead:** Centralize in `imageService.addWatermark()`, call from single point.
+| Area | Confidence | Reason |
+|------|------------|--------|
+| Thumbnail fix | HIGH | Clear code path, simple change |
+| Work detail page | HIGH | Existing patterns in Lightbox, API ready |
+| Filter integration | MEDIUM | Need to create new component pattern |
+| Admin layout | HIGH | CSS-only fix |
+| Style unification | HIGH | CSS refactoring, no logic changes |
 
-### 3. Blocking Upload for MD5 Computation
+## Files Modified Summary
 
-**What NOT to do:** Compute MD5 synchronously on large files.
+### New Files (5)
+- `views/WorkDetail.vue`
+- `components/gallery/WorkMediaGallery.vue`
+- `components/gallery/WorkInfo.vue`
+- `components/admin/AdminFilterBar.vue`
+- `composables/useWorkThumbnail.ts`
 
-**Why:** Blocks event loop, slow uploads.
-
-**Do instead:** Use streaming hash computation:
-
-```typescript
-import { createHash } from 'crypto';
-import { createReadStream } from 'fs';
-
-async function computeMD5(filePath: string): Promise<string> {
-  const hash = createHash('md5');
-  const stream = createReadStream(filePath);
-  for await (const chunk of stream) {
-    hash.update(chunk);
-  }
-  return hash.digest('hex');
-}
-```
-
-### 4. Not Handling Orphan Files
-
-**What NOT to do:** Delete MediaItem without checking if file is used elsewhere.
-
-**Why:** MD5 dedup means same file may be referenced by multiple MediaItems.
-
-**Do instead:** Reference counting or check file usage before deletion.
-
----
-
-## Scalability Considerations
-
-| Scale | Consideration |
-|-------|---------------|
-| 0-1k works | MD5 cache in memory is fine |
-| 1k-10k works | Consider Redis cache for MD5→path mapping |
-| 10k+ works | Consider dedicated file service, CDN for thumbnails |
-
-### First Bottleneck: Thumbnail Generation
-
-- CPU-bound operation during upload
-- Consider queue-based processing for batch uploads
-- Current: synchronous processing blocks request
-
-### Second Bottleneck: Share Token Lookup
-
-- Redis SCAN for listing all shares is O(N)
-- At 1000+ shares, consider MySQL index for metadata
-
----
+### Modified Files (8)
+- `router/index.ts` - Add work detail route, fix About meta
+- `components/gallery/WorkCard.vue` - Thumbnail fix
+- `components/gallery/Lightbox.vue` - Thumbnail fix
+- `views/admin/Works.vue` - Thumbnail fix, add filters
+- `views/admin/Dashboard.vue` - Sidebar scroll
+- `views/admin/Settings.vue` - Card width
+- `views/admin/Shares.vue` - Style unification
+- `views/admin/Clients.vue` - Style unification
 
 ## Sources
 
-- Existing codebase analysis: `backend/src/**/*.ts`, `frontend/src/**/*.ts`
-- TypeORM documentation: Entity patterns, relations
-- Sharp documentation: Image metadata, resize options
-- Redis patterns: Token TTL, SCAN command
+- Existing codebase analysis: `frontend/src/**/*.vue`, `frontend/src/**/*.ts`
+- Vue 3 Composition API documentation
+- Element Plus component patterns
+- Router navigation guards documentation
 
 ---
-*Architecture research for: Photography Studio Portfolio Platform v1.1*
+*Architecture research for: v1.2 UI/UX Improvements*
 *Researched: 2026-03-26*
