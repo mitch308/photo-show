@@ -236,9 +236,13 @@ export class ShareService {
 
   /**
    * List all active shares using SCAN
+   * @param filters - Optional filters (clientId, type)
    * @returns Array of ShareInfo sorted by createdAt DESC
    */
-  async listAllShares(): Promise<ShareInfo[]> {
+  async listAllShares(filters?: {
+    clientId?: string;
+    type?: 'work' | 'album';
+  }): Promise<ShareInfo[]> {
     const redis = getRedis();
     const shares: ShareInfo[] = [];
     let cursor = '0';
@@ -268,10 +272,22 @@ export class ShareService {
       }
     } while (cursor !== '0');
 
-    // Sort by createdAt DESC
-    shares.sort((a, b) => b.createdAt - a.createdAt);
+    // Apply filters
+    let filteredShares = shares;
+    if (filters?.clientId) {
+      filteredShares = filteredShares.filter(share => share.clientId === filters.clientId);
+    }
+    if (filters?.type === 'work') {
+      filteredShares = filteredShares.filter(share => !share.albumId);
+    }
+    if (filters?.type === 'album') {
+      filteredShares = filteredShares.filter(share => !!share.albumId);
+    }
 
-    return shares;
+    // Sort by createdAt DESC
+    filteredShares.sort((a, b) => b.createdAt - a.createdAt);
+
+    return filteredShares;
   }
 
   /**

@@ -153,10 +153,15 @@ router.post('/album', async (req: Request, res: Response) => {
 /**
  * GET /api/admin/share
  * List all active share links
+ * Query params: clientId, type (work|album)
  */
 router.get('/', async (req: Request, res: Response) => {
   try {
-    const shares = await shareService.listAllShares();
+    const { clientId, type } = req.query;
+    const shares = await shareService.listAllShares({
+      clientId: clientId as string | undefined,
+      type: type as 'work' | 'album' | undefined,
+    });
     res.json(successResponse(shares));
   } catch (error: any) {
     console.error('Error in GET /api/admin/share:', error);

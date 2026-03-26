@@ -1,11 +1,16 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
+import { ref, watch, onMounted, computed } from 'vue';
 import { shareApi, type ShareInfo, type AccessLogEntry } from '@/api/share';
 import { useWorksStore } from '@/stores/works';
 import { useClientsStore } from '@/stores/clients';
 
 const shares = ref<ShareInfo[]>([]);
 const loading = ref(true);
+
+// Filter state
+const clientFilter = ref('');
+const typeFilter = ref('');
+
 const showCreateDialog = ref(false);
 const showAccessLogDialog = ref(false);
 
@@ -31,10 +36,18 @@ onMounted(async () => {
   ]);
 });
 
+// Watch filter changes
+watch([clientFilter, typeFilter], () => {
+  loadShares();
+});
+
 const loadShares = async () => {
   loading.value = true;
   try {
-    shares.value = await shareApi.getShares();
+    shares.value = await shareApi.getShares({
+      clientId: clientFilter.value || undefined,
+      type: typeFilter.value as 'work' | 'album' | undefined,
+    });
   } finally {
     loading.value = false;
   }
@@ -135,6 +148,19 @@ const clients = computed(() => clientsStore.clients);
   <div class="shares-page">
     <div class="page-header">
       <h1>分享管理</h1>
+      <div class="filters">
+        <select v-model="clientFilter" class="filter-select">
+          <option value="">全部客户</option>
+          <option v-for="client in clients" :key="client.id" :value="client.id">
+            {{ client.name }}
+          </option>
+        </select>
+        <select v-model="typeFilter" class="filter-select">
+          <option value="">全部类型</option>
+          <option value="work">作品分享</option>
+          <option value="album">相册分享</option>
+        </select>
+      </div>
       <button class="btn-primary" @click="showCreateDialog = true">
         创建分享链接
       </button>
@@ -300,6 +326,19 @@ const clients = computed(() => clientsStore.clients);
   justify-content: space-between;
   align-items: center;
   margin-bottom: 24px;
+}
+
+.filters {
+  display: flex;
+  gap: 12px;
+}
+
+.filter-select {
+  padding: 8px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background: var(--bg-primary);
+  min-width: 120px;
 }
 
 .btn-primary {

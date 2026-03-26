@@ -71,8 +71,15 @@ export const shareApi = {
     return response.data.data;
   },
 
-  async getShares(): Promise<ShareInfo[]> {
-    const response = await api.get<ApiResponse<ShareInfo[]>>('/admin/share');
+  async getShares(filters?: {
+    clientId?: string;
+    type?: 'work' | 'album';
+  }): Promise<ShareInfo[]> {
+    const params = new URLSearchParams();
+    if (filters?.clientId) params.append('clientId', filters.clientId);
+    if (filters?.type) params.append('type', filters.type);
+    const url = params.toString() ? `/admin/share?${params.toString()}` : '/admin/share';
+    const response = await api.get<ApiResponse<ShareInfo[]>>(url);
     return response.data.data;
   },
 
