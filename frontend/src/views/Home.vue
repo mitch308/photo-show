@@ -1,45 +1,19 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { useRouter } from 'vue-router';
 import { useUrlFilters } from '@/composables/useUrlFilters';
 import { useInfiniteScroll } from '@/composables/useInfiniteScroll';
 import MasonryGrid from '@/components/gallery/MasonryGrid.vue';
-import Lightbox from '@/components/gallery/Lightbox.vue';
 import FilterBar from '@/components/gallery/FilterBar.vue';
-import { publicApi } from '@/api/public';
 import type { Work } from '@/api/types';
 
+const router = useRouter();
 const { store } = useUrlFilters();
-const selectedWork = ref<Work | null>(null);
-const lightboxOpen = ref(false);
 
 const { sentinel } = useInfiniteScroll(() => store.loadMore());
 
-const openLightbox = async (work: Work) => {
-  selectedWork.value = work;
-  lightboxOpen.value = true;
-
-  // Record view to increment view count
-  try {
-    await publicApi.recordView(work.id);
-  } catch (error) {
-    // Silently fail - view recording shouldn't affect user experience
-    console.error('Failed to record view:', error);
-  }
-};
-
-const closeLightbox = () => {
-  lightboxOpen.value = false;
-};
-
-const navigateLightbox = async (work: Work) => {
-  selectedWork.value = work;
-
-  // Record view when navigating to a new work in lightbox
-  try {
-    await publicApi.recordView(work.id);
-  } catch (error) {
-    console.error('Failed to record view:', error);
-  }
+const navigateToWork = (work: Work) => {
+  // Navigate to work detail page
+  router.push({ name: 'WorkDetail', params: { id: work.id } });
 };
 </script>
 
@@ -59,7 +33,7 @@ const navigateLightbox = async (work: Work) => {
       <MasonryGrid
         :works="store.works"
         :loading="store.loading"
-        @select="openLightbox"
+        @select="navigateToWork"
       />
       
       <!-- Infinite scroll sentinel -->
@@ -68,14 +42,6 @@ const navigateLightbox = async (work: Work) => {
         <span v-else-if="!store.pagination.hasMore">没有更多作品了</span>
       </div>
     </main>
-    
-    <Lightbox
-      :work="selectedWork"
-      :works="store.works"
-      :isOpen="lightboxOpen"
-      @close="closeLightbox"
-      @navigate="navigateLightbox"
-    />
   </div>
 </template>
 

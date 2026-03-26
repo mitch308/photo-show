@@ -9,6 +9,12 @@ const routes: RouteRecordRaw[] = [
     meta: { title: '首页' },
   },
   {
+    path: '/work/:id',
+    name: 'WorkDetail',
+    component: () => import('@/views/WorkDetail.vue'),
+    meta: { title: '作品详情' },
+  },
+  {
     path: '/about',
     name: 'About',
     component: () => import('@/views/About.vue'),
