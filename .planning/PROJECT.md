@@ -20,9 +20,9 @@
 - 后台跳转前台入口
 
 **Bug fixes:**
-- 水印功能未集成
-- 下载文件返回 JSON 而非源文件
-- 作品浏览量未增加
+- ~~水印功能未集成~~ ✅ Phase 7
+- ~~下载文件返回 JSON 而非源文件~~ ✅ Phase 7
+- ~~作品浏览量未增加~~ ✅ Phase 7
 
 ## Requirements
 
@@ -44,6 +44,9 @@
 - [x] 管理员可以管理客户联系方式和备注 — v1.0 Phase 4: CLNT-01~04
 - [x] 用户可以切换深色/浅色主题 — v1.0 Phase 4: THEM-01~03
 - [x] 作品可以包含多个媒体项（图片/视频）— v1.0 Phase 6: DATA-01~08
+- [x] 水印功能集成，公开展示显示水印，私密下载返回原图 — v1.1 Phase 7: BUG-01
+- [x] 下载文件返回源文件而非 JSON — v1.1 Phase 7: BUG-02
+- [x] 作品浏览量统计正常工作 — v1.1 Phase 7: BUG-03
 
 ### Active
 
@@ -55,9 +58,6 @@
 - [ ] 私密链接分享功能支持分享作品和相册
 - [ ] 作品管理中展示文件大小和文件数
 - [ ] 作品编辑支持添加删除文件
-- [ ] 水印功能集成
-- [ ] 下载文件返回源文件而非 JSON
-- [ ] 作品浏览量统计正常工作
 
 ### Out of Scope
 
@@ -115,7 +115,7 @@
 | VueUse + CSS 变量实现主题 | 简单可靠，自动持久化 | ✅ v1.0 |
 
 ---
-*Last updated: 2026-03-26 after v1.1 milestone started*
+*Last updated: 2026-03-26 after Phase 7 (Bug 修复) completion*
 
 ## Evolution
 
