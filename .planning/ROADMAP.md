@@ -102,8 +102,8 @@ Plans:
 **Plans:** 2 plans
 
 Plans:
-- [ ] 09-01-PLAN.md — 文件信息展示
-- [ ] 09-02-PLAN.md — 前台跳转入口
+- [x] 09-01-PLAN.md — 文件信息展示
+- [x] 09-02-PLAN.md — 前台跳转入口
 
 ---
 
@@ -119,8 +119,8 @@ Plans:
 **Plans:** 2 plans
 
 Plans:
-- [ ] 10-01-PLAN.md — 添加文件功能
-- [ ] 10-02-PLAN.md — 删除文件功能
+- [x] 10-01-PLAN.md — 添加文件功能
+- [x] 10-02-PLAN.md — 删除文件功能
 
 ---
 
