@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { useRoute } from 'vue-router';
 import { useShareStore } from '@/stores/share';
 import MasonryGrid from '@/components/gallery/MasonryGrid.vue';
 import Lightbox from '@/components/gallery/Lightbox.vue';
-import type { Work } from '@/api/types';
+import type { Work, MediaItem } from '@/api/types';
 
 const route = useRoute();
 const store = useShareStore();
@@ -27,8 +27,32 @@ const closeLightbox = () => {
   lightboxOpen.value = false;
 };
 
+// Check if work has multiple media items
+const hasMultipleMedia = computed(() => {
+  if (!selectedWork.value) return false;
+  return (selectedWork.value.mediaItems?.length ?? 0) > 1;
+});
+
+// Get media items for download list
+const mediaItems = computed(() => {
+  return selectedWork.value?.mediaItems ?? [];
+});
+
+// Format file size for display
+const formatFileSize = (bytes: number): string => {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+};
+
+// Download single file (first media item)
 const downloadWork = async (workId: string) => {
   await store.downloadWork(workId);
+};
+
+// Download specific media item
+const downloadMediaItem = async (workId: string, mediaId: string) => {
+  await store.downloadWork(workId, mediaId);
 };
 </script>
 
@@ -73,9 +97,31 @@ const downloadWork = async (workId: string) => {
       @navigate="(work) => selectedWork = work"
     >
       <template #actions>
-        <button class="download-btn" @click="downloadWork(selectedWork.id)">
+        <!-- Single file: simple download button -->
+        <button 
+          v-if="!hasMultipleMedia"
+          class="download-btn" 
+          @click="downloadWork(selectedWork.id)"
+        >
           下载原图
         </button>
+        
+        <!-- Multiple files: download list -->
+        <div v-else class="download-list">
+          <div class="download-label">选择下载：</div>
+          <div class="download-items">
+            <button
+              v-for="(item, index) in mediaItems"
+              :key="item.id"
+              class="download-item-btn"
+              @click="downloadMediaItem(selectedWork.id, item.id)"
+            >
+              <span class="item-index">{{ index + 1 }}</span>
+              <span class="item-name">{{ item.originalFilename }}</span>
+              <span class="item-size">{{ formatFileSize(item.fileSize) }}</span>
+            </button>
+          </div>
+        </div>
       </template>
     </Lightbox>
   </div>
@@ -143,6 +189,73 @@ const downloadWork = async (workId: string) => {
   border-radius: 4px;
   cursor: pointer;
   font-size: 16px;
+}
+
+.download-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 300px;
+}
+
+.download-label {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+}
+
+.download-items {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.download-item-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.2s;
+}
+
+.download-item-btn:hover {
+  background: var(--bg-hover);
+}
+
+.item-index {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  background: var(--color-primary);
+  color: white;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+.item-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 14px;
+  color: var(--text-primary);
+}
+
+.item-size {
+  font-size: 12px;
+  color: var(--text-secondary);
+  flex-shrink: 0;
 }
 
 @media (max-width: 768px) {

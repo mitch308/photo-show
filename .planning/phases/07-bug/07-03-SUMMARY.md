@@ -64,7 +64,7 @@ Each task was committed atomically:
 
 1. **Task 1-3: 浏览量统计修复** - `389d16c` (fix)
 
-**Plan metadata:** To be committed after summary creation
+**Plan metadata:** `1032a30` (docs: complete plan)
 
 ## Files Created/Modified
 - `backend/src/services/publicService.ts` - 添加 incrementViewCount 方法用于独立递增浏览量
@@ -90,6 +90,8 @@ None - no external service configuration required.
 ## Next Phase Readiness
 - 浏览量统计功能已修复，可以正常统计公开访问
 - 私密分享访问正确记录到 ShareAccessLog 表
+
+## Self-Check: PASSED
 
 ---
 *Phase: 07-bug*
