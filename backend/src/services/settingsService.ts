@@ -11,6 +11,15 @@ export interface WatermarkConfig {
   opacity: number;
 }
 
+export interface StudioInfo {
+  name: string;
+  logo?: string;
+  phone?: string;
+  email?: string;
+  address?: string;
+  description?: string;  // HTML 富文本
+}
+
 export class SettingsService {
   private repo: Repository<SystemSettings>;
 
@@ -28,7 +37,7 @@ export class SettingsService {
     if (!settings) {
       return this.getDefaultWatermarkConfig();
     }
-    return settings.value as WatermarkConfig;
+    return settings.value as unknown as WatermarkConfig;
   }
 
   /**
@@ -41,10 +50,10 @@ export class SettingsService {
     if (!settings) {
       settings = this.repo.create({
         key: 'watermark',
-        value: config as Record<string, unknown>
+        value: config as unknown as Record<string, unknown>
       });
     } else {
-      settings.value = config as Record<string, unknown>;
+      settings.value = config as unknown as Record<string, unknown>;
     }
     await this.repo.save(settings);
   }
@@ -56,6 +65,47 @@ export class SettingsService {
       text: '',
       position: 'bottom-right',
       opacity: 0.5
+    };
+  }
+
+  /**
+   * Get studio information. Returns defaults if not configured.
+   */
+  async getStudioInfo(): Promise<StudioInfo> {
+    const settings = await this.repo.findOne({
+      where: { key: 'studio_info' }
+    });
+    if (!settings) {
+      return this.getDefaultStudioInfo();
+    }
+    return settings.value as unknown as StudioInfo;
+  }
+
+  /**
+   * Save studio information.
+   */
+  async setStudioInfo(info: StudioInfo): Promise<void> {
+    let settings = await this.repo.findOne({
+      where: { key: 'studio_info' }
+    });
+    if (!settings) {
+      settings = this.repo.create({
+        key: 'studio_info',
+        value: info as unknown as Record<string, unknown>
+      });
+    } else {
+      settings.value = info as unknown as Record<string, unknown>;
+    }
+    await this.repo.save(settings);
+  }
+
+  private getDefaultStudioInfo(): StudioInfo {
+    return {
+      name: '',
+      phone: '',
+      email: '',
+      address: '',
+      description: ''
     };
   }
 }

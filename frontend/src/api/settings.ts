@@ -1,6 +1,6 @@
 import api from './index';
 import type { ApiResponse } from './types';
-import type { WatermarkConfig } from '@/types/settings';
+import type { WatermarkConfig, StudioInfo } from '@/types/settings';
 
 export const settingsApi = {
   async getWatermarkConfig(): Promise<WatermarkConfig> {
@@ -17,6 +17,25 @@ export const settingsApi = {
     const formData = new FormData();
     formData.append('image', file);
     const response = await api.post<ApiResponse<{ imagePath: string }>>('/settings/watermark/image', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+    return response.data.data;
+  },
+
+  async getStudioInfo(): Promise<StudioInfo> {
+    const response = await api.get<ApiResponse<StudioInfo>>('/settings/studio');
+    return response.data.data;
+  },
+
+  async setStudioInfo(info: StudioInfo): Promise<StudioInfo> {
+    const response = await api.put<ApiResponse<StudioInfo>>('/settings/studio', info);
+    return response.data.data;
+  },
+
+  async uploadStudioLogo(file: File): Promise<{ logoPath: string }> {
+    const formData = new FormData();
+    formData.append('logo', file);
+    const response = await api.post<ApiResponse<{ logoPath: string }>>('/settings/studio/logo', formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
     });
     return response.data.data;
