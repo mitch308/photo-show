@@ -8,9 +8,10 @@
 
 | Statistic | Value |
 |-----------|-------|
-| Total Phases | 12 |
+| Total Phases | 17 |
 | v1.0 Requirements | 48 (Complete) |
-| v1.1 Requirements | 15 |
+| v1.1 Requirements | 15 (Complete) |
+| v1.2 Requirements | 12 |
 | Coverage | 100% |
 
 ---
@@ -18,7 +19,8 @@
 ## Milestones
 
 - ✅ **v1.0 摄影工作室作品展示平台** - Phases 1-6 (shipped 2026-03-25)
-- 🚧 **v1.1 增强与修复** - Phases 7-12 (in progress)
+- ✅ **v1.1 增强与修复** - Phases 7-12 (shipped 2026-03-26)
+- 🚧 **v1.2 UI/UX 优化与修复** - Phases 13-17 (in progress)
 
 ---
 
@@ -53,139 +55,166 @@
 
 ---
 
-### 🚧 v1.1 增强与修复 (In Progress)
+<details>
+<summary>✅ v1.1 增强与修复 (Phases 7-12) - SHIPPED 2026-03-26</summary>
 
-**Milestone Goal:** 修复已知问题，增强文件处理、作品管理和私密分享功能
-
-#### Phase 7: Bug 修复
+### Phase 7: Bug 修复
 **Goal:** 核心功能按预期工作
-**Depends on:** Phase 6
 **Requirements:** BUG-01, BUG-02, BUG-03
-**Success Criteria** (what must be TRUE):
-  1. 管理员配置水印后，公开展示的作品图片显示水印
-  2. 客户通过私密链接下载文件时，获得源文件而非 JSON 响应
-  3. 作品浏览量在每次访问时正确递增
-**Plans:** 3 plans
+**Plans:** 3 plans (Complete)
 
-Plans:
-- [x] 07-01-PLAN.md — 水印功能集成
-- [x] 07-02-PLAN.md — 下载文件修复
-- [x] 07-03-PLAN.md — 浏览量统计修复
-
----
-
-#### Phase 8: 文件存储优化
+### Phase 8: 文件存储优化
 **Goal:** 文件存储高效且智能，通过 Fast-MD5 预检查实现去重
-**Depends on:** Phase 7
 **Requirements:** FILE-01, FILE-02
-**Success Criteria** (what must be TRUE):
-  1. 上传前计算 Fast-MD5 预检查，已存在文件跳过上传
-  2. 新文件以 Fast-MD5 哈希命名存储，自动去重
-  3. 图片尺寸小于缩略图尺寸时，访问缩略图返回原图
-**Plans:** 2 plans
+**Plans:** 2 plans (Complete)
 
-Plans:
-- [x] 08-01-PLAN.md — Fast-MD5 预检查去重
-- [x] 08-02-PLAN.md — 智能缩略图生成
-
----
-
-#### Phase 9: 作品信息增强
+### Phase 9: 作品信息增强
 **Goal:** 管理员可以查看作品详情并快速访问前台
-**Depends on:** Phase 8
 **Requirements:** WORK-01, WORK-02
 **UI hint:** yes
-**Success Criteria** (what must be TRUE):
-  1. 作品列表显示每个作品的总文件大小
-  2. 作品列表显示每个作品的文件数量
-  3. 后台管理页面有跳转前台画廊的入口链接
-**Plans:** 2 plans
+**Plans:** 2 plans (Complete)
 
-Plans:
-- [x] 09-01-PLAN.md — 文件信息展示
-- [x] 09-02-PLAN.md — 前台跳转入口
-
----
-
-#### Phase 10: 作品文件管理
+### Phase 10: 作品文件管理
 **Goal:** 管理员可以管理作品中的文件
-**Depends on:** Phase 9
 **Requirements:** WORK-03, WORK-04
 **UI hint:** yes
-**Success Criteria** (what must be TRUE):
-  1. 管理员可以为已有作品添加新的图片或视频文件
-  2. 管理员可以从作品中删除文件
-  3. 删除最后一个文件时提示确认或阻止操作
-**Plans:** 2 plans
+**Plans:** 2 plans (Complete)
 
-Plans:
-- [x] 10-01-PLAN.md — 添加文件功能
-- [x] 10-02-PLAN.md — 删除文件功能
-
----
-
-#### Phase 11: 工作室介绍
+### Phase 11: 工作室介绍
 **Goal:** 访客可以了解工作室信息
-**Depends on:** Phase 7
 **Requirements:** STUD-01, STUD-02, STUD-03
 **UI hint:** yes
-**Success Criteria** (what must be TRUE):
-  1. 管理员可以在后台配置工作室名称、Logo 和联系方式
-  2. 管理员可以使用富文本编辑器编辑工作室介绍内容
-  3. 访客可以在前台查看工作室介绍页面
-**Plans:** 3 plans
+**Plans:** 3 plans (Complete)
 
-Plans:
-- [x] 11-01-PLAN.md — 工作室设置模型
-- [x] 11-02-PLAN.md — 后台设置页面
-- [x] 11-03-PLAN.md — 前台介绍页面
+### Phase 12: 相册分享
+**Goal:** 管理员可以分享整个相册给客户
+**Requirements:** SHAR-01, SHAR-02, SHAR-03
+**UI hint:** yes
+**Plans:** 2 plans (Complete)
+
+</details>
 
 ---
 
-#### Phase 12: 相册分享
-**Goal:** 管理员可以分享整个相册给客户
-**Depends on:** Phase 7
-**Requirements:** SHAR-01, SHAR-02, SHAR-03
+### 🚧 v1.2 UI/UX 优化与修复 (In Progress)
+
+**Milestone Goal:** 修复 UI 问题，美化界面，提升用户体验
+
+#### Phase 13: Bug 修复
+**Goal:** 核心功能按预期工作
+**Depends on:** Phase 12
+**Requirements:** BUG-01, BUG-02
+**Success Criteria** (what must be TRUE):
+  1. 访客无需登录即可访问"关于我们"页面
+  2. 作品缩略图正确显示（使用第一个 mediaItem，兼容旧数据）
+**Plans:** TBD
+
+---
+
+#### Phase 14: 作品详情页
+**Goal:** 用户可以查看作品的所有文件
+**Depends on:** Phase 13
+**Requirements:** GALL-01, GALL-02, GALL-03
 **UI hint:** yes
 **Success Criteria** (what must be TRUE):
-  1. 管理员可以生成私密链接分享整个相册
-  2. 客户通过私密链接可以查看相册中的所有作品
-  3. 客户通过私密链接可以下载相册中的作品原图
-**Plans:** 2 plans
+  1. 用户可以点击作品卡片进入作品详情页
+  2. 详情页以网格布局展示作品的所有媒体文件
+  3. 用户可以在灯箱中查看文件（支持缩放、平移、旋转）
+**Plans:** TBD
 
-Plans:
-- [x] 12-01-PLAN.md — 相册分享后端
-- [x] 12-02-PLAN.md — 相册分享前端
+---
+
+#### Phase 15: 后台筛选
+**Goal:** 管理员可以快速定位管理内容
+**Depends on:** Phase 13
+**Requirements:** AUX-01, AUX-02, AUX-03, AUX-04
+**UI hint:** yes
+**Success Criteria** (what must be TRUE):
+  1. 管理员可以按标题或状态筛选作品列表
+  2. 管理员可以按名称筛选相册列表
+  3. 管理员可以按名称筛选标签列表
+  4. 管理员可以按客户名称或分享类型筛选分享列表
+**Plans:** TBD
+
+---
+
+#### Phase 16: 布局优化
+**Goal:** 后台界面布局更合理易用
+**Depends on:** Phase 15
+**Requirements:** AUX-05, AUX-06
+**UI hint:** yes
+**Success Criteria** (what must be TRUE):
+  1. 侧边栏导航可以独立滚动，内容区域滚动不影响侧边栏
+  2. 系统设置卡片宽度自适应屏幕宽度
+**Plans:** TBD
+
+---
+
+#### Phase 17: 样式统一
+**Goal:** 后台界面视觉风格一致
+**Depends on:** Phase 16
+**Requirements:** AUX-07
+**UI hint:** yes
+**Success Criteria** (what must be TRUE):
+  1. 分享管理页面使用与其他管理页面一致的表格样式
+  2. 客户管理页面使用与其他管理页面一致的表格样式
+**Plans:** TBD
 
 ---
 
 ## Phase Dependencies
 
 ```
-v1.0 (Complete)
-    │
-    ↓
-Phase 7 (Bug 修复)
-    ├──────────────────┬────────────────────┐
-    ↓                  ↓                    ↓
-Phase 8            Phase 11             Phase 12
-(文件存储优化)     (工作室介绍)          (相册分享)
-    ↓                  │                    │
-Phase 9               │                    │
-(作品信息增强)        │                    │
-    ↓                  │                    │
-Phase 10              │                    │
-(作品文件管理)        │                    │
-    │                  │                    │
-    └──────────────────┴────────────────────┘
-                       │
-                       ↓
-                v1.1 Complete
+v1.0 Complete ──→ v1.1 Complete ──→ v1.2
+                                        │
+                                        ↓
+                                   Phase 13 (Bug 修复)
+                                        │
+                           ┌────────────┴────────────┐
+                           ↓                         ↓
+                      Phase 14                  Phase 15
+                   (作品详情页)               (后台筛选)
+                           │                         │
+                           └────────────┬────────────┘
+                                        ↓
+                                   Phase 16 (布局优化)
+                                        │
+                                        ↓
+                                   Phase 17 (样式统一)
+                                        │
+                                        ↓
+                                  v1.2 Complete
 ```
 
 **Execution Order:**
-- Phases 7 → 8 → 9 → 10 (sequential chain)
-- Phases 11 and 12 can run in parallel after Phase 7
+- Phase 13 → Phase 14 (作品详情页依赖缩略图修复)
+- Phase 13 → Phase 15 (筛选功能可与详情页并行)
+- Phase 15 → Phase 16 (布局优化在筛选后)
+- Phase 16 → Phase 17 (样式统一最后)
+
+---
+
+## Progress
+
+| Phase | Milestone | Plans Complete | Status | Completed |
+|-------|-----------|----------------|--------|-----------|
+| 1. 项目基础架构 | v1.0 | 4/4 | Complete | 2026-03-25 |
+| 2. 作品管理功能 | v1.0 | 4/4 | Complete | 2026-03-25 |
+| 3. 公开展示与私密分享 | v1.0 | 4/4 | Complete | 2026-03-25 |
+| 4. 增强功能 | v1.0 | 5/5 | Complete | 2026-03-25 |
+| 5. 部署与优化 | v1.0 | - | Complete | 2026-03-25 |
+| 6. 数据模型重构 | v1.0 | 5/5 | Complete | 2026-03-25 |
+| 7. Bug 修复 | v1.1 | 3/3 | Complete | 2026-03-26 |
+| 8. 文件存储优化 | v1.1 | 2/2 | Complete | 2026-03-26 |
+| 9. 作品信息增强 | v1.1 | 2/2 | Complete | 2026-03-26 |
+| 10. 作品文件管理 | v1.1 | 2/2 | Complete | 2026-03-26 |
+| 11. 工作室介绍 | v1.1 | 3/3 | Complete | 2026-03-26 |
+| 12. 相册分享 | v1.1 | 2/2 | Complete | 2026-03-26 |
+| 13. Bug 修复 | v1.2 | 0/2 | Not started | - |
+| 14. 作品详情页 | v1.2 | 0/3 | Not started | - |
+| 15. 后台筛选 | v1.2 | 0/4 | Not started | - |
+| 16. 布局优化 | v1.2 | 0/2 | Not started | - |
+| 17. 样式统一 | v1.2 | 0/1 | Not started | - |
 
 ---
 
@@ -193,10 +222,12 @@ Phase 10              │                    │
 
 | Risk | Phase | Mitigation |
 |------|-------|------------|
-| 水印影响原图质量 | Phase 7 | 只在公开展示时动态添加水印，不修改原图 |
-| MD5 计算大文件慢 | Phase 8 | 使用流式计算，显示进度 |
-| 富文本 XSS 风险 | Phase 11 | 使用 sanitize-html 过滤，白名单策略 |
-| 相册分享权限泄露 | Phase 12 | 使用安全随机 token，设置过期时间 |
+| 缩略图兼容旧数据 | Phase 13 | 创建 useWorkThumbnail composable，实现降级逻辑 |
+| 作品无 mediaItems 时显示异常 | Phase 13 | 检查 mediaItems 长度，提供占位图 |
+| 灯箱组件功能不完整 | Phase 14 | 使用 vue-easy-lightbox，支持缩放/平移/旋转 |
+| 筛选状态丢失 | Phase 15 | 使用 URL 参数存储筛选状态 |
+| 侧边栏滚动布局破坏 | Phase 16 | 只对 .nav 设置滚动，使用 min-height: 0 |
+| Element Plus 暗色模式不一致 | Phase 17 | 映射 CSS 变量到 Element Plus token |
 
 ---
 
@@ -204,16 +235,16 @@ Phase 10              │                    │
 
 | Phase | Requirements | Count |
 |-------|--------------|-------|
-| Phase 7 | BUG-01, BUG-02, BUG-03 | 3 |
-| Phase 8 | FILE-01, FILE-02 | 2 |
-| Phase 9 | WORK-01, WORK-02 | 2 |
-| Phase 10 | WORK-03, WORK-04 | 2 |
-| Phase 11 | STUD-01, STUD-02, STUD-03 | 3 |
-| Phase 12 | SHAR-01, SHAR-02, SHAR-03 | 3 |
+| Phase 13 | BUG-01, BUG-02 | 2 |
+| Phase 14 | GALL-01, GALL-02, GALL-03 | 3 |
+| Phase 15 | AUX-01, AUX-02, AUX-03, AUX-04 | 4 |
+| Phase 16 | AUX-05, AUX-06 | 2 |
+| Phase 17 | AUX-07 | 1 |
 
-**v1.1 Total:** 15 requirements covered ✓
+**v1.2 Total:** 12 requirements covered ✓
 
 ---
 
 *Roadmap created: 2026-03-24*
 *Updated for v1.1: 2026-03-26*
+*Updated for v1.2: 2026-03-26*

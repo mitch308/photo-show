@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: UI/UX 优化与修复
 status: planning
-stopped_at: Milestone initialized
-last_updated: "2026-03-26T12:30:00.000Z"
+stopped_at: Roadmap created
+last_updated: "2026-03-26T13:00:00.000Z"
 progress:
-  total_phases: 0
+  total_phases: 5
   completed_phases: 0
-  total_plans: 0
+  total_plans: 12
   completed_plans: 0
 ---
 
@@ -20,16 +20,18 @@ progress:
 
 ## Current Position
 
-Phase: Not started (defining requirements)
+Phase: 13 of 17 (Bug 修复)
 Plan: —
-Last activity: 2026-03-26 — Milestone v1.2 started
+Last activity: 2026-03-26 — v1.2 Roadmap created
+
+Progress: [░░░░░░░░░░░░░░░░░░] 0%
 
 ## Project Reference
 
 See: .planning/PROJECT.md (updated 2026-03-26)
 
 **Core value:** 让摄影师轻松管理作品，让客户优雅地查看和获取作品
-**Current focus:** v1.2 UI/UX 优化与修复
+**Current focus:** v1.2 UI/UX 优化与修复 — 修复 UI 问题，美化界面，提升用户体验
 
 ## Performance Metrics
 
@@ -37,6 +39,9 @@ See: .planning/PROJECT.md (updated 2026-03-26)
 
 | Phase | Duration | Tasks | Files |
 |-------|----------|-------|-------|
+| Phase 07-01 | 7min | 4 tasks | 11 files |
+| Phase 07-02 | 5min | 3 tasks | 3 files |
+| Phase 07-03 | 5min | 3 tasks | 3 files |
 | Phase 08-01 | 7min | 4 tasks | 11 files |
 | Phase 08-02 | 5min | 3 tasks | 3 files |
 | Phase 09-01 | 5min | 3 tasks | 1 file |
@@ -69,14 +74,22 @@ See: .planning/PROJECT.md (updated 2026-03-26)
 - 客户管理
 - 主题切换
 
-### v1.1 New Features
+### v1.1 Completed Features
 
-- 文件存储优化（Phase 08）
-- 作品列表显示文件数量和总大小（Phase 09-01）
-- 后台侧边栏前台画廊入口（Phase 09-02）
-- 作品文件管理：添加/删除文件（Phase 10）
-- 工作室介绍页面（Phase 11）
-- 相册分享功能（Phase 12）
+- 文件存储优化（MD5 去重、智能缩略图）
+- 作品列表显示文件数量和总大小
+- 后台侧边栏前台画廊入口
+- 作品文件管理：添加/删除文件
+- 工作室介绍页面
+- 相册分享功能
+
+### v1.2 Scope
+
+- Bug 修复：关于我们页面无需登录、缩略图显示
+- 作品详情页：点击查看所有文件、灯箱预览
+- 后台筛选：作品/相册/标签/分享筛选
+- 布局优化：侧边栏独立滚动、卡片自适应
+- 样式统一：分享/客户管理表格样式
 
 ### Key Decisions (Recent)
 
@@ -90,7 +103,6 @@ See: .planning/PROJECT.md (updated 2026-03-26)
 - Phase 9: 前台入口在新标签页打开，保持后台会话
 - Phase 6: MediaItem 模型支持多媒体，作品可包含多个图片/视频
 - Phase 4: VueUse + CSS 变量实现主题切换
-- Phase 3: 私密链接使用 Redis + TTL，瀑布流布局
 
 ### Pending Todos
 
@@ -102,10 +114,10 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-26T12:30:00.000Z
-Stopped at: Milestone v1.2 initialized
+Last session: 2026-03-26T13:00:00.000Z
+Stopped at: v1.2 Roadmap created, ready to plan Phase 13
 Resume file: None
 
 ---
 *State initialized: 2026-03-24*
-*Reset for v1.2: 2026-03-26*
+*Updated for v1.2: 2026-03-26*
