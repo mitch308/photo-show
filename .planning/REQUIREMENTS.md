@@ -16,7 +16,7 @@ v1.2 UI/UX 优化与修复需求。
 
 - [x] **GALL-01**: 用户可点击作品查看详情页
 - [x] **GALL-02**: 作品详情页展示所有文件（网格布局）
-- [ ] **GALL-03**: 用户可在灯箱中查看文件（支持缩放/平移/旋转）
+- [x] **GALL-03**: 用户可在灯箱中查看文件（支持缩放/平移/旋转）
 
 ### 后台体验
 
@@ -93,7 +93,7 @@ v1.2 UI/UX 优化与修复需求。
 | BUG-02 | Phase 13 | Complete |
 | GALL-01 | Phase 14 | Complete |
 | GALL-02 | Phase 14 | Complete |
-| GALL-03 | Phase 14 | Pending |
+| GALL-03 | Phase 14 | Complete |
 | AUX-01 | Phase 15 | Pending |
 | AUX-02 | Phase 15 | Pending |
 | AUX-03 | Phase 15 | Pending |
