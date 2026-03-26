@@ -13,7 +13,7 @@
 
 ### File Storage Optimization
 
-- [ ] **FILE-01**: 文件使用 MD5 哈希作为文件名存储，相同文件自动去重
+- [x] **FILE-01**: 文件使用 MD5 哈希作为文件名存储，相同文件自动去重
 - [x] **FILE-02**: 图片尺寸小于缩略图尺寸时不生成缩略图，访问缩略图时返回原图
 
 ### Work Management Enhancement
@@ -67,7 +67,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | BUG-01 | Phase 7 | Complete |
 | BUG-02 | Phase 7 | Complete |
 | BUG-03 | Phase 7 | Complete |
-| FILE-01 | Phase 8 | Pending |
+| FILE-01 | Phase 8 | Complete |
 | FILE-02 | Phase 8 | Complete |
 | WORK-01 | Phase 9 | Pending |
 | WORK-02 | Phase 9 | Pending |

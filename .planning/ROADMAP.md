@@ -85,7 +85,7 @@ Plans:
 **Plans:** 2 plans
 
 Plans:
-- [ ] 08-01-PLAN.md — Fast-MD5 预检查去重
+- [x] 08-01-PLAN.md — Fast-MD5 预检查去重
 - [x] 08-02-PLAN.md — 智能缩略图生成
 
 ---
