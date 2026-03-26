@@ -39,6 +39,7 @@ function handleThemeToggle() {
         <router-link to="/admin/tags" class="nav-item">标签管理</router-link>
         <router-link to="/admin/shares" class="nav-item">分享管理</router-link>
         <router-link to="/admin/clients" class="nav-item">客户管理</router-link>
+        <router-link to="/admin/settings" class="nav-item">系统设置</router-link>
       </nav>
       <div class="sidebar-footer">
         <button class="theme-toggle" @click="handleThemeToggle" :title="isDark ? '切换到浅色模式' : '切换到深色模式'">
