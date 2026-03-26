@@ -3,9 +3,19 @@ import path from 'path';
 import fs from 'fs';
 import { v4 as uuidv4 } from 'uuid';
 
+/**
+ * Thumbnail size constants per D-05
+ */
+export const THUMBNAIL_SIZES = {
+  SMALL: 300,
+  LARGE: 1200,
+};
+
 export interface ThumbnailResult {
-  small: string;   // 300px
-  large: string;   // 1200px
+  small: string;           // 缩略图路径或原图路径
+  large: string;           // 缩略图路径或原图路径
+  smallIsOriginal: boolean; // small 是否为原图
+  largeIsOriginal: boolean; // large 是否为原图
 }
 
 export interface WatermarkOptions {
@@ -17,32 +27,85 @@ export interface WatermarkOptions {
 
 export class ImageService {
   /**
+   * 检查是否需要生成指定尺寸的缩略图
+   * @param imageWidth 原图宽度
+   * @param targetSize 目标缩略图尺寸
+   * @returns true 表示需要生成，false 表示可以使用原图
+   */
+  shouldGenerateThumbnail(imageWidth: number, targetSize: number): boolean {
+    return imageWidth > targetSize;
+  }
+
+  /**
+   * 智能生成缩略图
+   * - 图片宽度 <= 目标尺寸时不生成，返回原图路径
+   * - 图片宽度 > 目标尺寸时生成缩略图
+   */
+  async generateSmartThumbnails(
+    inputPath: string,
+    outputDir: string,
+    originalName: string,
+    fileHash?: string
+  ): Promise<ThumbnailResult> {
+    const ext = path.extname(originalName);
+    const uuid = fileHash || uuidv4();
+
+    // 获取原图尺寸
+    const image = sharp(inputPath);
+    const metadata = await image.metadata();
+    const width = metadata.width || 0;
+
+    const result: ThumbnailResult = {
+      small: '',
+      large: '',
+      smallIsOriginal: false,
+      largeIsOriginal: false,
+    };
+
+    // Small thumbnail (300px)
+    if (this.shouldGenerateThumbnail(width, THUMBNAIL_SIZES.SMALL)) {
+      const smallPath = path.join(outputDir, `${uuid}_small${ext}`);
+      await sharp(inputPath)
+        .resize(THUMBNAIL_SIZES.SMALL, undefined, { fit: 'inside' })
+        .toFile(smallPath);
+      result.small = smallPath;
+      result.smallIsOriginal = false;
+    } else {
+      // 图片太小，使用原图
+      result.small = inputPath;
+      result.smallIsOriginal = true;
+    }
+
+    // Large thumbnail (1200px)
+    if (this.shouldGenerateThumbnail(width, THUMBNAIL_SIZES.LARGE)) {
+      const largePath = path.join(outputDir, `${uuid}_large${ext}`);
+      await sharp(inputPath)
+        .resize(THUMBNAIL_SIZES.LARGE, undefined, { fit: 'inside' })
+        .toFile(largePath);
+      result.large = largePath;
+      result.largeIsOriginal = false;
+    } else {
+      // 图片太小，使用原图
+      result.large = inputPath;
+      result.largeIsOriginal = true;
+    }
+
+    return result;
+  }
+
+  /**
    * Generate thumbnails per D-05: 300px and 1200px
+   * @deprecated Use generateSmartThumbnails instead
    */
   async generateThumbnails(
     inputPath: string,
     outputDir: string,
     originalName: string
-  ): Promise<ThumbnailResult> {
-    const ext = path.extname(originalName);
-    const uuid = uuidv4();
-
-    const smallPath = path.join(outputDir, `${uuid}_small${ext}`);
-    const largePath = path.join(outputDir, `${uuid}_large${ext}`);
-
-    // Generate 300px thumbnail
-    await sharp(inputPath)
-      .resize(300, undefined, { fit: 'inside' })
-      .toFile(smallPath);
-
-    // Generate 1200px thumbnail
-    await sharp(inputPath)
-      .resize(1200, undefined, { fit: 'inside' })
-      .toFile(largePath);
-
+  ): Promise<{ small: string; large: string }> {
+    const result = await this.generateSmartThumbnails(inputPath, outputDir, originalName);
     return {
-      small: smallPath,
-      large: largePath,
+      small: result.small,
+      large: result.large,
     };
   }
 
