@@ -2,6 +2,7 @@
 import { ref, onMounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { publicApi } from '@/api/public';
+import MediaLightbox from '@/components/gallery/MediaLightbox.vue';
 import type { Work, MediaItem } from '@/api/types';
 
 const route = useRoute();
@@ -11,6 +12,10 @@ const router = useRouter();
 const work = ref<Work | null>(null);
 const loading = ref(true);
 const error = ref<string | null>(null);
+
+// Lightbox state
+const lightboxVisible = ref(false);
+const lightboxIndex = ref(0);
 
 // Get work ID from route params
 const workId = computed(() => route.params.id as string);
@@ -64,6 +69,16 @@ const formatDate = (dateStr: string): string => {
 // Go back function
 const goBack = () => {
   router.push('/');
+};
+
+// Lightbox functions
+const openLightbox = (index: number) => {
+  lightboxIndex.value = index;
+  lightboxVisible.value = true;
+};
+
+const closeLightbox = () => {
+  lightboxVisible.value = false;
 };
 
 // Load work data on mount
@@ -138,7 +153,7 @@ onMounted(async () => {
           v-for="(item, index) in mediaItems"
           :key="item.id"
           class="media-item"
-          @click="console.log('Open lightbox for item:', index)"
+          @click="openLightbox(index)"
         >
           <img
             :src="`/${item.thumbnailLarge || item.thumbnailSmall || item.filePath}`"
@@ -152,6 +167,15 @@ onMounted(async () => {
         </div>
       </div>
     </main>
+
+    <!-- Lightbox -->
+    <MediaLightbox
+      v-if="work"
+      :mediaItems="mediaItems"
+      :initialIndex="lightboxIndex"
+      v-model:visible="lightboxVisible"
+      @close="closeLightbox"
+    />
   </div>
 </template>
 
