@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import VueEasyLightbox from 'vue-easy-lightbox';
-import 'vue-easy-lightbox/dist/style.css';
+import 'vue-easy-lightbox/dist/external-css/vue-easy-lightbox.css';
 import type { MediaItem } from '@/api/types';
 
 const props = defineProps<{

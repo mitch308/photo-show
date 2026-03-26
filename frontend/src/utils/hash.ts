@@ -34,7 +34,7 @@ export async function computeFastMd5(
   
   // 计算 MD5
   const spark = new SparkMD5.ArrayBuffer();
-  spark.append(combined);
+  spark.append(combined.buffer);
   
   onProgress?.(100);
   
