@@ -12,8 +12,14 @@ const storage = multer.diskStorage({
   },
   filename: (req, file, cb) => {
     const ext = path.extname(file.originalname);
-    const uuid = uuidv4();
-    cb(null, `${uuid}${ext}`);
+    // Use fileHash from body or query if provided, otherwise fallback to UUID
+    const hash = req.body.fileHash || req.query.fileHash;
+    if (hash) {
+      cb(null, `${hash}${ext}`);
+    } else {
+      const uuid = uuidv4();
+      cb(null, `${uuid}${ext}`);
+    }
   },
 });
 

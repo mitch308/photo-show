@@ -21,7 +21,8 @@ router.post('/', uploadAny.single('file'), async (req: Request, res: Response) =
       return;
     }
 
-    const result = await uploadService.processFile(req.file);
+    const fileHash = req.body.fileHash || req.query.fileHash;
+    const result = await uploadService.processFile(req.file, fileHash);
     res.json(successResponse(result, 'File uploaded successfully'));
   } catch (error: any) {
     res.status(500).json(errorResponse(ErrorCodes.UNKNOWN, error.message));
@@ -39,7 +40,8 @@ router.post('/image', uploadImage.single('file'), async (req: Request, res: Resp
       return;
     }
 
-    const result = await uploadService.processImage(req.file);
+    const fileHash = req.body.fileHash || req.query.fileHash;
+    const result = await uploadService.processImage(req.file, fileHash);
     res.json(successResponse(result, 'Image uploaded successfully'));
   } catch (error: any) {
     res.status(500).json(errorResponse(ErrorCodes.UNKNOWN, error.message));
@@ -57,7 +59,8 @@ router.post('/video', uploadVideo.single('file'), async (req: Request, res: Resp
       return;
     }
 
-    const result = await uploadService.processVideo(req.file);
+    const fileHash = req.body.fileHash || req.query.fileHash;
+    const result = await uploadService.processVideo(req.file, fileHash);
     res.json(successResponse(result, 'Video uploaded successfully'));
   } catch (error: any) {
     res.status(500).json(errorResponse(ErrorCodes.UNKNOWN, error.message));
@@ -78,7 +81,15 @@ router.post('/multiple', uploadAny.array('files', 20), async (req: Request, res:
       return;
     }
 
-    const result = await uploadService.uploadMultipleFiles(files);
+    // Extract file hashes from body (can be array or comma-separated string)
+    let fileHashes: string[] | undefined;
+    if (req.body.fileHashes) {
+      fileHashes = Array.isArray(req.body.fileHashes) 
+        ? req.body.fileHashes 
+        : req.body.fileHashes.split(',').map((h: string) => h.trim());
+    }
+
+    const result = await uploadService.uploadMultipleFiles(files, fileHashes);
     res.json(successResponse(result, 
       result.success ? 'All files uploaded successfully' : 'Some files failed to upload'));
   } catch (error: any) {
@@ -99,7 +110,15 @@ router.post('/multiple/images', uploadImage.array('files', 20), async (req: Requ
       return;
     }
 
-    const result = await uploadService.uploadMultipleFiles(files);
+    // Extract file hashes from body (can be array or comma-separated string)
+    let fileHashes: string[] | undefined;
+    if (req.body.fileHashes) {
+      fileHashes = Array.isArray(req.body.fileHashes) 
+        ? req.body.fileHashes 
+        : req.body.fileHashes.split(',').map((h: string) => h.trim());
+    }
+
+    const result = await uploadService.uploadMultipleFiles(files, fileHashes);
     res.json(successResponse(result, 
       result.success ? 'All images uploaded successfully' : 'Some images failed to upload'));
   } catch (error: any) {
