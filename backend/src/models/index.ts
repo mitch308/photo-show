@@ -5,3 +5,4 @@ export { Tag } from './Tag.js';
 export { Client } from './Client.js';
 export { ShareAccessLog } from './ShareAccessLog.js';
 export { MediaItem } from './MediaItem.js';
+export { SystemSettings } from './SystemSettings.js';
