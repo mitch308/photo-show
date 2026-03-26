@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
 import { useRoute } from 'vue-router';
+import { ElMessage } from 'element-plus';
 import { useShareStore } from '@/stores/share';
 import MasonryGrid from '@/components/gallery/MasonryGrid.vue';
 import Lightbox from '@/components/gallery/Lightbox.vue';
@@ -45,14 +46,39 @@ const formatFileSize = (bytes: number): string => {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 };
 
+// Handle download with error handling
+const handleDownload = async (workId: string, mediaId?: string) => {
+  // Check if link is expired
+  if (store.expired) {
+    ElMessage.error('链接已过期，无法下载');
+    return;
+  }
+
+  // Check if store has valid data
+  if (!store.isValid) {
+    ElMessage.error('链接无效，无法下载');
+    return;
+  }
+
+  // Show download starting message
+  ElMessage.info('开始下载...');
+
+  // Execute download
+  const success = await store.downloadWork(workId, mediaId);
+  
+  if (!success) {
+    ElMessage.error('下载失败，请重试');
+  }
+};
+
 // Download single file (first media item)
 const downloadWork = async (workId: string) => {
-  await store.downloadWork(workId);
+  await handleDownload(workId);
 };
 
 // Download specific media item
 const downloadMediaItem = async (workId: string, mediaId: string) => {
-  await store.downloadWork(workId, mediaId);
+  await handleDownload(workId, mediaId);
 };
 </script>
 
