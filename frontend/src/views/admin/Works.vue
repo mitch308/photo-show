@@ -152,6 +152,35 @@ function cancelAddFile() {
   showAddFile.value = false;
 }
 
+async function handleDeleteFile(item: MediaItem) {
+  if (!editingWork.value) return;
+  
+  if (editingWork.value.mediaItems && editingWork.value.mediaItems.length <= 1) {
+    ElMessage.warning('作品至少需要保留一个文件，请先上传其他文件');
+    return;
+  }
+  
+  try {
+    await ElMessageBox.confirm(
+      `确定要删除文件「${item.originalFilename}」吗？此操作不可恢复。`,
+      '删除确认',
+      { type: 'warning' }
+    );
+    
+    await mediaItemsApi.deleteMediaItem(item.id);
+    ElMessage.success('文件删除成功');
+    
+    await worksStore.fetchWorks();
+    
+    const updated = worksStore.works.find(w => w.id === editingWork.value?.id);
+    if (updated) {
+      editingWork.value = updated;
+    }
+  } catch {
+    // 用户取消
+  }
+}
+
 function resetForm() {
   editingWork.value = null;
   uploadedFile.value = null;
@@ -338,6 +367,15 @@ async function handleBatchDelete() {
                   {{ item.fileType === 'video' ? '🎬' : '📷' }}
                 </div>
                 <span class="file-name">{{ item.originalFilename }}</span>
+                <el-button 
+                  link 
+                  type="danger" 
+                  size="small"
+                  :disabled="editingWork.mediaItems && editingWork.mediaItems.length <= 1"
+                  @click="handleDeleteFile(item)"
+                >
+                  删除
+                </el-button>
               </div>
             </div>
             
@@ -537,6 +575,7 @@ async function handleBatchDelete() {
   background: var(--el-fill-color-light);
   border-radius: 4px;
   min-width: 200px;
+  max-width: 300px;
 }
 
 .file-thumb {
