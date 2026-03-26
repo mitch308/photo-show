@@ -75,17 +75,17 @@ Plans:
 ---
 
 #### Phase 8: 文件存储优化
-**Goal:** 文件存储高效且智能
+**Goal:** 文件存储高效且智能，通过 Fast-MD5 预检查实现去重
 **Depends on:** Phase 7
 **Requirements:** FILE-01, FILE-02
 **Success Criteria** (what must be TRUE):
-  1. 相同文件上传时自动去重，存储空间不浪费
-  2. 图片尺寸小于缩略图尺寸时，访问缩略图返回原图
-  3. 新上传的文件以 MD5 哈希命名
+  1. 上传前计算 Fast-MD5 预检查，已存在文件跳过上传
+  2. 新文件以 Fast-MD5 哈希命名存储，自动去重
+  3. 图片尺寸小于缩略图尺寸时，访问缩略图返回原图
 **Plans:** 2 plans
 
 Plans:
-- [ ] 08-01-PLAN.md — MD5 去重存储
+- [ ] 08-01-PLAN.md — Fast-MD5 预检查去重
 - [ ] 08-02-PLAN.md — 智能缩略图生成
 
 ---
