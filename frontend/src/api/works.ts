@@ -2,11 +2,13 @@ import api from './index';
 import type { ApiResponse, Work } from './types';
 
 export const worksApi = {
-  async getWorks(filters?: { albumId?: string; tagId?: string; isPublic?: boolean }): Promise<Work[]> {
+  async getWorks(filters?: { albumId?: string; tagId?: string; isPublic?: boolean; title?: string; isPinned?: boolean }): Promise<Work[]> {
     const params = new URLSearchParams();
     if (filters?.albumId) params.append('albumId', filters.albumId);
     if (filters?.tagId) params.append('tagId', filters.tagId);
     if (filters?.isPublic !== undefined) params.append('isPublic', String(filters.isPublic));
+    if (filters?.title) params.append('title', filters.title);
+    if (filters?.isPinned !== undefined) params.append('isPinned', String(filters.isPinned));
     
     const response = await api.get<ApiResponse<Work[]>>(`/works?${params.toString()}`);
     return response.data.data;

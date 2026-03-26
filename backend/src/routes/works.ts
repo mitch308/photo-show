@@ -15,11 +15,13 @@ router.use(authMiddleware);
  */
 router.get('/', async (req: Request, res: Response) => {
   try {
-    const { albumId, tagId, isPublic } = req.query;
+    const { albumId, tagId, isPublic, title, isPinned } = req.query;
     const works = await workService.getWorks({
       albumId: albumId as string | undefined,
       tagId: tagId as string | undefined,
       isPublic: isPublic === 'true' ? true : isPublic === 'false' ? false : undefined,
+      title: title as string | undefined,
+      isPinned: isPinned === 'true' ? true : isPinned === 'false' ? false : undefined,
     });
     res.json(successResponse(works));
   } catch (error: any) {

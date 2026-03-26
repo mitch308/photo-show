@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, watch, onMounted } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { useWorksStore } from '@/stores/works';
 import { albumsApi } from '@/api/albums';
@@ -13,6 +13,10 @@ import type { Album, Tag, UploadResult, Work, MediaItem } from '@/api/types';
 const worksStore = useWorksStore();
 const albums = ref<Album[]>([]);
 const tags = ref<Tag[]>([]);
+
+// Filter state
+const searchQuery = ref('');
+const statusFilter = ref('');
 
 const dialogVisible = ref(false);
 const editingWork = ref<Work | null>(null);
@@ -43,6 +47,20 @@ onMounted(async () => {
     loadAlbums(),
     loadTags(),
   ]);
+});
+
+// Filter with debounce
+let searchTimeout: ReturnType<typeof setTimeout>;
+watch([searchQuery, statusFilter], () => {
+  clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(() => {
+    const filters: { title?: string; isPublic?: boolean; isPinned?: boolean } = {};
+    if (searchQuery.value) filters.title = searchQuery.value;
+    if (statusFilter.value === 'public') filters.isPublic = true;
+    if (statusFilter.value === 'private') filters.isPublic = false;
+    if (statusFilter.value === 'pinned') filters.isPinned = true;
+    worksStore.fetchWorks(filters);
+  }, 300);
 });
 
 async function loadAlbums() {
@@ -292,6 +310,19 @@ async function handleBatchDelete() {
   <div class="works-page">
     <div class="page-header">
       <h2>作品管理</h2>
+      <div class="filters">
+        <el-input
+          v-model="searchQuery"
+          placeholder="搜索作品标题..."
+          clearable
+          style="width: 200px"
+        />
+        <el-select v-model="statusFilter" placeholder="状态筛选" clearable style="width: 120px">
+          <el-option label="公开" value="public" />
+          <el-option label="私密" value="private" />
+          <el-option label="置顶" value="pinned" />
+        </el-select>
+      </div>
       <el-button type="primary" @click="dialogVisible = true">
         上传作品
       </el-button>
@@ -548,6 +579,12 @@ async function handleBatchDelete() {
 
 .page-header h2 {
   margin: 0;
+}
+
+.filters {
+  display: flex;
+  gap: 12px;
+  align-items: center;
 }
 
 .stat-count {

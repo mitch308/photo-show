@@ -17,7 +17,7 @@ export const useWorksStore = defineStore('works', {
   }),
 
   actions: {
-    async fetchWorks(filters?: { albumId?: string; tagId?: string; isPublic?: boolean }) {
+    async fetchWorks(filters?: { albumId?: string; tagId?: string; isPublic?: boolean; title?: string; isPinned?: boolean }) {
       this.loading = true;
       this.error = null;
       try {

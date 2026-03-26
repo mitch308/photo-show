@@ -111,7 +111,7 @@ export class WorkService {
     return savedWork;
   }
 
-  async getWorks(options?: { albumId?: string; tagId?: string; isPublic?: boolean }): Promise<Work[]> {
+  async getWorks(options?: { albumId?: string; tagId?: string; isPublic?: boolean; title?: string; isPinned?: boolean }): Promise<Work[]> {
     const query = this.workRepo.createQueryBuilder('work')
       .leftJoinAndSelect('work.albums', 'albums')
       .leftJoinAndSelect('work.tags', 'tags')
@@ -125,6 +125,12 @@ export class WorkService {
     }
     if (options?.isPublic !== undefined) {
       query.andWhere('work.isPublic = :isPublic', { isPublic: options.isPublic });
+    }
+    if (options?.title) {
+      query.andWhere('work.title LIKE :title', { title: `%${options.title}%` });
+    }
+    if (options?.isPinned !== undefined) {
+      query.andWhere('work.isPinned = :isPinned', { isPinned: options.isPinned });
     }
 
     // Sort: pinned first, then by position
