@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 import { DataSource, DataSourceOptions } from 'typeorm';
-import { Admin, Work, Album, Tag, Client, ShareAccessLog, MediaItem } from '../models/index.js';
+import { Admin, Work, Album, Tag, Client, ShareAccessLog, MediaItem, SystemSettings } from '../models/index.js';
 
 let dataSource: DataSource | null = null;
 
@@ -14,7 +14,7 @@ export function getDataSource(): DataSource {
       username: process.env.DB_USER || 'root',
       password: process.env.DB_PASSWORD || '',
       database: process.env.DB_NAME || 'photo_show',
-      entities: [Admin, Work, Album, Tag, Client, ShareAccessLog, MediaItem],
+      entities: [Admin, Work, Album, Tag, Client, ShareAccessLog, MediaItem, SystemSettings],
       synchronize: isDev,
       logging: isDev,
       poolSize: 10,
