@@ -41,5 +41,12 @@ export const publicApi = {
   async getTags(): Promise<Tag[]> {
     const response = await api.get<ApiResponse<Tag[]>>('/public/tags');
     return response.data.data;
+  },
+
+  /**
+   * Record a view for a public work (increments view count)
+   */
+  async recordView(id: string): Promise<void> {
+    await api.post(`/public/works/${id}/view`);
   }
 };

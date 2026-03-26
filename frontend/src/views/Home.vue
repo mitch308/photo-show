@@ -5,6 +5,7 @@ import { useInfiniteScroll } from '@/composables/useInfiniteScroll';
 import MasonryGrid from '@/components/gallery/MasonryGrid.vue';
 import Lightbox from '@/components/gallery/Lightbox.vue';
 import FilterBar from '@/components/gallery/FilterBar.vue';
+import { publicApi } from '@/api/public';
 import type { Work } from '@/api/types';
 
 const { store } = useUrlFilters();
@@ -13,17 +14,32 @@ const lightboxOpen = ref(false);
 
 const { sentinel } = useInfiniteScroll(() => store.loadMore());
 
-const openLightbox = (work: Work) => {
+const openLightbox = async (work: Work) => {
   selectedWork.value = work;
   lightboxOpen.value = true;
+
+  // Record view to increment view count
+  try {
+    await publicApi.recordView(work.id);
+  } catch (error) {
+    // Silently fail - view recording shouldn't affect user experience
+    console.error('Failed to record view:', error);
+  }
 };
 
 const closeLightbox = () => {
   lightboxOpen.value = false;
 };
 
-const navigateLightbox = (work: Work) => {
+const navigateLightbox = async (work: Work) => {
   selectedWork.value = work;
+
+  // Record view when navigating to a new work in lightbox
+  try {
+    await publicApi.recordView(work.id);
+  } catch (error) {
+    console.error('Failed to record view:', error);
+  }
 };
 </script>
 

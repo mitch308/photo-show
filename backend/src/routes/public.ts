@@ -113,4 +113,26 @@ router.get('/tags', async (req: Request, res: Response) => {
   }
 });
 
+/**
+ * POST /api/public/works/:id/view
+ * Record a view for a public work (increments view count)
+ * No authentication required
+ */
+router.post('/works/:id/view', async (req: Request, res: Response) => {
+  try {
+    const id = req.params.id as string;
+    const success = await publicService.incrementViewCount(id);
+
+    if (!success) {
+      res.status(404).json(errorResponse(ErrorCodes.NOT_FOUND, 'Work not found'));
+      return;
+    }
+
+    res.json(successResponse(null, 'View recorded'));
+  } catch (error: any) {
+    console.error('Error in POST /api/public/works/:id/view:', error);
+    res.status(500).json(errorResponse(ErrorCodes.UNKNOWN, error.message));
+  }
+});
+
 export default router;

@@ -234,6 +234,19 @@ export class PublicService {
   }
 
   /**
+   * Increment view count for a public work
+   * Called when user views work details in lightbox
+   */
+  async incrementViewCount(id: string): Promise<boolean> {
+    const result = await this.workRepo.increment(
+      { id, isPublic: true },
+      'viewCount',
+      1
+    );
+    return result.affected ? result.affected > 0 : false;
+  }
+
+  /**
    * Get all tags with public work count only
    */
   async getPublicTags(): Promise<TagWithCount[]> {
