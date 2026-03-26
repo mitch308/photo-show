@@ -77,6 +77,12 @@ const routes: RouteRecordRaw[] = [
     meta: { title: '私密分享' },
   },
   {
+    path: '/album-share/:token',
+    name: 'AlbumShare',
+    component: () => import('@/views/AlbumShare.vue'),
+    meta: { title: '相册分享' },
+  },
+  {
     path: '/:pathMatch(.*)*',
     name: 'NotFound',
     component: () => import('@/views/NotFound.vue'),

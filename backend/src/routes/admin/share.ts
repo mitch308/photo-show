@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { shareService } from '../../services/shareService.js';
+import { albumService } from '../../services/albumService.js';
 import { AppDataSource } from '../../config/database.js';
 import { ShareAccessLog } from '../../models/ShareAccessLog.js';
 import { successResponse, errorResponse, ErrorCodes } from '../../types/response.js';
@@ -80,6 +81,71 @@ router.post('/', async (req: Request, res: Response) => {
     }, '分享链接创建成功'));
   } catch (error: any) {
     console.error('Error in POST /api/admin/share:', error);
+    res.status(500).json(errorResponse(ErrorCodes.UNKNOWN, error.message));
+  }
+});
+
+/**
+ * POST /api/admin/share/album
+ * Create a share link for an album
+ * Per SHAR-02: 相册分享功能
+ * 
+ * Body: { 
+ *   albumId: string,
+ *   expiresInDays?: number,
+ *   maxAccess?: number,
+ *   clientId?: string
+ * }
+ */
+router.post('/album', async (req: Request, res: Response) => {
+  try {
+    const { albumId, expiresInDays, maxAccess, clientId } = req.body;
+
+    if (!albumId || typeof albumId !== 'string') {
+      return res.status(400).json(errorResponse(ErrorCodes.VALIDATION_ERROR, 'albumId 必须是非空字符串'));
+    }
+
+    const album = await albumService.getAlbumById(albumId);
+    if (!album) {
+      return res.status(404).json(errorResponse(ErrorCodes.NOT_FOUND, '相册不存在'));
+    }
+
+    // Validate expiresInDays if provided
+    if (expiresInDays !== undefined) {
+      if (typeof expiresInDays !== 'number' || expiresInDays <= 0) {
+        return res.status(400).json(errorResponse(ErrorCodes.VALIDATION_ERROR, 'expiresInDays 必须是正整数'));
+      }
+    }
+
+    // Validate maxAccess if provided
+    if (maxAccess !== undefined) {
+      if (typeof maxAccess !== 'number' || maxAccess <= 0) {
+        return res.status(400).json(errorResponse(ErrorCodes.VALIDATION_ERROR, 'maxAccess 必须是正整数'));
+      }
+    }
+
+    const token = await shareService.createAlbumShareToken(albumId, album.name, {
+      expiresInDays: expiresInDays || 7,
+      maxAccess,
+      clientId,
+    });
+
+    const shareInfo = await shareService.getShareInfo(token);
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const shareUrl = `${frontendUrl}/album-share/${token}`;
+
+    res.status(201).json(successResponse({
+      token,
+      shareUrl,
+      albumId,
+      albumName: album.name,
+      expiresAt: shareInfo?.expiresAt,
+      maxAccess: shareInfo?.maxAccess,
+      clientId: shareInfo?.clientId,
+      workCount: album.works?.length || 0,
+    }, '相册分享链接创建成功'));
+  } catch (error: any) {
+    console.error('Error in POST /api/admin/share/album:', error);
     res.status(500).json(errorResponse(ErrorCodes.UNKNOWN, error.message));
   }
 });

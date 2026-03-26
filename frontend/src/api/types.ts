@@ -131,3 +131,34 @@ export interface BatchUploadResult {
   items: UploadResult[];
   errors?: string[];
 }
+
+/**
+ * 相册分享数据
+ */
+export interface AlbumShareData {
+  token: string;
+  album: {
+    id: string;
+    name: string;
+    description: string;
+    coverPath: string;
+  };
+  works: Work[];
+  expiresAt: number;
+}
+
+/**
+ * 相册分享信息（管理端）
+ */
+export interface AlbumShareInfo {
+  token: string;
+  albumId: string;
+  albumName: string;
+  expiresAt: number;
+  createdAt: number;
+  shareUrl?: string;
+  maxAccess?: number;
+  accessCount?: number;
+  clientId?: string;
+  workCount?: number;
+}

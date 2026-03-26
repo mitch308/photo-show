@@ -1,5 +1,5 @@
 import api from './index';
-import type { ApiResponse, Work } from './types';
+import type { ApiResponse, Work, AlbumShareData, AlbumShareInfo } from './types';
 
 export interface ShareData {
   token: string;
@@ -14,9 +14,18 @@ export interface CreateShareRequest {
   clientId?: string;
 }
 
+export interface CreateAlbumShareRequest {
+  albumId: string;
+  expiresInDays?: number;
+  maxAccess?: number;
+  clientId?: string;
+}
+
 export interface ShareInfo {
   token: string;
-  workIds: string[];
+  workIds?: string[];
+  albumId?: string;
+  albumName?: string;
   expiresAt: number;
   createdAt: number;
   shareUrl?: string;
@@ -98,6 +107,24 @@ export const shareApi = {
     const response = await api.get<ApiResponse<AccessLogResult>>(
       `/admin/share/${token}/access-logs?${params.toString()}`
     );
+    return response.data.data;
+  },
+
+  // Album share endpoints
+  async getAlbumShare(token: string): Promise<AlbumShareData> {
+    const response = await api.get<ApiResponse<AlbumShareData>>(`/album-share/${token}`);
+    return response.data.data;
+  },
+
+  getAlbumDownloadUrl(token: string, workId: string, mediaId?: string): string {
+    if (mediaId) {
+      return `${api.defaults.baseURL}/album-share/${token}/download/${workId}/media/${mediaId}`;
+    }
+    return `${api.defaults.baseURL}/album-share/${token}/download/${workId}`;
+  },
+
+  async createAlbumShare(data: CreateAlbumShareRequest): Promise<AlbumShareInfo> {
+    const response = await api.post<ApiResponse<AlbumShareInfo>>('/admin/share/album', data);
     return response.data.data;
   }
 };

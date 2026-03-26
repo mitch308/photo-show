@@ -5,9 +5,12 @@ import { getRedis } from '../config/redis.js';
  * Share token data stored in Redis
  * Per PRIV-06: 支持访问次数限制
  * Per CLNT-02: 支持为客户创建专属私密链接
+ * Per SHAR-02: 支持相册分享
  */
 export interface ShareTokenData {
-  workIds: string[];
+  workIds?: string[];   // 作品分享（可选，与 albumId 互斥）
+  albumId?: string;     // 相册分享（可选，与 workIds 互斥）
+  albumName?: string;   // 相册名称（管理端显示）
   expiresAt: number;  // Unix timestamp (ms)
   createdAt: number;
   createdBy?: string; // Admin ID (optional)
@@ -81,6 +84,55 @@ export class ShareService {
     await redis.setex(key, ttlSeconds, JSON.stringify(data));
 
     return token;
+  }
+
+  /**
+   * Create a share token for an album (SHAR-02)
+   * @param albumId - Album ID to share
+   * @param albumName - Album name for display
+   * @param options - Optional settings
+   * @param options.expiresInDays - Expiration in days (default: 7)
+   * @param options.clientId - Client ID for customer-specific shares
+   * @param options.maxAccess - Maximum access count limit
+   * @returns The generated token
+   */
+  async createAlbumShareToken(
+    albumId: string,
+    albumName: string,
+    options?: {
+      expiresInDays?: number;
+      clientId?: string;
+      maxAccess?: number;
+    }
+  ): Promise<string> {
+    const token = this.generateToken();
+    const now = Date.now();
+    const expiresInDays = options?.expiresInDays ?? 7;
+    const expiresAt = now + expiresInDays * 24 * 60 * 60 * 1000;
+    const ttlSeconds = expiresInDays * 24 * 60 * 60;
+
+    const data: ShareTokenData = {
+      albumId,
+      albumName,
+      expiresAt,
+      createdAt: now,
+      clientId: options?.clientId,
+      maxAccess: options?.maxAccess,
+      accessCount: 0,
+    };
+
+    const redis = getRedis();
+    const key = `${this.KEY_PREFIX}${token}`;
+    await redis.setex(key, ttlSeconds, JSON.stringify(data));
+
+    return token;
+  }
+
+  /**
+   * Check if share is an album share
+   */
+  isAlbumShare(data: ShareTokenData): boolean {
+    return !!data.albumId;
   }
 
   /**
@@ -163,7 +215,23 @@ export class ShareService {
       return false;
     }
 
-    return data.workIds.includes(workId);
+    // For album shares, we need to check if work is in the album
+    // This is handled by the route handler, not here
+    if (data.albumId) {
+      return true; // Album share - actual check done in route
+    }
+
+    return data.workIds?.includes(workId) ?? false;
+  }
+
+  /**
+   * Check if a share is an album share
+   * @param token - The share token
+   * @returns true if it's an album share, false otherwise
+   */
+  async isTokenAlbumShare(token: string): Promise<boolean> {
+    const data = await this.validateToken(token);
+    return data ? this.isAlbumShare(data) : false;
   }
 
   /**

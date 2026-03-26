@@ -2,22 +2,50 @@
 import { ref, onMounted, computed } from 'vue';
 import { useRoute } from 'vue-router';
 import { ElMessage } from 'element-plus';
-import { useShareStore } from '@/stores/share';
+import { shareApi } from '@/api/share';
 import MasonryGrid from '@/components/gallery/MasonryGrid.vue';
 import Lightbox from '@/components/gallery/Lightbox.vue';
-import type { Work } from '@/api/types';
+import type { Work, AlbumShareData } from '@/api/types';
 
 const route = useRoute();
-const store = useShareStore();
+const token = route.params.token as string;
+
+const shareData = ref<AlbumShareData | null>(null);
+const loading = ref(true);
+const error = ref<string | null>(null);
+const expired = ref(false);
 
 const selectedWork = ref<Work | null>(null);
 const lightboxOpen = ref(false);
 
-const token = route.params.token as string;
-
-onMounted(() => {
-  store.fetchShare(token);
+onMounted(async () => {
+  await fetchAlbumShare();
 });
+
+const fetchAlbumShare = async () => {
+  loading.value = true;
+  error.value = null;
+  expired.value = false;
+  
+  try {
+    const data = await shareApi.getAlbumShare(token);
+    shareData.value = data;
+    
+    // Check if expired
+    if (data.expiresAt < Date.now()) {
+      expired.value = true;
+    }
+  } catch (e: any) {
+    if (e.response?.status === 404) {
+      expired.value = true;
+      error.value = '链接已过期或不存在';
+    } else {
+      error.value = e.message || '加载失败';
+    }
+  } finally {
+    loading.value = false;
+  }
+};
 
 const openLightbox = (work: Work) => {
   selectedWork.value = work;
@@ -27,6 +55,21 @@ const openLightbox = (work: Work) => {
 const closeLightbox = () => {
   lightboxOpen.value = false;
 };
+
+const isValid = computed(() => shareData.value !== null && !expired.value);
+
+const expiresIn = computed(() => {
+  if (!shareData.value) return null;
+  const diff = shareData.value.expiresAt - Date.now();
+  if (diff <= 0) return '已过期';
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+  if (days > 0) return `${days}天后过期`;
+  const hours = Math.floor(diff / (1000 * 60 * 60));
+  if (hours > 0) return `${hours}小时后过期`;
+  return '即将过期';
+});
+
+const works = computed(() => shareData.value?.works || []);
 
 // Check if work has multiple media items
 const hasMultipleMedia = computed(() => {
@@ -49,13 +92,13 @@ const formatFileSize = (bytes: number): string => {
 // Handle download with error handling
 const handleDownload = async (workId: string, mediaId?: string) => {
   // Check if link is expired
-  if (store.expired) {
+  if (expired.value) {
     ElMessage.error('链接已过期，无法下载');
     return;
   }
 
-  // Check if store has valid data
-  if (!store.isValid) {
+  // Check if has valid data
+  if (!isValid.value) {
     ElMessage.error('链接无效，无法下载');
     return;
   }
@@ -63,12 +106,9 @@ const handleDownload = async (workId: string, mediaId?: string) => {
   // Show download starting message
   ElMessage.info('开始下载...');
 
-  // Execute download
-  const success = await store.downloadWork(workId, mediaId);
-  
-  if (!success) {
-    ElMessage.error('下载失败，请重试');
-  }
+  // Get download URL and navigate
+  const url = shareApi.getAlbumDownloadUrl(token, workId, mediaId);
+  window.location.href = url;
 };
 
 // Download single file (first media item)
@@ -83,32 +123,35 @@ const downloadMediaItem = async (workId: string, mediaId: string) => {
 </script>
 
 <template>
-  <div class="share-page">
+  <div class="album-share-page">
     <header class="header">
-      <h1>私密作品分享</h1>
-      <p v-if="store.isValid" class="expires">{{ store.expiresIn }}</p>
+      <h1>{{ shareData?.album?.name || '相册分享' }}</h1>
+      <p v-if="shareData?.album?.description" class="album-description">
+        {{ shareData.album.description }}
+      </p>
+      <p v-if="isValid" class="expires">{{ expiresIn }}</p>
     </header>
     
     <!-- Loading state -->
-    <div v-if="store.loading" class="loading">
+    <div v-if="loading" class="loading">
       加载中...
     </div>
     
     <!-- Error/Expired state -->
-    <div v-else-if="store.expired || store.error" class="error-state">
+    <div v-else-if="expired || error" class="error-state">
       <h2>链接已过期或不存在</h2>
       <p>请联系摄影师获取新的分享链接</p>
     </div>
     
     <!-- Gallery -->
-    <main v-else-if="store.isValid" class="main">
+    <main v-else-if="isValid" class="main">
       <div class="share-info">
-        <p>这是为您精选的 {{ store.works.length }} 张作品</p>
+        <p>这是为您精选的 {{ works.length }} 张作品</p>
         <p class="hint">点击作品查看大图，可下载高清无水印原图</p>
       </div>
       
       <MasonryGrid
-        :works="store.works"
+        :works="works"
         @select="openLightbox"
       />
     </main>
@@ -117,7 +160,7 @@ const downloadMediaItem = async (workId: string, mediaId: string) => {
     <Lightbox
       v-if="selectedWork"
       :work="selectedWork"
-      :works="store.works"
+      :works="works"
       :isOpen="lightboxOpen"
       @close="closeLightbox"
       @navigate="(work) => selectedWork = work"
@@ -154,7 +197,7 @@ const downloadMediaItem = async (workId: string, mediaId: string) => {
 </template>
 
 <style scoped>
-.share-page {
+.album-share-page {
   min-height: 100vh;
   background: var(--bg-primary);
 }
@@ -168,6 +211,13 @@ const downloadMediaItem = async (workId: string, mediaId: string) => {
 .header h1 {
   font-size: 24px;
   color: var(--text-primary);
+  margin-bottom: 8px;
+}
+
+.album-description {
+  color: var(--text-secondary);
+  font-size: 14px;
+  margin-bottom: 8px;
 }
 
 .expires {

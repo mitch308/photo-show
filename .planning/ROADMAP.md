@@ -154,8 +154,8 @@ Plans:
 **Plans:** 2 plans
 
 Plans:
-- [ ] 12-01-PLAN.md — 相册分享后端
-- [ ] 12-02-PLAN.md — 相册分享前端
+- [x] 12-01-PLAN.md — 相册分享后端
+- [x] 12-02-PLAN.md — 相册分享前端
 
 ---
 

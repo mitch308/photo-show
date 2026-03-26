@@ -18,6 +18,7 @@ import albumsRoutes from './routes/albums.js';
 import tagsRoutes from './routes/tags.js';
 import publicRoutes from './routes/public.js';
 import shareRoutes from './routes/share.js';
+import albumShareRoutes from './routes/albumShare.js';
 import adminShareRoutes from './routes/admin/share.js';
 import batchRoutes from './routes/batch.js';
 import statsRoutes from './routes/stats.js';
@@ -49,6 +50,7 @@ app.use('/api/public', publicRoutes);
 
 // 私密分享 API（无需认证，token-based）
 app.use('/api/share', shareRoutes);
+app.use('/api/album-share', albumShareRoutes);
 
 // API 路由
 app.use('/api/auth', authRoutes);

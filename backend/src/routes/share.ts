@@ -17,6 +17,7 @@ const router = Router();
  * GET /api/share/:token
  * Get works by share token (public access, no auth required)
  * Returns works with all their media items
+ * Note: This endpoint is for work-based shares. For album shares, use /api/album-share/:token
  */
 router.get('/:token', async (req: Request, res: Response) => {
   try {
@@ -30,9 +31,16 @@ router.get('/:token', async (req: Request, res: Response) => {
       return;
     }
 
+    // Check if this is an album share - redirect to album share endpoint
+    if (shareData.albumId) {
+      res.status(400).json(errorResponse(ErrorCodes.VALIDATION_ERROR, '这是相册分享链接，请使用 /api/album-share/:token 访问'));
+      return;
+    }
+
     // Fetch works by IDs
+    const workIds = shareData.workIds || [];
     const works = await Promise.all(
-      shareData.workIds.map(workId => workService.getWorkById(workId))
+      workIds.map(workId => workService.getWorkById(workId))
     );
 
     // Filter out nulls (in case some works were deleted)
@@ -77,7 +85,8 @@ router.get('/:token/download/:workId', async (req: Request, res: Response) => {
     }
 
     // Check if workId is in share (per D-14)
-    const isAuthorized = await shareService.isWorkInShare(token, workId);
+    const workIds = shareData.workIds || [];
+    const isAuthorized = workIds.includes(workId);
 
     if (!isAuthorized) {
       res.status(403).json(errorResponse(ErrorCodes.FORBIDDEN, '无权下载此作品'));
@@ -166,7 +175,8 @@ router.get('/:token/download/:workId/media/:mediaId', async (req: Request, res: 
     }
 
     // Check if workId is in share (per D-14)
-    const isAuthorized = await shareService.isWorkInShare(token, workId);
+    const workIds = shareData.workIds || [];
+    const isAuthorized = workIds.includes(workId);
 
     if (!isAuthorized) {
       res.status(403).json(errorResponse(ErrorCodes.FORBIDDEN, '无权下载此作品'));
@@ -234,7 +244,8 @@ router.post('/:token/view/:workId', async (req: Request, res: Response) => {
     }
 
     // Check if workId is in share
-    const isAuthorized = await shareService.isWorkInShare(token, workId);
+    const workIds = shareData.workIds || [];
+    const isAuthorized = workIds.includes(workId);
 
     if (!isAuthorized) {
       res.status(403).json(errorResponse(ErrorCodes.FORBIDDEN, '无权查看此作品'));

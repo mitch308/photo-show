@@ -25,28 +25,28 @@
 
 ### 分享 Token 结构
 
-- **D-01:** 复用现有 ShareTokenData 结构，添加 albumId 字段
-  - 理由：保持与现有分享机制一致，便于管理
+- **D-01:** 复用现有 ShareTokenData 结构，添加 albumId 和 albumName 字段
+  - 理由：保持与现有分享机制一致，albumName 便于管理端显示
 
-- **D-02:** 分享时将相册中的作品 ID 快照存储到 workIds
-  - 理由：分享后相册内容变更不影响已分享的作品集
+- **D-02:** 相册分享存储 albumId，访问时动态获取作品
+  - 理由：客户始终看到相册最新内容，无需重新生成链接
 
-- **D-03:** 新增 albumShareService 或扩展 shareService
-  - 选择：扩展 shareService，添加 createAlbumShare 方法
+- **D-03:** 扩展 shareService，添加 createAlbumShare 方法
   - 理由：复用现有逻辑，避免重复代码
 
 ### 后端 API
 
-- **D-04:** 新增 POST /api/admin/album-share 端点
+- **D-04:** 新增 POST /api/admin/share/album 端点
   - Body: { albumId, expiresInDays?, clientId?, maxAccess? }
-  - 返回: { token, shareUrl, workIds, expiresAt }
+  - 返回: { token, shareUrl, albumId, albumName, expiresAt }
 
-- **D-05:** 复用现有 GET /api/share/:token 端点
-  - 返回格式相同，前端无需区分作品分享和相册分享
+- **D-05:** 新增 GET /api/album-share/:token 端点
+  - 返回: { token, album, works, expiresAt }
+  - 区分于作品分享，返回格式包含相册信息
 
-- **D-06:** 复用现有下载 API
-  - GET /api/share/:token/download/:workId
-  - GET /api/share/:token/download/:workId/media/:mediaId
+- **D-06:** 新增相册分享下载 API
+  - GET /api/album-share/:token/download/:workId
+  - GET /api/album-share/:token/download/:workId/media/:mediaId
 
 ### 前端管理入口
 
@@ -66,13 +66,12 @@
 
 ### 客户端访问页面
 
-- **D-10:** 复用现有 Share.vue 页面
-  - 显示相册名称作为标题
+- **D-10:** 创建 AlbumShare.vue 页面
+  - 显示相册名称和描述
   - 复用瀑布流展示、灯箱、下载功能
 
-- **D-11:** 页面标题根据分享类型显示
-  - 相册分享：显示相册名称
-  - 作品分享：显示"私密作品分享"
+- **D-11:** 路由: /album-share/:token
+  - 区分于作品分享路由 /share/:token
 
 ### Claude's Discretion
 

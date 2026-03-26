@@ -70,8 +70,17 @@ const resetCreateForm = () => {
   maxAccess.value = undefined;
 };
 
+const getShareUrl = (share: ShareInfo): string => {
+  if (share.shareUrl) return share.shareUrl;
+  // Album shares use different URL path
+  if (share.albumId) {
+    return `${window.location.origin}/album-share/${share.token}`;
+  }
+  return `${window.location.origin}/share/${share.token}`;
+};
+
 const copyShareUrl = async (share: ShareInfo) => {
-  const url = share.shareUrl || `${window.location.origin}/share/${share.token}`;
+  const url = getShareUrl(share);
   await navigator.clipboard.writeText(url);
   alert('链接已复制！');
 };
@@ -135,7 +144,8 @@ const clients = computed(() => clientsStore.clients);
       <table v-if="shares.length > 0">
         <thead>
           <tr>
-            <th>作品数</th>
+            <th>类型</th>
+            <th>名称</th>
             <th>客户</th>
             <th>访问次数</th>
             <th>创建时间</th>
@@ -146,7 +156,14 @@ const clients = computed(() => clientsStore.clients);
         </thead>
         <tbody>
           <tr v-for="share in shares" :key="share.token">
-            <td>{{ share.workIds.length }}</td>
+            <td>
+              <span :class="['type-tag', share.albumId ? 'album' : 'work']">
+                {{ share.albumId ? '相册' : '作品' }}
+              </span>
+            </td>
+            <td>
+              {{ share.albumName || `${share.workIds?.length || 0} 个作品` }}
+            </td>
             <td>{{ getClientName(share.clientId) }}</td>
             <td>
               {{ share.accessCount || 0 }}
@@ -322,6 +339,22 @@ th, td {
 .status.expired {
   background: rgba(245, 108, 108, 0.15);
   color: var(--color-danger);
+}
+
+.type-tag {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.type-tag.work {
+  background: rgba(64, 158, 255, 0.15);
+  color: var(--color-primary);
+}
+
+.type-tag.album {
+  background: rgba(103, 194, 58, 0.15);
+  color: var(--color-success);
 }
 
 .action-tag {

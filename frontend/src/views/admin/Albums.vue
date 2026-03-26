@@ -1,7 +1,9 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { albumsApi } from '@/api/albums';
+import { shareApi } from '@/api/share';
+import { useClientsStore } from '@/stores/clients';
 import type { Album } from '@/api/types';
 
 const albums = ref<Album[]>([]);
@@ -11,7 +13,23 @@ const dialogVisible = ref(false);
 const editingAlbum = ref<Album | null>(null);
 const form = ref({ name: '', description: '' });
 
-onMounted(() => loadAlbums());
+// Share dialog state
+const shareDialogVisible = ref(false);
+const sharingAlbum = ref<Album | null>(null);
+const shareForm = ref({
+  expiresInDays: 7,
+  maxAccess: undefined as number | undefined,
+  clientId: '',
+});
+const generatedShareUrl = ref('');
+const shareLoading = ref(false);
+
+const clientsStore = useClientsStore();
+
+onMounted(() => {
+  loadAlbums();
+  clientsStore.fetchClients();
+});
 
 async function loadAlbums() {
   loading.value = true;
@@ -73,6 +91,45 @@ async function deleteAlbum(album: Album) {
     }
   }
 }
+
+// Share functions
+function openShareDialog(album: Album) {
+  sharingAlbum.value = album;
+  shareForm.value = { expiresInDays: 7, maxAccess: undefined, clientId: '' };
+  generatedShareUrl.value = '';
+  shareDialogVisible.value = true;
+}
+
+async function createAlbumShare() {
+  if (!sharingAlbum.value) return;
+  
+  shareLoading.value = true;
+  try {
+    const result = await shareApi.createAlbumShare({
+      albumId: sharingAlbum.value.id,
+      expiresInDays: shareForm.value.expiresInDays,
+      maxAccess: shareForm.value.maxAccess,
+      clientId: shareForm.value.clientId || undefined,
+    });
+    
+    generatedShareUrl.value = result.shareUrl || '';
+    await navigator.clipboard.writeText(generatedShareUrl.value);
+    ElMessage.success('分享链接已创建并复制到剪贴板');
+  } catch (error: any) {
+    ElMessage.error('创建分享链接失败：' + error.message);
+  } finally {
+    shareLoading.value = false;
+  }
+}
+
+async function copyShareUrl() {
+  if (generatedShareUrl.value) {
+    await navigator.clipboard.writeText(generatedShareUrl.value);
+    ElMessage.success('链接已复制');
+  }
+}
+
+const clients = computed(() => clientsStore.clients);
 </script>
 
 <template>
@@ -97,6 +154,67 @@ async function deleteAlbum(album: Album) {
       </template>
     </el-dialog>
 
+    <!-- Share Dialog -->
+    <el-dialog v-model="shareDialogVisible" title="分享相册" width="500px">
+      <div v-if="sharingAlbum">
+        <p class="share-album-name">
+          相册：<strong>{{ sharingAlbum.name }}</strong>
+          <span class="work-count">（{{ sharingAlbum.works?.length || 0 }} 个作品）</span>
+        </p>
+        
+        <el-form label-width="100px" class="share-form">
+          <el-form-item label="过期时间">
+            <el-select v-model="shareForm.expiresInDays">
+              <el-option :value="1" label="1 天" />
+              <el-option :value="7" label="7 天" />
+              <el-option :value="30" label="30 天" />
+            </el-select>
+          </el-form-item>
+          
+          <el-form-item label="关联客户">
+            <el-select v-model="shareForm.clientId" placeholder="不关联客户" clearable>
+              <el-option
+                v-for="client in clients"
+                :key="client.id"
+                :value="client.id"
+                :label="client.name"
+              />
+            </el-select>
+          </el-form-item>
+          
+          <el-form-item label="访问限制">
+            <el-input-number
+              v-model="shareForm.maxAccess"
+              :min="1"
+              placeholder="不限制"
+              controls-position="right"
+            />
+            <span class="form-hint">留空表示不限制访问次数</span>
+          </el-form-item>
+        </el-form>
+        
+        <div v-if="generatedShareUrl" class="share-result">
+          <p>分享链接：</p>
+          <div class="share-url-box">
+            <input type="text" :value="generatedShareUrl" readonly class="share-url-input" />
+            <el-button type="primary" @click="copyShareUrl">复制</el-button>
+          </div>
+        </div>
+      </div>
+      
+      <template #footer>
+        <el-button @click="shareDialogVisible = false">关闭</el-button>
+        <el-button
+          type="primary"
+          @click="createAlbumShare"
+          :loading="shareLoading"
+          :disabled="!!generatedShareUrl"
+        >
+          {{ generatedShareUrl ? '已创建' : '创建并复制链接' }}
+        </el-button>
+      </template>
+    </el-dialog>
+
     <el-table :data="albums" v-loading="loading" stripe>
       <el-table-column prop="name" label="名称" min-width="150" />
       <el-table-column prop="description" label="描述" min-width="200" />
@@ -105,9 +223,10 @@ async function deleteAlbum(album: Album) {
           {{ row.works?.length || 0 }}
         </template>
       </el-table-column>
-      <el-table-column label="操作" width="150">
+      <el-table-column label="操作" width="200">
         <template #default="{ row }">
           <el-button link type="primary" @click="openEditDialog(row)">编辑</el-button>
+          <el-button link type="success" @click="openShareDialog(row)">分享</el-button>
           <el-button link type="danger" @click="deleteAlbum(row)">删除</el-button>
         </template>
       </el-table-column>
@@ -129,5 +248,45 @@ async function deleteAlbum(album: Album) {
 
 .page-header h2 {
   margin: 0;
+}
+
+.share-album-name {
+  margin-bottom: 20px;
+  color: var(--text-secondary);
+}
+
+.work-count {
+  font-size: 13px;
+}
+
+.share-form {
+  margin-bottom: 16px;
+}
+
+.form-hint {
+  margin-left: 12px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.share-result {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-color);
+}
+
+.share-url-box {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.share-url-input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background: var(--bg-primary);
+  font-size: 13px;
 }
 </style>
