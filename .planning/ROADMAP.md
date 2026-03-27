@@ -170,8 +170,8 @@
   2. 上传和编辑弹窗的文件拖拽区都位于底部，UI 风格一致
   3. 用户可以同时拖拽多个文件到拖拽区
   4. 用户可以通过文件选择器一次性选择多个文件
-**Plans:** 1 plan
-  - [ ] 18-01-PLAN.md — Fix edit dialog, add multiple file support
+**Plans:** 1/1 plans complete
+  - [x] 18-01-PLAN.md — Fix edit dialog, add multiple file support
 **UI hint:** yes
 
 #### Phase 19: 作品展示修复
@@ -229,7 +229,7 @@ v1.2 Complete ──→ v1.3
 | 15. 后台筛选 | v1.2 | 4/4 | Complete | 2026-03-26 |
 | 16. 布局优化 | v1.2 | 1/1 | Complete | 2026-03-27 |
 | 17. 样式统一 | v1.2 | 1/1 | Complete | 2026-03-27 |
-| 18. 作品编辑修复 | v1.3 | 0/1 | Not started | - |
+| 18. 作品编辑修复 | v1.3 | 1/1 | Complete   | 2026-03-27 |
 | 19. 作品展示修复 | v1.3 | 0/1 | Not started | - |
 
 ---

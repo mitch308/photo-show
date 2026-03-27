@@ -9,10 +9,10 @@ v1.3 作品管理 UI 修复与优化需求。
 
 ### 作品编辑修复
 
-- [ ] **EDIT-01**: 作品编辑弹窗正确显示所有已上传的文件（包括第一个文件）
-- [ ] **EDIT-02**: 上传和编辑弹窗 UI 统一，文件拖拽区保持在底部
-- [ ] **EDIT-03**: 拖拽区支持同时拖拽多个文件
-- [ ] **EDIT-04**: 点击选择文件时支持多选
+- [x] **EDIT-01**: 作品编辑弹窗正确显示所有已上传的文件（包括第一个文件）
+- [x] **EDIT-02**: 上传和编辑弹窗 UI 统一，文件拖拽区保持在底部
+- [x] **EDIT-03**: 拖拽区支持同时拖拽多个文件
+- [x] **EDIT-04**: 点击选择文件时支持多选
 
 ### 作品展示修复
 
@@ -107,10 +107,10 @@ v1.3 作品管理 UI 修复与优化需求。
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| EDIT-01 | Phase 18 | Pending |
-| EDIT-02 | Phase 18 | Pending |
-| EDIT-03 | Phase 18 | Pending |
-| EDIT-04 | Phase 18 | Pending |
+| EDIT-01 | Phase 18 | Complete |
+| EDIT-02 | Phase 18 | Complete |
+| EDIT-03 | Phase 18 | Complete |
+| EDIT-04 | Phase 18 | Complete |
 | SHOW-01 | Phase 19 | Pending |
 | SHOW-02 | Phase 19 | Pending |
 | SHOW-03 | Phase 19 | Pending |
