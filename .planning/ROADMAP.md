@@ -8,10 +8,11 @@
 
 | Statistic | Value |
 |-----------|-------|
-| Total Phases | 17 |
+| Total Phases | 19 |
 | v1.0 Requirements | 48 (Complete) |
 | v1.1 Requirements | 15 (Complete) |
 | v1.2 Requirements | 12 (Complete) |
+| v1.3 Requirements | 8 (In Progress) |
 | Coverage | 100% |
 
 ---
@@ -21,6 +22,7 @@
 - ✅ **v1.0 摄影工作室作品展示平台** - Phases 1-6 (shipped 2026-03-25)
 - ✅ **v1.1 增强与修复** - Phases 7-12 (shipped 2026-03-26)
 - ✅ **v1.2 UI/UX 优化与修复** - Phases 13-17 (shipped 2026-03-27)
+- 🚧 **v1.3 作品管理 UI 修复与优化** - Phases 18-19 (in progress)
 
 ---
 
@@ -96,11 +98,10 @@
 
 ---
 
-### ✅ v1.2 UI/UX 优化与修复 (Shipped 2026-03-27)
+<details>
+<summary>✅ v1.2 UI/UX 优化与修复 (Phases 13-17) - SHIPPED 2026-03-27</summary>
 
-**Milestone Goal:** 修复 UI 问题，美化界面，提升用户体验
-
-#### Phase 13: Bug 修复
+### Phase 13: Bug 修复
 **Goal:** 核心功能按预期工作
 **Depends on:** Phase 12
 **Requirements:** BUG-01, BUG-02
@@ -109,13 +110,7 @@
   2. 作品缩略图正确显示（使用第一个 mediaItem，兼容旧数据）
 **Plans:** 2/2 plans complete
 
-Plans:
-- [x] 13-01-PLAN.md — 验证并确保访客无需登录即可访问"关于我们"页面
-- [x] 13-02-PLAN.md — 创建 useWorkThumbnail composable 修复缩略图显示
-
----
-
-#### Phase 14: 作品详情页
+### Phase 14: 作品详情页
 **Goal:** 用户可以查看作品的所有文件
 **Depends on:** Phase 13
 **Requirements:** GALL-01, GALL-02, GALL-03
@@ -126,13 +121,7 @@ Plans:
   3. 用户可以在灯箱中查看文件（支持缩放、平移、旋转）
 **Plans:** 2/2 plans complete
 
-Plans:
-- [x] 14-01-PLAN.md — 创建作品详情页，实现从首页作品卡片点击导航到详情页，详情页以响应式网格布局展示作品的所有媒体文件
-- [x] 14-02-PLAN.md — 集成 vue-easy-lightbox 库创建增强灯箱组件，支持缩放、平移、旋转功能
-
----
-
-#### Phase 15: 后台筛选
+### Phase 15: 后台筛选
 **Goal:** 管理员可以快速定位管理内容
 **Depends on:** Phase 13
 **Requirements:** AUX-01, AUX-02, AUX-03, AUX-04
@@ -144,15 +133,7 @@ Plans:
   4. 管理员可以按客户名称或分享类型筛选分享列表
 **Plans:** 4/4 plans complete
 
-Plans:
-- [x] 15-01-PLAN.md — 作品管理页面筛选（标题搜索 + 状态筛选）
-- [x] 15-02-PLAN.md — 相册管理页面筛选（名称搜索）
-- [x] 15-03-PLAN.md — 标签管理页面筛选（名称搜索）
-- [x] 15-04-PLAN.md — 分享管理页面筛选（客户筛选 + 类型筛选）
-
----
-
-#### Phase 16: 布局优化
+### Phase 16: 布局优化
 **Goal:** 后台界面布局更合理易用
 **Depends on:** Phase 15
 **Requirements:** AUX-05, AUX-06
@@ -162,12 +143,7 @@ Plans:
   2. 系统设置卡片宽度自适应屏幕宽度
 **Plans:** 1/1 plans complete
 
-Plans:
-- [x] 16-01-PLAN.md — 优化侧边栏独立滚动和设置卡片宽度自适应
-
----
-
-#### Phase 17: 样式统一
+### Phase 17: 样式统一
 **Goal:** 后台界面视觉风格一致
 **Depends on:** Phase 16
 **Requirements:** AUX-07
@@ -177,40 +153,57 @@ Plans:
   2. 客户管理页面使用与其他管理页面一致的表格样式
 **Plans:** 1/1 plans complete
 
-Plans:
-- [x] 17-01-PLAN.md — 将 Shares.vue 和 Clients.vue 从原生 HTML 转换为 Element Plus 组件
+</details>
+
+---
+
+### 🚧 v1.3 作品管理 UI 修复与优化 (In Progress)
+
+**Milestone Goal:** 修复作品编辑/详情页面的多项 Bug，优化上传和编辑体验
+
+#### Phase 18: 作品编辑修复
+**Goal:** 编辑弹窗正确显示所有文件，统一上传/编辑 UI
+**Depends on:** Phase 17
+**Requirements:** EDIT-01, EDIT-02, EDIT-03, EDIT-04
+**Success Criteria** (what must be TRUE):
+  1. 编辑作品弹窗显示所有已上传的文件，包括第一个文件
+  2. 上传和编辑弹窗的文件拖拽区都位于底部，UI 风格一致
+  3. 用户可以同时拖拽多个文件到拖拽区
+  4. 用户可以通过文件选择器一次性选择多个文件
+**Plans:** TBD
+**UI hint:** yes
+
+#### Phase 19: 作品展示修复
+**Goal:** 前台正确显示作品缩略图和详情页文件
+**Depends on:** Phase 18
+**Requirements:** SHOW-01, SHOW-02, SHOW-03, SHOW-04
+**Success Criteria** (what must be TRUE):
+  1. 首页作品卡片正确显示作品缩略图
+  2. 作品详情页网格显示所有文件，包括第一个文件
+  3. 详情页大图左键切换到上一个文件，右键切换到下一个文件
+  4. 进入作品详情页时，大图正确显示第一个文件
+**Plans:** TBD
+**UI hint:** yes
 
 ---
 
 ## Phase Dependencies
 
 ```
-v1.0 Complete ──→ v1.1 Complete ──→ v1.2
-                                        │
-                                        ↓
-                                   Phase 13 (Bug 修复)
-                                        │
-                           ┌────────────┴────────────┐
-                           ↓                         ↓
-                      Phase 14                  Phase 15
-                   (作品详情页)               (后台筛选)
-                           │                         │
-                           └────────────┬────────────┘
-                                        ↓
-                                   Phase 16 (布局优化)
-                                        │
-                                        ↓
-                                   Phase 17 (样式统一)
-                                        │
-                                        ↓
-                                  v1.2 Complete
+v1.2 Complete ──→ v1.3
+                    │
+                    ↓
+              Phase 18 (作品编辑修复)
+                    │
+                    ↓
+              Phase 19 (作品展示修复)
+                    │
+                    ↓
+              v1.3 Complete
 ```
 
 **Execution Order:**
-- Phase 13 → Phase 14 (作品详情页依赖缩略图修复)
-- Phase 13 → Phase 15 (筛选功能可与详情页并行)
-- Phase 15 → Phase 16 (布局优化在筛选后)
-- Phase 16 → Phase 17 (样式统一最后)
+- Phase 18 → Phase 19 (展示修复依赖编辑修复可能涉及的文件处理逻辑)
 
 ---
 
@@ -235,23 +228,23 @@ v1.0 Complete ──→ v1.1 Complete ──→ v1.2
 | 15. 后台筛选 | v1.2 | 4/4 | Complete | 2026-03-26 |
 | 16. 布局优化 | v1.2 | 1/1 | Complete | 2026-03-27 |
 | 17. 样式统一 | v1.2 | 1/1 | Complete | 2026-03-27 |
-
----
-
-## Risk Register
-
-| Risk | Phase | Mitigation |
-|------|-------|------------|
-| 缩略图兼容旧数据 | Phase 13 | 创建 useWorkThumbnail composable，实现降级逻辑 |
-| 作品无 mediaItems 时显示异常 | Phase 13 | 检查 mediaItems 长度，提供占位图 |
-| 灯箱组件功能不完整 | Phase 14 | 使用 vue-easy-lightbox，支持缩放/平移/旋转 |
-| 筛选状态丢失 | Phase 15 | 使用 URL 参数存储筛选状态 |
-| 侧边栏滚动布局破坏 | Phase 16 | 只对 .nav 设置滚动，使用 min-height: 0 |
-| Element Plus 暗色模式不一致 | Phase 17 | 映射 CSS 变量到 Element Plus token |
+| 18. 作品编辑修复 | v1.3 | 0/1 | Not started | - |
+| 19. 作品展示修复 | v1.3 | 0/1 | Not started | - |
 
 ---
 
 ## Traceability Matrix
+
+### v1.3 Traceability
+
+| Phase | Requirements | Count |
+|-------|--------------|-------|
+| Phase 18 | EDIT-01, EDIT-02, EDIT-03, EDIT-04 | 4 |
+| Phase 19 | SHOW-01, SHOW-02, SHOW-03, SHOW-04 | 4 |
+
+**v1.3 Total:** 8 requirements covered ✓
+
+### v1.2 Traceability (Complete ✓)
 
 | Phase | Requirements | Count |
 |-------|--------------|-------|
@@ -267,4 +260,5 @@ v1.0 Complete ──→ v1.1 Complete ──→ v1.2
 
 *Roadmap created: 2026-03-24*
 *Updated for v1.1: 2026-03-26*
-*Updated for v1.2: 2026-03-27 (SHIPPED)*
+*Updated for v1.2: 2026-03-27*
+*Updated for v1.3: 2026-03-27*
