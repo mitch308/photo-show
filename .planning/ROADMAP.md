@@ -11,7 +11,7 @@
 | Total Phases | 17 |
 | v1.0 Requirements | 48 (Complete) |
 | v1.1 Requirements | 15 (Complete) |
-| v1.2 Requirements | 12 |
+| v1.2 Requirements | 12 (Complete) |
 | Coverage | 100% |
 
 ---
@@ -20,7 +20,7 @@
 
 - ✅ **v1.0 摄影工作室作品展示平台** - Phases 1-6 (shipped 2026-03-25)
 - ✅ **v1.1 增强与修复** - Phases 7-12 (shipped 2026-03-26)
-- 🚧 **v1.2 UI/UX 优化与修复** - Phases 13-17 (in progress)
+- ✅ **v1.2 UI/UX 优化与修复** - Phases 13-17 (shipped 2026-03-27)
 
 ---
 
@@ -96,7 +96,7 @@
 
 ---
 
-### 🚧 v1.2 UI/UX 优化与修复 (In Progress)
+### ✅ v1.2 UI/UX 优化与修复 (Shipped 2026-03-27)
 
 **Milestone Goal:** 修复 UI 问题，美化界面，提升用户体验
 
@@ -230,11 +230,11 @@ v1.0 Complete ──→ v1.1 Complete ──→ v1.2
 | 10. 作品文件管理 | v1.1 | 2/2 | Complete | 2026-03-26 |
 | 11. 工作室介绍 | v1.1 | 3/3 | Complete | 2026-03-26 |
 | 12. 相册分享 | v1.1 | 2/2 | Complete | 2026-03-26 |
-| 13. Bug 修复 | v1.2 | 2/2 | Complete    | 2026-03-26 |
-| 14. 作品详情页 | v1.2 | 2/2 | Complete    | 2026-03-26 |
-| 15. 后台筛选 | v1.2 | 4/4 | Complete   | 2026-03-26 |
-| 16. 布局优化 | v1.2 | 1/1 | Complete   | 2026-03-27 |
-| 17. 样式统一 | v1.2 | 1/1 | Complete   | 2026-03-27 |
+| 13. Bug 修复 | v1.2 | 2/2 | Complete | 2026-03-26 |
+| 14. 作品详情页 | v1.2 | 2/2 | Complete | 2026-03-26 |
+| 15. 后台筛选 | v1.2 | 4/4 | Complete | 2026-03-26 |
+| 16. 布局优化 | v1.2 | 1/1 | Complete | 2026-03-27 |
+| 17. 样式统一 | v1.2 | 1/1 | Complete | 2026-03-27 |
 
 ---
 
@@ -267,4 +267,4 @@ v1.0 Complete ──→ v1.1 Complete ──→ v1.2
 
 *Roadmap created: 2026-03-24*
 *Updated for v1.1: 2026-03-26*
-*Updated for v1.2: 2026-03-26*
+*Updated for v1.2: 2026-03-27 (SHIPPED)*

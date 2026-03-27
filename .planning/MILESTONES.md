@@ -1,5 +1,33 @@
 # Milestones
 
+## v1.2 UI/UX 优化与修复 (Shipped: 2026-03-27)
+
+**Phases completed:** 5 phases, 10 plans, 22 tasks
+
+**Key accomplishments:**
+
+- Bug 修复：验证关于我们页面公开访问，创建 useWorkThumbnail composable 修复缩略图显示并兼容旧数据
+- 作品详情页：创建 WorkDetail.vue 响应式网格布局页面，集成 vue-easy-lightbox 灯箱支持缩放/平移/旋转
+- 后台筛选：作品管理支持标题搜索和状态筛选，相册/标签支持名称搜索，分享支持客户和类型筛选
+- 布局优化：侧边栏独立滚动（min-height: 0 技巧），系统设置卡片宽度自适应
+- 样式统一：Shares.vue 和 Clients.vue 转换为 Element Plus 组件，移除 700+ 行自定义 CSS
+
+---
+
+## v1.1 增强与修复 (Shipped: 2026-03-26)
+
+**Phases completed:** 6 phases, 14 plans, 45 tasks
+
+**Key accomplishments:**
+
+- 文件存储优化：MD5 去重、智能缩略图生成
+- 作品信息增强：列表显示文件数量和总大小，后台侧边栏前台入口
+- 作品文件管理：添加/删除文件功能
+- 工作室介绍：wangEditor 富文本编辑器、sanitize-html XSS 防护
+- 相册分享：支持分享整个相册，动态获取作品
+
+---
+
 ## v1.0 摄影工作室作品展示平台 (Shipped: 2026-03-25)
 
 **Phases completed:** 6 phases, 27 plans, 70 tasks
