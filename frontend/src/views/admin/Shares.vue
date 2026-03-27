@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, watch, onMounted, computed } from 'vue';
+import { ElMessage, ElMessageBox } from 'element-plus';
 import { shareApi, type ShareInfo, type AccessLogEntry } from '@/api/share';
 import { useWorksStore } from '@/stores/works';
 import { useClientsStore } from '@/stores/clients';
@@ -66,13 +67,13 @@ const createShare = async () => {
     
     // Copy to clipboard
     await navigator.clipboard.writeText(result.shareUrl || '');
-    alert('分享链接已创建并复制到剪贴板！');
+    ElMessage.success('分享链接已创建并复制到剪贴板！');
     
     showCreateDialog.value = false;
     resetCreateForm();
     await loadShares();
   } catch (e: any) {
-    alert('创建失败：' + e.message);
+    ElMessage.error('创建失败：' + e.message);
   }
 };
 
@@ -95,17 +96,21 @@ const getShareUrl = (share: ShareInfo): string => {
 const copyShareUrl = async (share: ShareInfo) => {
   const url = getShareUrl(share);
   await navigator.clipboard.writeText(url);
-  alert('链接已复制！');
+  ElMessage.success('链接已复制！');
 };
 
 const revokeShare = async (token: string) => {
-  if (!confirm('确定要撤销这个分享链接吗？')) return;
-  
   try {
+    await ElMessageBox.confirm(
+      '确定要撤销这个分享链接吗？',
+      '撤销确认',
+      { type: 'warning' }
+    );
     await shareApi.revokeShare(token);
+    ElMessage.success('撤销成功');
     await loadShares();
-  } catch (e: any) {
-    alert('撤销失败：' + e.message);
+  } catch {
+    // Cancelled
   }
 };
 
@@ -147,354 +152,197 @@ const clients = computed(() => clientsStore.clients);
 <template>
   <div class="shares-page">
     <div class="page-header">
-      <h1>分享管理</h1>
+      <h2>分享管理</h2>
       <div class="filters">
-        <select v-model="clientFilter" class="filter-select">
-          <option value="">全部客户</option>
-          <option v-for="client in clients" :key="client.id" :value="client.id">
-            {{ client.name }}
-          </option>
-        </select>
-        <select v-model="typeFilter" class="filter-select">
-          <option value="">全部类型</option>
-          <option value="work">作品分享</option>
-          <option value="album">相册分享</option>
-        </select>
+        <el-select v-model="clientFilter" placeholder="全部客户" clearable style="width: 140px">
+          <el-option
+            v-for="client in clients"
+            :key="client.id"
+            :label="client.name"
+            :value="client.id"
+          />
+        </el-select>
+        <el-select v-model="typeFilter" placeholder="全部类型" clearable style="width: 120px">
+          <el-option label="作品分享" value="work" />
+          <el-option label="相册分享" value="album" />
+        </el-select>
       </div>
-      <button class="btn-primary" @click="showCreateDialog = true">
+      <el-button type="primary" @click="showCreateDialog = true">
         创建分享链接
-      </button>
+      </el-button>
     </div>
     
-    <div class="shares-list">
-      <table v-if="shares.length > 0">
-        <thead>
-          <tr>
-            <th>类型</th>
-            <th>名称</th>
-            <th>客户</th>
-            <th>访问次数</th>
-            <th>创建时间</th>
-            <th>过期时间</th>
-            <th>状态</th>
-            <th>操作</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="share in shares" :key="share.token">
-            <td>
-              <span :class="['type-tag', share.albumId ? 'album' : 'work']">
-                {{ share.albumId ? '相册' : '作品' }}
-              </span>
-            </td>
-            <td>
-              {{ share.albumName || `${share.workIds?.length || 0} 个作品` }}
-            </td>
-            <td>{{ getClientName(share.clientId) }}</td>
-            <td>
-              {{ share.accessCount || 0 }}
-              <span v-if="share.maxAccess"> / {{ share.maxAccess }}</span>
-            </td>
-            <td>{{ formatDate(share.createdAt) }}</td>
-            <td>{{ formatDate(share.expiresAt) }}</td>
-            <td>
-              <span :class="['status', isExpired(share) ? 'expired' : 'active']">
-                {{ isExpired(share) ? '已过期' : '有效' }}
-              </span>
-            </td>
-            <td class="actions">
-              <button @click="copyShareUrl(share)" :disabled="isExpired(share)">
-                复制链接
-              </button>
-              <button @click="loadAccessLogs(share.token)">访问记录</button>
-              <button @click="revokeShare(share.token)" :disabled="isExpired(share)" class="danger">
-                撤销
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+    <el-table :data="shares" v-loading="loading" stripe>
+      <el-table-column label="类型" width="90">
+        <template #default="{ row }">
+          <el-tag :type="row.albumId ? 'success' : 'primary'">
+            {{ row.albumId ? '相册' : '作品' }}
+          </el-tag>
+        </template>
+      </el-table-column>
       
-      <div v-else class="empty">
-        暂无分享链接
-      </div>
-    </div>
+      <el-table-column label="名称" min-width="150">
+        <template #default="{ row }">
+          {{ row.albumName || `${row.workIds?.length || 0} 个作品` }}
+        </template>
+      </el-table-column>
+      
+      <el-table-column label="客户" width="120">
+        <template #default="{ row }">
+          {{ getClientName(row.clientId) }}
+        </template>
+      </el-table-column>
+      
+      <el-table-column label="访问次数" width="100" align="center">
+        <template #default="{ row }">
+          {{ row.accessCount || 0 }}
+          <span v-if="row.maxAccess"> / {{ row.maxAccess }}</span>
+        </template>
+      </el-table-column>
+      
+      <el-table-column label="创建时间" width="170">
+        <template #default="{ row }">
+          {{ formatDate(row.createdAt) }}
+        </template>
+      </el-table-column>
+      
+      <el-table-column label="过期时间" width="170">
+        <template #default="{ row }">
+          {{ formatDate(row.expiresAt) }}
+        </template>
+      </el-table-column>
+      
+      <el-table-column label="状态" width="90">
+        <template #default="{ row }">
+          <el-tag :type="isExpired(row) ? 'danger' : 'success'">
+            {{ isExpired(row) ? '已过期' : '有效' }}
+          </el-tag>
+        </template>
+      </el-table-column>
+      
+      <el-table-column label="操作" width="220" fixed="right">
+        <template #default="{ row }">
+          <el-button link type="primary" @click="copyShareUrl(row)" :disabled="isExpired(row)">
+            复制链接
+          </el-button>
+          <el-button link type="default" @click="loadAccessLogs(row.token)">
+            访问记录
+          </el-button>
+          <el-button link type="danger" @click="revokeShare(row.token)" :disabled="isExpired(row)">
+            撤销
+          </el-button>
+        </template>
+      </el-table-column>
+    </el-table>
     
     <!-- Create dialog -->
-    <div v-if="showCreateDialog" class="dialog-overlay" @click.self="showCreateDialog = false">
-      <div class="dialog">
-        <h2>创建分享链接</h2>
+    <el-dialog v-model="showCreateDialog" title="创建分享链接" width="500px">
+      <el-form label-width="100px">
+        <el-form-item label="选择作品">
+          <el-checkbox-group v-model="selectedWorkIds">
+            <el-checkbox 
+              v-for="work in works" 
+              :key="work.id" 
+              :value="work.id"
+              :label="work.id"
+            >
+              {{ work.title }}
+            </el-checkbox>
+          </el-checkbox-group>
+        </el-form-item>
         
-        <div class="form-group">
-          <label>选择作品</label>
-          <div class="work-selector">
-            <label v-for="work in works" :key="work.id" class="work-item">
-              <input
-                type="checkbox"
-                :value="work.id"
-                v-model="selectedWorkIds"
-              />
-              <span>{{ work.title }}</span>
-            </label>
-          </div>
-        </div>
+        <el-form-item label="关联客户">
+          <el-select v-model="selectedClientId" placeholder="不关联客户" clearable style="width: 100%">
+            <el-option
+              v-for="client in clients"
+              :key="client.id"
+              :label="client.name"
+              :value="client.id"
+            />
+          </el-select>
+        </el-form-item>
         
-        <div class="form-group">
-          <label>关联客户（可选）</label>
-          <select v-model="selectedClientId">
-            <option value="">不关联客户</option>
-            <option v-for="client in clients" :key="client.id" :value="client.id">
-              {{ client.name }}
-            </option>
-          </select>
-        </div>
+        <el-form-item label="过期时间">
+          <el-select v-model="expiresInDays" style="width: 100%">
+            <el-option :value="1" label="1天" />
+            <el-option :value="7" label="7天" />
+            <el-option :value="30" label="30天" />
+          </el-select>
+        </el-form-item>
         
-        <div class="form-group">
-          <label>过期时间</label>
-          <select v-model="expiresInDays">
-            <option :value="1">1天</option>
-            <option :value="7">7天</option>
-            <option :value="30">30天</option>
-          </select>
-        </div>
-        
-        <div class="form-group">
-          <label>访问次数限制（可选）</label>
-          <input
-            type="number"
-            v-model.number="maxAccess"
-            min="1"
+        <el-form-item label="访问次数限制">
+          <el-input-number 
+            v-model="maxAccess" 
+            :min="1" 
             placeholder="不限制"
+            style="width: 100%"
           />
-          <small class="hint">留空表示不限制访问次数</small>
-        </div>
-        
-        <div class="dialog-actions">
-          <button @click="showCreateDialog = false">取消</button>
-          <button class="btn-primary" @click="createShare" :disabled="selectedWorkIds.length === 0">
-            创建并复制链接
-          </button>
-        </div>
-      </div>
-    </div>
+          <div class="form-hint">留空表示不限制访问次数</div>
+        </el-form-item>
+      </el-form>
+      
+      <template #footer>
+        <el-button @click="showCreateDialog = false">取消</el-button>
+        <el-button 
+          type="primary" 
+          @click="createShare" 
+          :disabled="selectedWorkIds.length === 0"
+        >
+          创建并复制链接
+        </el-button>
+      </template>
+    </el-dialog>
     
     <!-- Access Log Dialog -->
-    <div v-if="showAccessLogDialog" class="dialog-overlay" @click.self="showAccessLogDialog = false">
-      <div class="dialog">
-        <h2>访问记录</h2>
-        
-        <div v-if="accessLogsLoading" class="loading">加载中...</div>
-        
-        <table v-else-if="accessLogs.length > 0">
-          <thead>
-            <tr>
-              <th>操作</th>
-              <th>IP 地址</th>
-              <th>时间</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="log in accessLogs" :key="log.id">
-              <td>
-                <span :class="['action-tag', log.action]">
-                  {{ log.action === 'view' ? '查看' : '下载' }}
-                </span>
-              </td>
-              <td>{{ log.ipAddress }}</td>
-              <td>{{ formatDate(log.createdAt) }}</td>
-            </tr>
-          </tbody>
-        </table>
-        
-        <div v-else class="empty">暂无访问记录</div>
-        
-        <div class="dialog-actions">
-          <button @click="showAccessLogDialog = false">关闭</button>
-        </div>
-      </div>
-    </div>
+    <el-dialog v-model="showAccessLogDialog" title="访问记录" width="500px">
+      <el-table :data="accessLogs" v-loading="accessLogsLoading" stripe>
+        <el-table-column label="操作" width="100">
+          <template #default="{ row }">
+            <el-tag :type="row.action === 'view' ? 'primary' : 'warning'" size="small">
+              {{ row.action === 'view' ? '查看' : '下载' }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column prop="ipAddress" label="IP 地址" />
+        <el-table-column label="时间" width="170">
+          <template #default="{ row }">
+            {{ formatDate(row.createdAt) }}
+          </template>
+        </el-table-column>
+      </el-table>
+      
+      <template #footer>
+        <el-button @click="showAccessLogDialog = false">关闭</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <style scoped>
 .shares-page {
-  padding: 24px;
+  padding: 20px;
 }
 
 .page-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
+  margin-bottom: 20px;
+}
+
+.page-header h2 {
+  margin: 0;
 }
 
 .filters {
   display: flex;
   gap: 12px;
-}
-
-.filter-select {
-  padding: 8px 12px;
-  border: 1px solid var(--border-color);
-  border-radius: 4px;
-  background: var(--bg-primary);
-  min-width: 120px;
-}
-
-.btn-primary {
-  padding: 8px 16px;
-  background: var(--color-primary);
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-  background: var(--bg-card);
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-th, td {
-  padding: 12px;
-  text-align: left;
-  border-bottom: 1px solid var(--border-color);
-}
-
-.status {
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 12px;
-}
-
-.status.active {
-  background: rgba(103, 194, 58, 0.15);
-  color: var(--color-success);
-}
-
-.status.expired {
-  background: rgba(245, 108, 108, 0.15);
-  color: var(--color-danger);
-}
-
-.type-tag {
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 12px;
-}
-
-.type-tag.work {
-  background: rgba(64, 158, 255, 0.15);
-  color: var(--color-primary);
-}
-
-.type-tag.album {
-  background: rgba(103, 194, 58, 0.15);
-  color: var(--color-success);
-}
-
-.action-tag {
-  padding: 2px 6px;
-  border-radius: 3px;
-  font-size: 12px;
-}
-
-.action-tag.view {
-  background: rgba(64, 158, 255, 0.15);
-  color: var(--color-primary);
-}
-
-.action-tag.download {
-  background: rgba(230, 162, 60, 0.15);
-  color: var(--color-warning);
-}
-
-.actions button {
-  margin-right: 8px;
-  padding: 4px 8px;
-  border: 1px solid var(--border-color);
-  border-radius: 4px;
-  background: transparent;
-  cursor: pointer;
-}
-
-.actions button.danger {
-  color: #dc3545;
-}
-
-.empty, .loading {
-  text-align: center;
-  padding: 48px;
-  color: var(--text-secondary);
-}
-
-.dialog-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
   align-items: center;
-  justify-content: center;
-  z-index: 100;
 }
 
-.dialog {
-  background: var(--bg-card);
-  padding: 24px;
-  border-radius: 8px;
-  min-width: 400px;
-  max-width: 600px;
-  max-height: 80vh;
-  overflow-y: auto;
-}
-
-.form-group {
-  margin-bottom: 16px;
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 8px;
-  font-weight: 500;
-}
-
-.form-group input,
-.form-group select {
-  width: 100%;
-  padding: 8px 12px;
-  border: 1px solid var(--border-color);
-  border-radius: 4px;
-  box-sizing: border-box;
-}
-
-.hint {
-  display: block;
-  margin-top: 4px;
-  color: var(--text-secondary);
+.form-hint {
   font-size: 12px;
-}
-
-.work-selector {
-  max-height: 300px;
-  overflow-y: auto;
-  border: 1px solid var(--border-color);
-  border-radius: 4px;
-  padding: 8px;
-}
-
-.work-item {
-  display: block;
-  padding: 8px;
-  cursor: pointer;
-}
-
-.dialog-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-  margin-top: 24px;
+  color: var(--el-text-color-secondary);
+  margin-top: 4px;
 }
 </style>
