@@ -55,6 +55,27 @@ const formatFileSize = (bytes: number): string => {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 };
 
+// Mouse click navigation for SHOW-03
+const handleMouseDown = (e: MouseEvent) => {
+  if (!props.visible) return;
+  
+  // Left click (button 0) → previous image
+  if (e.button === 0) {
+    e.preventDefault();
+    onPrev();
+  }
+  // Right click (button 2) → next image
+  else if (e.button === 2) {
+    e.preventDefault();
+    onNext();
+  }
+};
+
+// Prevent context menu on right click
+const handleContextMenu = (e: MouseEvent) => {
+  e.preventDefault();
+};
+
 // Keyboard navigation
 const handleKeydown = (e: KeyboardEvent) => {
   if (!props.visible) return;
@@ -100,8 +121,12 @@ watch(() => props.visible, (newVisible) => {
     :rotateDisabled="false"
     :zoomDisabled="false"
     :pinchDisabled="false"
+    :dblclickDisabled="false"
+    :moveDisabled="false"
     @hide="onClose"
     @on-index-change="onIndexChange"
+    @mousedown="handleMouseDown"
+    @contextmenu="handleContextMenu"
   >
     <template #toolbar>
       <div class="lightbox-toolbar">
@@ -111,6 +136,7 @@ watch(() => props.visible, (newVisible) => {
         <span class="position-info">
           {{ currentIndex + 1 }} / {{ mediaItems.length }}
         </span>
+        <span class="hint-info">左键上一张，右键下一张</span>
       </div>
     </template>
   </VueEasyLightbox>
@@ -144,5 +170,11 @@ watch(() => props.visible, (newVisible) => {
 .position-info {
   font-size: 12px;
   opacity: 0.8;
+}
+
+.hint-info {
+  font-size: 11px;
+  opacity: 0.6;
+  margin-top: 4px;
 }
 </style>
