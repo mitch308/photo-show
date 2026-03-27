@@ -86,6 +86,8 @@ function handleThemeToggle() {
 .nav {
   flex: 1;
   padding: 20px 0;
+  overflow-y: auto;
+  min-height: 0;
 }
 
 .nav-item {
