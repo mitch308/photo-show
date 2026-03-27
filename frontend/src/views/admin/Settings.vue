@@ -372,7 +372,7 @@ async function handleLogoUpload(options: any) {
 }
 
 .settings-card {
-  max-width: 600px;
+  /* Card width now adapts to screen width */
 }
 
 .card-header {
