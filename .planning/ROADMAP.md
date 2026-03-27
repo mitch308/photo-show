@@ -160,7 +160,10 @@ Plans:
 **Success Criteria** (what must be TRUE):
   1. 侧边栏导航可以独立滚动，内容区域滚动不影响侧边栏
   2. 系统设置卡片宽度自适应屏幕宽度
-**Plans:** TBD
+**Plans:** 1 plan
+
+Plans:
+- [ ] 16-01-PLAN.md — 优化侧边栏独立滚动和设置卡片宽度自适应
 
 ---
 
@@ -227,7 +230,7 @@ v1.0 Complete ──→ v1.1 Complete ──→ v1.2
 | 13. Bug 修复 | v1.2 | 2/2 | Complete    | 2026-03-26 |
 | 14. 作品详情页 | v1.2 | 2/2 | Complete    | 2026-03-26 |
 | 15. 后台筛选 | v1.2 | 4/4 | Complete   | 2026-03-26 |
-| 16. 布局优化 | v1.2 | 0/2 | Not started | - |
+| 16. 布局优化 | v1.2 | 0/1 | Not started | - |
 | 17. 样式统一 | v1.2 | 0/1 | Not started | - |
 
 ---
