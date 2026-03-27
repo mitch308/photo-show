@@ -1,11 +1,27 @@
 # Requirements: 摄影工作室作品展示平台
 
-**Defined:** 2026-03-26
+**Defined:** 2026-03-27
 **Core Value:** 让摄影师轻松管理作品，让客户优雅地查看和获取作品
 
-## v1.2 Requirements
+## v1.3 Requirements
 
-v1.2 UI/UX 优化与修复需求。
+v1.3 作品管理 UI 修复与优化需求。
+
+### 作品编辑修复
+
+- [ ] **EDIT-01**: 作品编辑弹窗正确显示所有已上传的文件（包括第一个文件）
+- [ ] **EDIT-02**: 上传和编辑弹窗 UI 统一，文件拖拽区保持在底部
+- [ ] **EDIT-03**: 拖拽区支持同时拖拽多个文件
+- [ ] **EDIT-04**: 点击选择文件时支持多选
+
+### 作品展示修复
+
+- [ ] **SHOW-01**: 首页作品缩略图正确显示
+- [ ] **SHOW-02**: 作品详情页正确显示所有文件（包括第一个文件）
+- [ ] **SHOW-03**: 详情页大图左右切换逻辑正确（左键切换到上一个，右键切换到下一个）
+- [ ] **SHOW-04**: 进入详情页时大图正确显示
+
+## v1.2 Requirements (Complete ✓)
 
 ### Bug 修复
 
@@ -87,6 +103,21 @@ v1.2 UI/UX 优化与修复需求。
 
 需求与阶段对应关系。
 
+### v1.3 Traceability
+
+| Requirement | Phase | Status |
+|-------------|-------|--------|
+| EDIT-01 | Phase 18 | Pending |
+| EDIT-02 | Phase 18 | Pending |
+| EDIT-03 | Phase 18 | Pending |
+| EDIT-04 | Phase 18 | Pending |
+| SHOW-01 | Phase 19 | Pending |
+| SHOW-02 | Phase 19 | Pending |
+| SHOW-03 | Phase 19 | Pending |
+| SHOW-04 | Phase 19 | Pending |
+
+### v1.2 Traceability (Complete ✓)
+
 | Requirement | Phase | Status |
 |-------------|-------|--------|
 | BUG-01 | Phase 13 | Complete |
@@ -103,17 +134,10 @@ v1.2 UI/UX 优化与修复需求。
 | AUX-07 | Phase 17 | Complete |
 
 **Coverage:**
-- v1.2 requirements: 12 total
-- Mapped to phases: 12
+- v1.3 requirements: 8 total
+- Mapped to phases: 8
 - Unmapped: 0 ✓
 
-**Phase Summary:**
-- Phase 13 (Bug 修复): BUG-01, BUG-02
-- Phase 14 (作品详情页): GALL-01, GALL-02, GALL-03
-- Phase 15 (后台筛选): AUX-01, AUX-02, AUX-03, AUX-04
-- Phase 16 (布局优化): AUX-05, AUX-06
-- Phase 17 (样式统一): AUX-07
-
 ---
-*Requirements defined: 2026-03-26*
-*Last updated: 2026-03-26 after v1.2 requirements defined*
+*Requirements defined: 2026-03-27*
+*Last updated: 2026-03-27 after v1.3 requirements defined*
