@@ -102,7 +102,8 @@ function handleDrop(e: DragEvent) {
   dragover.value = false;
   const files = e.dataTransfer?.files;
   if (files && files.length > 0) {
-    handleUpload(files[0]);
+    // Process all files sequentially
+    Array.from(files).forEach(file => handleUpload(file));
   }
 }
 
@@ -110,7 +111,8 @@ function handleFileChange(e: Event) {
   const target = e.target as HTMLInputElement;
   const files = target.files;
   if (files && files.length > 0) {
-    handleUpload(files[0]);
+    // Process all files sequentially
+    Array.from(files).forEach(file => handleUpload(file));
   }
 }
 </script>
@@ -127,6 +129,7 @@ function handleFileChange(e: Event) {
       <input
         type="file"
         :accept="acceptTypes"
+        multiple
         @change="handleFileChange"
         class="file-input"
       />
