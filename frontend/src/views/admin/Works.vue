@@ -34,6 +34,9 @@ const uploadedFile = ref<UploadResult | null>(null);
 // File management state
 const addingFile = ref(false);
 
+// Track first file for multi-upload
+let isFirstFile = true;
+
 // Batch selection state
 const selectedWorks = ref<string[]>([]);
 const batchLoading = ref(false);
@@ -70,10 +73,15 @@ async function loadTags() {
   tags.value = await tagsApi.getTags();
 }
 
-function handleUploadSuccess(result: UploadResult) {
-  uploadedFile.value = result;
-  form.value.title = result.originalFilename.replace(/\.[^/.]+$/, '');
-  // Don't set dialogVisible.value = true; dialog is already open
+function handleUploadSuccess(result: UploadResult & { isDuplicate?: boolean }) {
+  if (isFirstFile) {
+    uploadedFile.value = result;
+    form.value.title = result.originalFilename.replace(/\.[^/.]+$/, '');
+    isFirstFile = false;
+  } else {
+    // Additional files - inform user
+    ElMessage.info(`文件「${result.originalFilename}」需要在保存后通过编辑添加`);
+  }
 }
 
 function openEditDialog(work: Work) {
@@ -195,6 +203,7 @@ async function handleDeleteFile(item: MediaItem) {
 function resetForm() {
   editingWork.value = null;
   uploadedFile.value = null;
+  isFirstFile = true;
   form.value = {
     title: '',
     description: '',
