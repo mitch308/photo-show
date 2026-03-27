@@ -170,7 +170,8 @@
   2. 上传和编辑弹窗的文件拖拽区都位于底部，UI 风格一致
   3. 用户可以同时拖拽多个文件到拖拽区
   4. 用户可以通过文件选择器一次性选择多个文件
-**Plans:** TBD
+**Plans:** 1 plan
+  - [ ] 18-01-PLAN.md — Fix edit dialog, add multiple file support
 **UI hint:** yes
 
 #### Phase 19: 作品展示修复
