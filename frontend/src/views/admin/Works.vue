@@ -32,7 +32,6 @@ const form = ref({
 const uploadedFile = ref<UploadResult | null>(null);
 
 // File management state
-const showAddFile = ref(false);
 const addingFile = ref(false);
 
 // Batch selection state
@@ -74,7 +73,7 @@ async function loadTags() {
 function handleUploadSuccess(result: UploadResult) {
   uploadedFile.value = result;
   form.value.title = result.originalFilename.replace(/\.[^/.]+$/, '');
-  dialogVisible.value = true;
+  // Don't set dialogVisible.value = true; dialog is already open
 }
 
 function openEditDialog(work: Work) {
@@ -133,7 +132,7 @@ async function deleteWork(work: Work) {
 
 async function handleAddFile(result: UploadResult & { isDuplicate?: boolean }) {
   if (!editingWork.value) return;
-  
+
   addingFile.value = true;
   try {
     const data = {
@@ -146,14 +145,13 @@ async function handleAddFile(result: UploadResult & { isDuplicate?: boolean }) {
       fileSize: result.fileSize,
       fileHash: result.fileHash || undefined,
     };
-    
+
     await mediaItemsApi.addMediaItem(editingWork.value.id, data);
-    
+
     ElMessage.success('文件添加成功');
-    showAddFile.value = false;
-    
+
     await worksStore.fetchWorks();
-    
+
     const updated = worksStore.works.find(w => w.id === editingWork.value?.id);
     if (updated) {
       editingWork.value = updated;
@@ -163,10 +161,6 @@ async function handleAddFile(result: UploadResult & { isDuplicate?: boolean }) {
   } finally {
     addingFile.value = false;
   }
-}
-
-function cancelAddFile() {
-  showAddFile.value = false;
 }
 
 async function handleDeleteFile(item: MediaItem) {
@@ -335,19 +329,16 @@ async function handleBatchDelete() {
       width="600px"
       @closed="resetForm"
     >
-      <div v-if="!editingWork && !uploadedFile">
-        <Upload @success="handleUploadSuccess" />
-      </div>
-      
-      <el-form v-else :model="form" label-width="80px">
+      <el-form :model="form" label-width="80px">
+        <!-- Form fields first -->
         <el-form-item label="标题" required>
           <el-input v-model="form.title" placeholder="请输入标题" />
         </el-form-item>
-        
+
         <el-form-item label="描述">
           <el-input v-model="form.description" type="textarea" :rows="3" />
         </el-form-item>
-        
+
         <el-form-item label="相册">
           <el-select v-model="form.albumIds" multiple placeholder="选择相册">
             <el-option
@@ -358,7 +349,7 @@ async function handleBatchDelete() {
             />
           </el-select>
         </el-form-item>
-        
+
         <el-form-item label="标签">
           <el-select v-model="form.tagIds" multiple placeholder="选择标签">
             <el-option
@@ -369,22 +360,22 @@ async function handleBatchDelete() {
             />
           </el-select>
         </el-form-item>
-        
+
         <el-form-item label="置顶">
           <el-switch v-model="form.isPinned" />
         </el-form-item>
-        
+
         <el-form-item label="公开">
           <el-switch v-model="form.isPublic" />
         </el-form-item>
-        
-        <!-- 文件管理区域（仅编辑模式） -->
+
+        <!-- File management area (edit mode) -->
         <el-form-item v-if="editingWork" label="文件">
           <div class="files-manager">
             <div class="files-list">
-              <div 
-                v-for="item in editingWork.mediaItems" 
-                :key="item.id" 
+              <div
+                v-for="item in editingWork.mediaItems"
+                :key="item.id"
                 class="file-item"
               >
                 <el-image
@@ -397,9 +388,9 @@ async function handleBatchDelete() {
                   {{ item.fileType === 'video' ? '🎬' : '📷' }}
                 </div>
                 <span class="file-name">{{ item.originalFilename }}</span>
-                <el-button 
-                  link 
-                  type="danger" 
+                <el-button
+                  link
+                  type="danger"
                   size="small"
                   :disabled="editingWork.mediaItems && editingWork.mediaItems.length <= 1"
                   @click="handleDeleteFile(item)"
@@ -408,29 +399,19 @@ async function handleBatchDelete() {
                 </el-button>
               </div>
             </div>
-            
-            <el-button 
-              v-if="!showAddFile"
-              size="small" 
-              @click="showAddFile = true"
-            >
-              添加文件
-            </el-button>
-            
-            <div v-else class="add-file-area">
-              <Upload @success="handleAddFile" />
-              <el-button 
-                size="small" 
-                @click="cancelAddFile" 
-                style="margin-top: 10px"
-              >
-                取消
-              </el-button>
-            </div>
           </div>
         </el-form-item>
+
+        <!-- Upload area at bottom - always visible -->
+        <div class="upload-section">
+          <div v-if="editingWork" class="upload-label">添加更多文件：</div>
+          <div v-else class="upload-label">上传文件：</div>
+          <Upload
+            @success="editingWork ? handleAddFile($event) : handleUploadSuccess($event)"
+          />
+        </div>
       </el-form>
-      
+
       <template #footer>
         <el-button @click="dialogVisible = false">取消</el-button>
         <el-button type="primary" @click="saveWork" :disabled="!form.title">
@@ -637,6 +618,18 @@ async function handleBatchDelete() {
   text-overflow: ellipsis;
   white-space: nowrap;
   flex: 1;
+}
+
+.upload-section {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid var(--el-border-color-light);
+}
+
+.upload-label {
+  margin-bottom: 10px;
+  font-size: 14px;
+  color: var(--el-text-color-regular);
 }
 
 .add-file-area {
