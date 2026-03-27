@@ -170,7 +170,9 @@ export class WorkService {
       work.tags = await this.tagRepo.findBy({ id: In(data.tagIds) });
     }
 
-    return this.workRepo.save(work);
+    await this.workRepo.save(work);
+    // Reload work with all relations including mediaItems
+    return this.getWorkById(id);
   }
 
   async deleteWork(id: string): Promise<boolean> {
