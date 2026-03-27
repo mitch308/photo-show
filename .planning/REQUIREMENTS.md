@@ -26,7 +26,7 @@ v1.2 UI/UX 优化与修复需求。
 - [x] **AUX-04**: 管理员可按客户/类型筛选分享
 - [x] **AUX-05**: 侧边栏导航独立滚动
 - [x] **AUX-06**: 系统设置卡片自适应宽度
-- [ ] **AUX-07**: 分享/客户管理表格样式与其他页面统一
+- [x] **AUX-07**: 分享/客户管理表格样式与其他页面统一
 
 ## v1.1 Requirements (Complete ✓)
 
@@ -100,7 +100,7 @@ v1.2 UI/UX 优化与修复需求。
 | AUX-04 | Phase 15 | Complete |
 | AUX-05 | Phase 16 | Complete |
 | AUX-06 | Phase 16 | Complete |
-| AUX-07 | Phase 17 | Pending |
+| AUX-07 | Phase 17 | Complete |
 
 **Coverage:**
 - v1.2 requirements: 12 total
