@@ -1,5 +1,16 @@
 # Milestones
 
+## v1.3 作品管理 UI 修复与优化 (Shipped: 2026-03-27)
+
+**Phases completed:** 2 phases, 2 plans, 8 tasks
+
+**Key accomplishments:**
+
+- 作品编辑修复：后端 updateWork 方法返回完整 mediaItems，统一上传/编辑弹窗 UI，支持多文件拖拽和选择
+- 作品展示修复：验证缩略图和详情页显示正常，实现灯箱左键上一张、右键下一张点击导航
+
+---
+
 ## v1.2 UI/UX 优化与修复 (Shipped: 2026-03-27)
 
 **Phases completed:** 5 phases, 10 plans, 22 tasks
