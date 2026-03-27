@@ -16,10 +16,10 @@ v1.3 作品管理 UI 修复与优化需求。
 
 ### 作品展示修复
 
-- [ ] **SHOW-01**: 首页作品缩略图正确显示
-- [ ] **SHOW-02**: 作品详情页正确显示所有文件（包括第一个文件）
-- [ ] **SHOW-03**: 详情页大图左右切换逻辑正确（左键切换到上一个，右键切换到下一个）
-- [ ] **SHOW-04**: 进入详情页时大图正确显示
+- [x] **SHOW-01**: 首页作品缩略图正确显示
+- [x] **SHOW-02**: 作品详情页正确显示所有文件（包括第一个文件）
+- [x] **SHOW-03**: 详情页大图左右切换逻辑正确（左键切换到上一个，右键切换到下一个）
+- [x] **SHOW-04**: 进入详情页时大图正确显示
 
 ## v1.2 Requirements (Complete ✓)
 
@@ -111,10 +111,10 @@ v1.3 作品管理 UI 修复与优化需求。
 | EDIT-02 | Phase 18 | Complete |
 | EDIT-03 | Phase 18 | Complete |
 | EDIT-04 | Phase 18 | Complete |
-| SHOW-01 | Phase 19 | Pending |
-| SHOW-02 | Phase 19 | Pending |
-| SHOW-03 | Phase 19 | Pending |
-| SHOW-04 | Phase 19 | Pending |
+| SHOW-01 | Phase 19 | Complete |
+| SHOW-02 | Phase 19 | Complete |
+| SHOW-03 | Phase 19 | Complete |
+| SHOW-04 | Phase 19 | Complete |
 
 ### v1.2 Traceability (Complete ✓)
 
